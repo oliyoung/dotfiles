@@ -102,11 +102,20 @@ alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
 
-# Directory listing (with colors and groups)
-alias ls='ls --color=auto --group-directories-first'
-alias l='ls -alFh'
-alias la='ls -A'
-alias lsd='ls -d */'
+# Directory listing (eza - modern ls replacement)
+if command -v eza &> /dev/null; then
+    alias ls='eza --group-directories-first'
+    alias l='eza -alF --group-directories-first'
+    alias la='eza -a --group-directories-first'
+    alias ll='eza -l --group-directories-first'
+    alias lsd='eza -D --group-directories-first'
+    alias tree='eza --tree'
+else
+    alias ls='ls -G'
+    alias l='ls -alFh'
+    alias la='ls -A'
+    alias lsd='ls -d */'
+fi
 
 # Git operations
 alias gs='git status'                # Status
@@ -123,3 +132,4 @@ alias gcl='git clone'                # Clone
 
 # Local environment
 [ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
+export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
