@@ -849,3 +849,10 @@
 {"display":"git st","pastedContents":{},"timestamp":1768976206042,"project":"/mnt/c/Users/o.young/work/architecture","sessionId":"b0b6f6ee-c582-4047-a226-4d113c905b6a"}
 {"display":"git commit and push ","pastedContents":{},"timestamp":1769153790535,"project":"/mnt/c/Users/o.young/work/architecture","sessionId":"14e34d7a-e717-49e9-88df-9ee480b9819f"}
 {"display":"exit","pastedContents":{},"timestamp":1769153880839,"project":"/mnt/c/Users/o.young/work/architecture","sessionId":"14e34d7a-e717-49e9-88df-9ee480b9819f"}
+{"display":"fix ls: unrecognized option `--group-directories-first'","pastedContents":{},"timestamp":1769156817283,"project":"/Users/oliyoung/dotfiles","sessionId":"6605e187-0b1f-41fd-a514-908d628fc4f3"}
+{"display":"exit","pastedContents":{},"timestamp":1769156864954,"project":"/Users/oliyoung/dotfiles","sessionId":"6605e187-0b1f-41fd-a514-908d628fc4f3"}
+{"display":"replace ls with eza in my dotfiles","pastedContents":{},"timestamp":1769156900980,"project":"/Users/oliyoung/dotfiles","sessionId":"21cb9da8-70eb-4b3b-82b1-857211591373"}
+{"display":"add `source ~/.zshrc` to the makefiles","pastedContents":{},"timestamp":1769156942458,"project":"/Users/oliyoung/dotfiles","sessionId":"21cb9da8-70eb-4b3b-82b1-857211591373"}
+{"display":"why show? can't you just run the command?","pastedContents":{},"timestamp":1769156991519,"project":"/Users/oliyoung/dotfiles","sessionId":"21cb9da8-70eb-4b3b-82b1-857211591373"}
+{"display":"yeah","pastedContents":{},"timestamp":1769157011229,"project":"/Users/oliyoung/dotfiles","sessionId":"21cb9da8-70eb-4b3b-82b1-857211591373"}
+{"display":"exit","pastedContents":{},"timestamp":1769157026095,"project":"/Users/oliyoung/dotfiles","sessionId":"21cb9da8-70eb-4b3b-82b1-857211591373"}
