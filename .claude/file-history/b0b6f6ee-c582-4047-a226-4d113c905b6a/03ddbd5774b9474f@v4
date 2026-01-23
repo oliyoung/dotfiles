@@ -1,0 +1,398 @@
+= OTR-001 Salesforce Customer Support
+:slug: salesforce_customer_support
+:title: Salesforce Customer Support
+:domain: Customer Support & Engagement
+:domain-architect: O.Young@otr.com.au
+:project: OTR-001
+:status: In Progress
+:status-icon: icon:hourglass-half[role=yellow]
+:target-delivery: 2026-Q1
+:doctype: article
+:toc: left
+:toclevels: 3
+:sectanchors:
+:sectlinks:
+:sectnums:
+:icons: font
+:source-highlighter: highlightjs
+:experimental:
+
+include::initiatives:partial$_initiative_metadata.adoc[]
+
+== What We're Building
+
+A unified customer support platform that consolidates OTR digital customer feedback onto xref:bounded-contexts:salesforce_service_cloud.adoc[Salesforce Service Cloud] and establishes a foundational Domain-Driven Design architecture with xref:bounded-contexts:profile.adoc[Profile Service] and xref:bounded-contexts:engagement.adoc[Engagement Service] bounded contexts.
+
+[cols="1,2"]
+|===
+| Feature | Description
+
+| Submit feedback from Mobile App
+| Customers continue to submit support requests with structured categories (App, Service, Order, Rewards, Refund, Delete Account)
+
+| Immediate feedback confirmation
+| Non-blocking user experience with *instant acknowledgement*
+
+| Automated Case creation
+| Asynchronous Case creation in xref:bounded-contexts:salesforce_service_cloud.adoc[Salesforce Service Cloud] with retry logic and dead letter queue
+
+| Push notification updates
+| Customers receive notifications via xref:bounded-contexts:braze.adoc[Braze] when support agents update or resolve their Cases
+
+| Unified agent view
+| Support agents see all customer interactions across digital, fuel wholesale, Shell Card, and other Viva Energy channels
+
+| Just-In-Time Contact reconciliation
+| Mobile App users automatically reconciled as Salesforce Contacts (upsert by email)
+|===
+
+== Architecture Approach
+
+NOTE: This and the xref:initiatives:flybuys_integration.adoc[Flybuys Integration] initiative are the first implementations of the overall Domain-Driven Design (DDD) architecture for OTR Group's digital platform. Depending on sequencing, some architectural elements may be delivered in either initiative.
+
+This is the **first implementation of OTR's target Domain-Driven Design (DDD) architecture**, establishing two new bounded contexts (xref:bounded-contexts:profile.adoc[Profile Service], xref:bounded-contexts:engagement.adoc[Engagement Service]) and event-driven integration patterns that let serve as the foundation for future bounded contexts including Flybuys integration.
+
+At its core, this architecture creates a clear separation of concerns: xref:bounded-contexts:profile.adoc[Profile Service] owns customer identity reconciliation with Salesforce, while xref:bounded-contexts:engagement.adoc[Engagement Service] acts as an Anti-Corruption Layer protecting digital channels from external system changes.
+
+By implementing these patterns now, OTR establishes a repeatable approach for future bounded contexts (xref:bounded-contexts:loyalty.adoc[Loyalty Service], xref:bounded-contexts:location.adoc[Location Service], xref:bounded-contexts:payment.adoc[Payment Service]), reducing delivery risk and enabling the platform to evolve confidently and with agility as business priorities shift.
+
+=== New xref:bounded-contexts:profile.adoc[Profile Service]
+
+Customer identity and Contact reconciliation
+
+- Just-In-Time Contact reconciliation with Salesforce (upsert by email)
+- Returns Salesforce Contact ID to Mobile App
+- Foundation for Flybuys partner linking (reused in future integration)
+- Stateless service (Salesforce is System of Record)
+
+=== New xref:bounded-contexts:engagement.adoc[Engagement Service]
+
+Customer feedback and support coordination
+
+- Customer feedback submission facade (Backend-for-Frontend pattern)
+- Anti-Corruption Layer for xref:bounded-contexts:salesforce_service_cloud.adoc[Salesforce Service Cloud] Case creation
+- Asynchronous Case creation via Event Bus (non-blocking user experience)
+- xref:bounded-contexts:braze.adoc[Braze] integration for all outbound customer communications (push, email, SMS)
+- Webhook receiver for Salesforce Case updates
+
+=== New "Event Bus"
+
+Event-driven integration infrastructure
+
+- Domain event publishing using AWS infrastructure (SNS+SQS/EventBridge/Kinesis)
+- Asynchronous Case creation with retry logic and exponential backoff
+- Dead letter queue for operations team intervention
+- Foundation pattern for future bounded context integration
+
+=== Integration Points
+
+[cols="1,2"]
+|===
+| Integration | Description
+
+| xref:bounded-contexts:salesforce_service_cloud.adoc[Salesforce Service Cloud]
+| System of Record for Contact and Case data (shared Viva Energy instance)
+
+| xref:bounded-contexts:braze.adoc[Braze]
+| Customer communication platform for all outbound notifications (push, email, SMS) triggered by Salesforce Case updates (via Engagement Service ACL)
+
+| xref:bounded-contexts:microsoft_entra_external_id.adoc[Microsoft Entra External ID]
+| Customer authentication (existing CIAM service)
+
+| Event Bus
+| Domain events for service coordination (`SupportCaseCreated`, `SupportCaseUpdated`, `CustomerFeedbackSubmitted`)
+
+| D365 Customer Engagement
+| Legacy platform (retired within 90 days post-cutover)
+
+| App-Specific Customer Database
+| Legacy Contact storage (one-time migration to Salesforce, then deprecated)
+|===
+
+== Key Capabilities Delivered
+
+[cols="1,2,2"]
+|===
+| Capability | How It Works | Business Value
+
+| *Unified Customer View*
+| xref:bounded-contexts:salesforce_service_cloud.adoc[Salesforce Service Cloud] consolidates support data across all Viva Energy channels
+| Support agents have complete interaction history (digital, wholesale, Shell Card, retail)
+
+| *Non-Blocking Feedback Submission*
+| Async Case creation via Event Bus with immediate user acknowledgement
+| Faster user experience, resilient to Salesforce downtime
+
+| *Automated Notifications*
+| xref:bounded-contexts:salesforce_service_cloud.adoc[Salesforce Service Cloud] webhook → xref:bounded-contexts:engagement.adoc[Engagement Service] → xref:bounded-contexts:braze.adoc[Braze] push notifications
+| Customers informed of Case status without manual agent follow-up
+
+| *Just-In-Time Reconciliation*
+| xref:bounded-contexts:profile.adoc[Profile Service] upserts Contacts by email on-demand
+| No pre-sync required, Salesforce always has current Contact data
+
+| *Anti-Corruption Layer*
+| xref:bounded-contexts:engagement.adoc[Engagement Service] translates between OTR domain and Salesforce API
+| Digital channels protected from Salesforce API changes
+
+| *Automatic Retry Logic*
+| Exponential backoff with dead letter queue
+| Handles transient failures without manual intervention
+
+| *DDD Foundation*
+| First bounded contexts (xref:bounded-contexts:profile.adoc[Profile Service], xref:bounded-contexts:engagement.adoc[Engagement Service])
+| Establishes architecture pattern for future services (Flybuys, Loyalty, Location)
+|===
+
+== Customer Journey
+
+=== Mobile App (Feedback Submission)
+
+. Customer taps "_Get In Touch_" --> "_Contact Us_" in xref:bounded-contexts:mobile.adoc[OTR app]
+. Selects feedback category (App, Service, Order, Rewards, Refund, Delete Account)
+. Provides optional details: Store Name, Time of Visit, Phone Number, Free Text Message
+. Taps "_Submit Feedback_"
+. *Immediate confirmation*: "_Thank you, we've received your feedback_"
+. xref:bounded-contexts:profile.adoc[Profile Service] reconciles customer as Salesforce Contact (JIT upsert by email)
+. xref:bounded-contexts:engagement.adoc[Engagement Service] publishes feedback submission to Event Bus
+. Background worker creates Case in xref:bounded-contexts:salesforce_service_cloud.adoc[Salesforce Service Cloud] asynchronously
+. *Customer receives notification*: "_Your support request has been created (Case #12345)_" (within 5 minutes)
+
+[mermaid]
+----
+sequenceDiagram
+    actor Customer
+    participant Mobile as Mobile App
+    participant Profile as Profile Service
+    participant Engagement as Engagement Service
+    participant EventBus as Event Bus
+    participant Salesforce as Salesforce
+    participant Braze as Braze
+
+    Customer ->> Mobile: Tap "Contact Support" & submit feedback
+    Mobile ->> Profile: Reconcile Contact (JIT upsert by email)
+    Profile ->> Salesforce: Query/Create Contact
+    Salesforce -->> Profile: Contact ID
+    Profile -->> Mobile: Contact ID
+    Mobile ->> Engagement: Submit feedback (with Contact ID)
+    Engagement -->> Mobile: Immediate acknowledgement\n"Feedback submitted"
+    Mobile -->> Customer: "Thank you, we've received your feedback"
+    Engagement ->> EventBus: Publish CustomerFeedbackSubmitted event
+    EventBus ->> Engagement: Async Case creation worker
+    Engagement ->> Salesforce: Create Case
+    Salesforce -->> Engagement: Case ID
+    Engagement ->> Braze: Trigger push notification\n"Your support request #12345 has been created"
+    Braze -->> Customer: Push notification received\n(within 5 minutes)
+----
+
+=== Support Agent (Case Resolution)
+
+. Support agent logs into xref:bounded-contexts:salesforce_service_cloud.adoc[Salesforce Service Cloud]
+. Views Case assigned to their queue (sees complete customer interaction history)
+. Updates Case status, adds internal notes, contacts customer if needed
+. Resolves Case and adds resolution notes
+. Salesforce webhook notifies Engagement Service of Case update
+. *Customer receives push notification*: "_Your support request #12345 has been resolved_"
+. Customer can view resolution in Mobile App (future enhancement)
+
+[mermaid]
+----
+sequenceDiagram
+    actor Agent as Support Agent
+    participant Salesforce as Salesforce
+    participant Engagement as Engagement Service
+    participant Braze as Braze
+    actor Customer
+
+    Agent ->> Salesforce: View assigned Case
+    Salesforce -->> Agent: Case details + customer history
+    Agent ->> Salesforce: Update Case status\nAdd resolution notes
+    Agent ->> Salesforce: Resolve Case
+    Salesforce ->> Engagement: Webhook: Case Updated/Resolved
+    Engagement ->> Braze: Trigger push notification\n"Your request #12345 has been resolved"
+    Braze -->> Customer: Push notification received
+----
+
+== Implementation Phases
+
+Big Bang Cutover (no phased rollout)
+
+[cols="1,2,1,2"]
+|===
+| Phase | Capability Enabled | Users | Success Criteria
+
+| *TS-0: Baseline State*
+| D365 Customer Engagement & app-specific Contact database
+| All customers
+| Current state documented
+
+| *TS-1: Build & Test*
+| xref:bounded-contexts:profile.adoc[Profile Service], xref:bounded-contexts:engagement.adoc[Engagement Service], Event Bus (non-production), Contact migration tool
+| Testing only
+| UAT sign-off, Contact migration validated in sandbox, integration tests pass
+
+| *TS-2: Contact Migration*
+| Contact migration to Salesforce production (app database → Salesforce upsert)
+| No user impact
+| 100% Contact migration with zero data loss, >95% email/phone/VCI matching accuracy
+
+| *TS-3: Cutover (Go-Live)*
+| xref:bounded-contexts:profile.adoc[Profile Service] + xref:bounded-contexts:engagement.adoc[Engagement Service] production, Mobile App integration, D365 CE disabled
+| All customers (single deployment)
+| >99.5% feedback submission success rate, end-to-end flow validated, no P1/P2 incidents in 24 hours
+
+| *TS-4: Target State*
+| Salesforce fully operational, D365 CE retired
+| All customers
+| Customer satisfaction +15%, case resolution time -20%, D365 CE decommissioned within 90 days
+|===
+
+*Cutover Strategy*: Big bang cutover after Contact migration completion. All users switch from D365 CE to Salesforce simultaneously (no phased rollout, no parallel run).
+
+== Non-Functional Requirements Met
+
+[cols="1,2,2"]
+|===
+| Requirement | Target | How We Achieve It
+
+| *Feedback Submission Speed*
+| p95 < 1 second
+| Async Case creation, immediate user acknowledgement
+
+| *Contact Reconciliation Speed*
+| p95 < 500ms
+| JIT lookup in Salesforce, efficient upsert by email
+
+| *Async Case Creation Latency*
+| p95 < 5 minutes
+| Event Bus processing, background workers, retry logic
+
+| *System Uptime*
+| 99.9% (Profile Service & Engagement Service)
+| AWS auto-scaling, health checks, monitoring
+
+| *Feedback Submission Success Rate*
+| >99.5%
+| Retry logic with exponential backoff, dead letter queue
+
+| *Push Notification Delivery*
+| p95 < 30 seconds
+| xref:bounded-contexts:braze.adoc[Braze] webhook integration, circuit breaker pattern
+
+| *Graceful Degradation*
+| Salesforce downtime handling
+| Feedback still accepted, Cases queued for async creation when Salesforce recovers
+
+| *Scalability*
+| 100-150 submissions/day (20k DAU), capacity for 500 submissions/day (3x growth)
+| Auto-scaling, Event Bus queue capacity (100k messages), Salesforce API rate limit compliance (80% buffer)
+
+| *Data Residency*
+| Australia East region
+| Azure region pinning (Salesforce shared instance), compliance validation
+|===
+
+== Risks & Mitigation
+
+[cols="1,1,2"]
+|===
+| Risk | Impact | Mitigation
+
+| *Salesforce API downtime*
+| Cases not created immediately
+| Async Case creation via Event Bus with automatic retry, feedback still accepted and queued
+
+| *xref:bounded-contexts:braze.adoc[Braze] webhook failures*
+| Customers don't receive push notifications
+| Circuit breaker with dead letter queue, retry logic, monitoring alerts, Case still created successfully
+
+| *Contact migration errors*
+| Customer linking status lost or duplicated
+| 100% validation pass rate requirement, flexible matching (email/phone/VCI), reconciliation report, rollback to app database if critical errors
+
+| *Big bang cutover failures*
+| All users impacted simultaneously
+| Comprehensive UAT before cutover, Go/No-Go decision criteria, rollback plan (revert to D365 CE), 30-day monitoring period
+
+| *Email changes create duplicate Contacts*
+| Multiple Contact records for same customer
+| Rare edge case (email changes infrequent), manual cleanup acceptable, future enhancement: add VCI as Salesforce External ID
+
+| *Shared Salesforce instance governance*
+| Data isolation, security, multi-tenant conflicts
+| Data isolation strategy with Viva Energy Salesforce admin team (Record Types, custom fields, queues), conformist pattern
+
+| *Event Bus queue overflow*
+| Message loss during extreme spikes
+| Queue capacity 100k messages, monitoring alerts, auto-scaling, Salesforce API rate limit compliance
+|===
+
+== Key Decisions Made
+
+[cols="1,2,2"]
+|===
+| Decision | Rationale | Trade-off Accepted
+
+| *Consolidate onto Salesforce* (not build custom)
+| Unified customer view across Viva Energy, platform consolidation, proven solution
+| Conformist pattern (shared instance, less control over platform evolution)
+
+| *xref:bounded-contexts:profile.adoc[Profile Service] + xref:bounded-contexts:engagement.adoc[Engagement Service] bounded contexts* (not direct Mobile App → Salesforce)
+| Foundation for target DDD architecture, separation of concerns, Anti-Corruption Layer, reusability for Flybuys
+| Increased initial complexity (two new microservices, Event Bus infrastructure)
+
+| *Async Case creation via Event Bus* (not synchronous)
+| Non-blocking user experience, resilience to Salesforce downtime, automatic retry, scalability
+| Eventual consistency (user gets success after Case created, not immediately)
+
+| *Email as primary matching key* (not VCI)
+| Always available, unique in Salesforce, simplifies upsert logic
+| Email changes create duplicate Contacts (rare edge case, manual cleanup)
+
+| *No Case migration from D365 CE* (fresh start)
+| Simpler migration, faster time to value, clean start in Salesforce
+| Historical Cases not visible in Salesforce (D365 CE remains accessible temporarily)
+
+| *Big bang cutover* (not phased rollout)
+| Simpler deployment, faster D365 CE retirement, manageable user base
+| Higher cutover risk (all users switch at once, requires comprehensive testing)
+
+| *xref:bounded-contexts:engagement.adoc[Engagement Service] receives Salesforce webhooks* (not polling)
+| Efficient real-time Case update notifications, event-driven architecture
+| Webhook endpoint requires secure public URL, Salesforce configuration (Outbound Messages/Platform Events)
+
+| *xref:bounded-contexts:braze.adoc[Braze] handles all outbound customer communications* (not Salesforce Marketing Cloud)
+| Consistent customer experience across all channels (marketing + service), single platform for communication preferences and opt-outs, Anti-Corruption Layer (decoupled from Salesforce), team already familiar with Braze (migration from Salesforce Marketing Cloud completed)
+| Additional integration point, Braze must be available for customer notifications
+|===
+
+== Future Capacity Delivered
+
+[cols="1,3"]
+|===
+| Stream | Capacity
+
+| *Flybuys Integration*
+| xref:bounded-contexts:profile.adoc[Profile Service] Contact reconciliation reused for Flybuys partner linking (OAuth flow foundation)
+
+| *Coalition Loyalty*
+| Establishes event-driven pattern for partner integrations, Anti-Corruption Layer approach
+
+| *Engagement Service Evolution*
+| Foundation for customer notifications across all channels (not just support), campaign orchestration via xref:bounded-contexts:braze.adoc[Braze]
+
+| *Domain-Driven Design Architecture*
+| First bounded contexts implemented, establishes pattern for xref:bounded-contexts:loyalty.adoc[LoyaltyService], xref:bounded-contexts:location.adoc[LocationService], xref:bounded-contexts:payment.adoc[PaymentService], xref:bounded-contexts:recommendation.adoc[RecommendationService]
+
+| *Event Bus Infrastructure*
+| Event-driven integration foundation for all future bounded contexts, loose coupling, async processing
+
+| *Multi-Channel Support*
+| Salesforce consolidation enables future support channels (Web, Chatbot, WhatsApp, Email) beyond Mobile App
+
+| *Customer 360 View*
+| Unified customer data foundation for cross-channel personalization and recommendation engines
+
+| *Operational Excellence*
+| Establishes monitoring, alerting, and dead letter queue patterns for all future services
+|===

@@ -1,0 +1,51 @@
+# Minimal Zsh Configuration
+# Migrated from Oh My Zsh - see .zshrc.bak for previous config
+
+# History configuration
+export HISTFILE="$HOME/.zsh_history"
+export HISTSIZE=1000000000
+export SAVEHIST=$HISTSIZE
+
+setopt EXTENDED_HISTORY       # Timestamps in history
+setopt HIST_IGNORE_ALL_DUPS   # No duplicates
+setopt HIST_IGNORE_SPACE      # Don't record commands starting with space
+setopt SHARE_HISTORY          # Share history between sessions
+
+# Useful options
+setopt autocd                 # cd by just typing directory name
+setopt interactive_comments   # Allow comments in interactive shell
+
+# Completion system
+autoload -Uz compinit
+compinit
+
+# Emacs keybindings (default)
+bindkey -e
+
+# fzf integration for history search (Ctrl+R)
+if command -v fzf &> /dev/null; then
+    # Try Ubuntu/Debian path first
+    if [ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]; then
+        source /usr/share/doc/fzf/examples/key-bindings.zsh
+    else
+        # Fall back to fzf --zsh (works with most installations)
+        eval "$(fzf --zsh 2>/dev/null)" || true
+    fi
+fi
+
+# Directory colors - bright cyan (use custom dircolors)
+if [ -f ~/.dircolors ]; then
+    eval "$(dircolors ~/.dircolors)"
+fi
+
+# Enable colors for ls
+alias ls='ls --color=auto'
+
+# Starship prompt
+if command -v starship &> /dev/null; then
+    eval "$(starship init zsh)"
+fi
+
+# Your existing config
+export PUPPETEER_EXECUTABLE_PATH=/home/oliy/.cache/puppeteer/chrome-headless-shell/linux-143.0.7499.169/chrome-headless-shell-linux64/chrome-headless-shell
+[ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"

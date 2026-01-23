@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://api.otr.com.au/events/CustomerProfileUpdated.schema.json",
+  "title": "CustomerProfileUpdated Event",
+  "description": "Event published when a customer profile is updated (email, firstName, lastName, phone).",
+  "type": "object",
+  "properties": {
+    "specversion": {
+      "type": "string",
+      "const": "1.0",
+      "description": "CloudEvents specification version."
+    },
+    "type": {
+      "type": "string",
+      "const": "com.otr.profile.CustomerProfileUpdated",
+      "description": "Type of event."
+    },
+    "source": {
+      "type": "string",
+      "const": "/profile-service",
+      "description": "Context in which the event happened."
+    },
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique event identifier."
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of event creation."
+    },
+    "datacontenttype": {
+      "type": "string",
+      "const": "application/json"
+    },
+    "data": {
+      "type": "object",
+      "description": "The custom event data payload.",
+      "properties": {
+        "vivaConsumerId": {
+          "type": "string",
+          "pattern": "^vci_[a-zA-Z0-9]+$",
+          "description": "The customer's Viva Consumer ID."
+        },
+        "salesforceContactId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9]{15,18}$",
+          "description": "Salesforce Contact record ID."
+        },
+        "updatedFields": {
+          "type": "object",
+          "description": "Fields that were updated in this operation.",
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email",
+              "description": "Updated email address (if changed)."
+            },
+            "firstName": {
+              "type": "string",
+              "description": "Updated first name (if changed)."
+            },
+            "lastName": {
+              "type": "string",
+              "description": "Updated last name (if changed)."
+            },
+            "phone": {
+              "type": "string",
+              "pattern": "^\\+[1-9]\\d{1,14}$",
+              "description": "Updated phone number (if changed)."
+            }
+          },
+          "additionalProperties": false,
+          "minProperties": 1
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the profile was updated."
+        }
+      },
+      "required": ["vivaConsumerId", "salesforceContactId", "updatedFields", "updatedAt"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["specversion", "type", "source", "id", "time", "datacontenttype", "data"],
+  "additionalProperties": false
+}

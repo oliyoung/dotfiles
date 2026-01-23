@@ -1,0 +1,622 @@
+openapi: 3.0.3
+info:
+  title: ProfileService API
+  description: |
+    ProfileService manages customer profiles and partner account linking for the OTR digital platform.
+
+    **Related Documents**:
+    - Architecture Definition: [[Architecture Definitions/Flybuys Integration]]
+    - Solution Architecture: [[Solution Architectures/Flybuys Integration]]
+
+    **Key Responsibilities**:
+    - Partner account linking (Flybuys, Shell Card) via OAuth 2.0 + PKCE
+    - Reward preference management
+    - Partner link status tracking
+  version: 1.0.0
+  contact:
+    name: OTR Domain Architecture Team
+    email: O.Young@otr.com.au
+
+security:
+  - AzureADB2C: []
+servers:
+  - url: https://api.otr.com.au/profile/v1
+    description: Production
+  - url: https://api-staging.otr.com.au/profile/v1
+    description: Staging
+  - url: https://api-dev.otr.com.au/profile/v1
+    description: Development
+
+tags:
+  - name: Customer Profile
+    description: Customer profile creation and management
+  - name: Partner Links
+    description: Partner account linking and preference management
+
+paths:
+  /customers:
+    post:
+      tags:
+        - Customer Profile
+      summary: Create customer profile
+      description: |
+        Creates a new customer profile, links to Salesforce VCI, and provisions an EagleEye wallet.
+        Used by Just-In-Time Integration during customer login (AS-1 Foundation).
+
+        **Business Rules**:
+        - VCI must be unique across all customers
+        - Orchestrates EagleEye wallet creation via EagleEye ACL
+        - Links to Salesforce Contact record (validates Contact exists)
+        - Publishes `CustomerEnrolled` domain event on success
+        - Returns `409 Conflict` if profile already exists (idempotent operation)
+        - Transaction is atomic - if wallet creation fails, profile creation is rolled back
+
+        **Performance SLA**: p95 < 500ms (includes EagleEye wallet creation)
+      operationId: createCustomerProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCustomerProfileRequest"
+            example:
+              salesforceContactId: "003Dn000001234ABC"
+              vivaConsumerId: "vci_xyz789abc"
+              rewardPreference: "OTR_FUEL_DISCOUNT"
+      responses:
+        "201":
+          description: Profile created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerProfile"
+              example:
+                vivaConsumerId: "vci_xyz789abc"
+                salesforceContactId: "003Dn000001234ABC"
+                walletId: "wallet_123456"
+                rewardPreference: "OTR_FUEL_DISCOUNT"
+                createdAt: "2025-12-09T10:30:00Z"
+                status: "ACTIVE"
+        "400":
+          description: Invalid Salesforce Contact ID format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "INVALID_SALESFORCE_CONTACT_ID"
+                message: "Salesforce Contact ID must be 15 or 18 characters"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Salesforce Contact not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "SALESFORCE_CONTACT_NOT_FOUND"
+                message: "Salesforce Contact does not exist"
+                salesforceContactId: "003Dn000001234ABC"
+        "409":
+          description: Customer profile already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "PROFILE_ALREADY_EXISTS"
+                message: "Customer profile already exists for this VCI"
+                vivaConsumerId: "vci_xyz789abc"
+        "503":
+          description: EagleEye wallet creation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "EAGLEEYE_UNAVAILABLE"
+                message: "EagleEye wallet creation failed"
+                retryAfter: 60
+
+  /customers/{vivaConsumerId}:
+    get:
+      tags:
+        - Customer Profile
+      summary: Get customer profile by VCI
+      description: |
+        Retrieves customer profile details by Viva Consumer ID.
+
+        **Use Cases**:
+        - LoyaltyService queries customer profile during transaction adjudication
+        - Mobile app retrieves customer profile details
+        - Internal services lookup customer information
+
+        **Performance SLA**: p95 < 200ms
+      operationId: getCustomerProfile
+      parameters:
+        - name: vivaConsumerId
+          in: path
+          required: true
+          description: Viva Consumer ID
+          schema:
+            type: string
+            pattern: "^vci_[a-zA-Z0-9]+$"
+          example: "vci_xyz789abc"
+      responses:
+        "200":
+          description: Customer profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerProfile"
+              example:
+                vivaConsumerId: "vci_xyz789abc"
+                salesforceContactId: "003Dn000001234ABC"
+                walletId: "wallet_123456"
+                rewardPreference: "FLYBUYS_POINTS"
+                createdAt: "2025-12-09T10:30:00Z"
+                status: "ACTIVE"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Customer profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "CUSTOMER_NOT_FOUND"
+                message: "Customer profile does not exist for this VCI"
+                vivaConsumerId: "vci_xyz789abc"
+
+  /customers/{vivaConsumerId}/partners:
+    get:
+      tags:
+        - Partner Links
+      summary: Get customer's partner links
+      description: |
+        Retrieves all partner links for a customer by VCI.
+
+        **Performance SLA**: p95 < 200ms
+      operationId: getPartnerLinks
+      parameters:
+        - name: vivaConsumerId
+          in: path
+          required: true
+          description: Viva Consumer ID
+          schema:
+            type: string
+            pattern: "^vci_[a-zA-Z0-9]+$"
+          example: "vci_xyz789abc"
+      responses:
+        "200":
+          description: Partner links retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PartnerLinksResponse"
+              example:
+                vivaConsumerId: "vci_xyz789abc"
+                partnerLinks:
+                  - partnerLinkId: "550e8400-e29b-41d4-a716-446655440000"
+                    partner: "FLYBUYS"
+                    status: "LINKED"
+                    externalMemberId: "123456789012"
+                    linkedAt: "2025-12-09T10:30:00Z"
+                    rewardPreference: "FLYBUYS_POINTS"
+                  - partnerLinkId: "550e8400-e29b-41d4-a716-446655440001"
+                    partner: "SHELL_CARD"
+                    status: "LINKED"
+                    externalMemberId: "SC123456"
+                    linkedAt: "2025-11-15T14:20:00Z"
+                    rewardPreference: "OTR_FUEL_DISCOUNT"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Customer not found or has no partner links
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "CUSTOMER_NOT_FOUND"
+                message: "Customer profile does not exist for this VCI"
+                vivaConsumerId: "vci_xyz789abc"
+
+  /partners:
+    post:
+      tags:
+        - Partner Links
+      summary: Initiate partner account linking
+      description: |
+        Initiates OAuth-based partner account linking (Flybuys, Shell Card).
+
+        **Flow**:
+        1. Mobile app redirects user to partner OAuth authorization page
+        2. User authorizes, partner redirects back with authorization code
+        3. Mobile app calls this endpoint with code + PKCE verifier
+        4. ProfileService exchanges code for access token (stored in Azure Key Vault)
+        5. ProfileService retrieves external member ID and creates PartnerLink
+
+        **Business Rules** (reference Architecture Definition ADR-005):
+        - Customer can only have one active link per partner
+        - OAuth tokens stored in Azure Key Vault with 90-day retention
+        - Publishes `PartnerLinked` domain event on success
+
+        **Performance SLA**: p95 < 200ms
+      operationId: createPartnerLink
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePartnerLinkRequest"
+            example:
+              vivaConsumerId: "VCI-123456789"
+              partner: "FLYBUYS"
+              oauthAuthorizationCode: "AUTH_CODE_FROM_FLYBUYS"
+              codeVerifier: "PKCE_CODE_VERIFIER_12345678901234567890"
+      responses:
+        "201":
+          description: Partner link created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PartnerLink"
+              example:
+                partnerLinkId: "550e8400-e29b-41d4-a716-446655440000"
+                vivaConsumerId: "VCI-123456789"
+                partner: "FLYBUYS"
+                status: "LINKED"
+                externalMemberId: "123456789012"
+                linkedAt: "2025-12-09T10:30:00Z"
+                rewardPreference: "FLYBUYS_POINTS"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: Partner already linked for this customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "PARTNER_ALREADY_LINKED"
+                message: "Customer already has an active Flybuys link"
+                vivaConsumerId: "VCI-123456789"
+                partner: "FLYBUYS"
+        "503":
+          description: Partner OAuth service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "PARTNER_SERVICE_UNAVAILABLE"
+                message: "Flybuys OAuth service is temporarily unavailable"
+                retryAfter: 60
+
+  /partners/{partnerLinkId}/preference:
+    put:
+      tags:
+        - Partner Links
+      summary: Update reward preference
+      description: |
+        Updates the customer's reward preference for a specific partner link.
+
+        **Business Rules** (reference Architecture Definition ADR-005):
+        - Partner link must be in LINKED status
+        - Preference change publishes `RewardPreferenceChanged` domain event
+
+        **Performance SLA**: p95 < 200ms
+      operationId: updateRewardPreference
+      parameters:
+        - name: partnerLinkId
+          in: path
+          required: true
+          description: Partner Link ID (GUID)
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePreferenceRequest"
+            example:
+              rewardPreference: "FLYBUYS_POINTS"
+      responses:
+        "200":
+          description: Preference updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreferenceUpdateResponse"
+              example:
+                partnerLinkId: "550e8400-e29b-41d4-a716-446655440000"
+                rewardPreference: "FLYBUYS_POINTS"
+                updatedAt: "2025-12-09T11:00:00Z"
+        "400":
+          description: Invalid preference or partner link not in LINKED status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "INVALID_PREFERENCE_CHANGE"
+                message: "Cannot change preference for unlinked partner"
+                partnerLinkId: "550e8400-e29b-41d4-a716-446655440000"
+                status: "UNLINKED"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /partners/{partnerLinkId}:
+    delete:
+      tags:
+        - Partner Links
+      summary: Unlink partner account
+      description: |
+        Unlinks a partner account from the customer's profile.
+
+        **Business Rules**:
+        - Sets partner link status to UNLINKED
+        - OAuth tokens remain in Azure Key Vault (soft delete, 90-day retention)
+        - Publishes `PartnerUnlinked` domain event
+
+        **Performance SLA**: p95 < 200ms
+      operationId: unlinkPartner
+      parameters:
+        - name: partnerLinkId
+          in: path
+          required: true
+          description: Partner Link ID (GUID)
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        "204":
+          description: Partner unlinked successfully
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  securitySchemes:
+    AzureADB2C:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://otrviva.b2clogin.com/otrviva.onmicrosoft.com/oauth2/v2.0/authorize?p=B2C_1A_SIGNUP_SIGNIN
+          tokenUrl: https://otrviva.b2clogin.com/otrviva.onmicrosoft.com/oauth2/v2.0/token?p=B2C_1A_SIGNUP_SIGNIN
+          scopes:
+            https://otrviva.onmicrosoft.com/profile-api/profile.read: Read profile data
+            https://otrviva.onmicrosoft.com/profile-api/profile.write: Write profile data
+
+  schemas:
+    CreateCustomerProfileRequest:
+      type: object
+      required:
+        - salesforceContactId
+        - vivaConsumerId
+      properties:
+        salesforceContactId:
+          type: string
+          description: Salesforce Contact ID (15 or 18 characters)
+          pattern: "^[a-zA-Z0-9]{15}$|^[a-zA-Z0-9]{18}$"
+          example: "003Dn000001234ABC"
+        vivaConsumerId:
+          type: string
+          description: Viva Consumer ID (must be unique)
+          pattern: "^vci_[a-zA-Z0-9]+$"
+          example: "vci_xyz789abc"
+        rewardPreference:
+          type: string
+          enum:
+            - OTR_FUEL_DISCOUNT
+            - FLYBUYS_POINTS
+            - SHELL_PRICE_SAVE
+          description: Default reward preference (optional, defaults to OTR_FUEL_DISCOUNT)
+          default: "OTR_FUEL_DISCOUNT"
+          example: "OTR_FUEL_DISCOUNT"
+
+    CustomerProfile:
+      type: object
+      properties:
+        vivaConsumerId:
+          type: string
+          description: Viva Consumer ID
+          example: "vci_xyz789abc"
+        salesforceContactId:
+          type: string
+          description: Salesforce Contact record ID
+          example: "003Dn000001234ABC"
+        walletId:
+          type: string
+          description: EagleEye wallet identifier
+          example: "wallet_123456"
+        rewardPreference:
+          type: string
+          enum:
+            - OTR_FUEL_DISCOUNT
+            - FLYBUYS_POINTS
+            - SHELL_PRICE_SAVE
+          description: Default reward preference
+          example: "OTR_FUEL_DISCOUNT"
+        createdAt:
+          type: string
+          format: date-time
+          description: Profile creation timestamp
+          example: "2025-12-09T10:30:00Z"
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - SUSPENDED
+            - CLOSED
+          description: Profile status
+          example: "ACTIVE"
+
+    CreatePartnerLinkRequest:
+      type: object
+      required:
+        - vivaConsumerId
+        - partner
+        - oauthAuthorizationCode
+        - codeVerifier
+      properties:
+        vivaConsumerId:
+          type: string
+          description: Viva Consumer ID (GUID or VCI pattern)
+          example: "VCI-123456789"
+        partner:
+          type: string
+          enum:
+            - FLYBUYS
+            - SHELL_CARD
+            - AFL
+            - BUDGET_DIRECT
+          description: Partner identifier
+        oauthAuthorizationCode:
+          type: string
+          description: OAuth authorization code from partner OAuth callback
+        codeVerifier:
+          type: string
+          description: PKCE code verifier (43-128 characters, URL-safe)
+          minLength: 43
+          maxLength: 128
+
+    PartnerLink:
+      type: object
+      properties:
+        partnerLinkId:
+          type: string
+          format: uuid
+          description: Unique identifier for the partner link
+        vivaConsumerId:
+          type: string
+          description: Viva Consumer ID
+        partner:
+          type: string
+          enum:
+            - FLYBUYS
+            - SHELL_CARD
+            - AFL
+            - BUDGET_DIRECT
+          description: Partner identifier
+        status:
+          type: string
+          enum:
+            - LINKING_IN_PROGRESS
+            - LINKED
+            - UNLINKED
+            - FAILED
+          description: Partner link status
+        externalMemberId:
+          type: string
+          nullable: true
+          description: External partner member ID (e.g., 12-digit Flybuys number)
+        linkedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when partner was successfully linked
+        rewardPreference:
+          type: string
+          enum:
+            - FLYBUYS_POINTS
+            - OTR_FUEL_DISCOUNT
+            - SHELL_PRICE_SAVE
+          nullable: true
+          description: Customer's reward preference for this partner
+
+    PartnerLinksResponse:
+      type: object
+      properties:
+        vivaConsumerId:
+          type: string
+          description: Viva Consumer ID
+        partnerLinks:
+          type: array
+          items:
+            $ref: "#/components/schemas/PartnerLink"
+          description: List of partner links for this customer
+
+    UpdatePreferenceRequest:
+      type: object
+      required:
+        - rewardPreference
+      properties:
+        rewardPreference:
+          type: string
+          enum:
+            - FLYBUYS_POINTS
+            - OTR_FUEL_DISCOUNT
+          description: Updated reward preference
+
+    PreferenceUpdateResponse:
+      type: object
+      properties:
+        partnerLinkId:
+          type: string
+          format: uuid
+        rewardPreference:
+          type: string
+          enum:
+            - FLYBUYS_POINTS
+            - OTR_FUEL_DISCOUNT
+        updatedAt:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Machine-readable error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          additionalProperties: true
+          description: Additional error context
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid input
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: "INVALID_REQUEST"
+            message: "Invalid OAuth authorization code"
+
+    Unauthorized:
+      description: Unauthorized - invalid or missing OAuth token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: "UNAUTHORIZED"
+            message: "Invalid or expired OAuth 2.0 Bearer token"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: "NOT_FOUND"
+            message: "Partner link not found"

@@ -1,0 +1,640 @@
+= ProductCatalog Infrastructure Implementation
+:description: Infrastructure layer implementation details for ProductCatalogService
+:keywords: infrastructure, aws, postgresql, implementation, deployment
+
+== Overview
+
+This document describes the **Infrastructure Layer** implementation for ProductCatalogService, following xref:patterns:clean_architecture.adoc[Clean Architecture] principles.
+
+**Separation of Concerns**:
+
+- xref:../bounded-contexts/product_catalog.adoc[ProductCatalog Bounded Context]: Domain model, business rules, ports (interfaces)
+- **This Document**: Concrete implementations, deployment architecture, infrastructure choices
+
+== Infrastructure Adapters
+
+Following the **Ports & Adapters** pattern, infrastructure layer implements interfaces defined in Application layer.
+
+=== Repository Implementations
+
+==== PostgreSQL Product Price Repository
+
+**Port**: `IProductPriceRepository` (defined in Application layer)
+
+**Adapter**: `PostgreSqlProductPriceRepository` (Infrastructure layer)
+
+**Responsibilities**:
+
+- Implement domain repository interface using PostgreSQL as persistence mechanism
+- Map between relational database entities and domain aggregates
+- Use ORM framework for data access with eager loading strategies
+- Handle database transactions and concurrency
+
+**Query Patterns**:
+
+|===
+|Query Method |Database Strategy |Purpose
+
+|FindById
+|Single row lookup with joins to related tables
+|Retrieve product price with price group details
+
+|FindByStoreId
+|Multi-table join through store assignments
+|Find all products available at a specific store
+
+|FindByPriceGroup
+|Index-based lookup on price group
+|Retrieve products for a specific region/price group
+
+|SaveBatch
+|Bulk insert/update with transaction
+|ETL pipeline batch loading
+|===
+
+**Translation Strategy**:
+
+The adapter translates between two models:
+
+- **Database Model**: Normalized relational tables (products, prices, price_groups, store_assignments)
+- **Domain Model**: ProductPrice aggregate with embedded value objects
+
+This separation protects domain model from database schema changes.
+
+=== Database Schema (PostgreSQL)
+
+==== Entity Relationship Model
+
+[source,mermaid]
+----
+erDiagram
+    PRODUCTS ||--o{ PRODUCT_PRICES : "has pricing for"
+    PRICE_GROUPS ||--o{ PRODUCT_PRICES : "applies to"
+    PRICE_GROUPS ||--o{ STORE_ASSIGNMENTS : "assigned to"
+
+    PRODUCTS {
+        string product_id PK
+        string product_name
+        string product_category
+        timestamp last_updated
+        timestamp created_at
+    }
+
+    PRICE_GROUPS {
+        string price_group_id PK
+        string price_group_name
+        string region_code
+        timestamp last_updated
+        timestamp created_at
+    }
+
+    PRODUCT_PRICES {
+        int id PK
+        string product_id FK
+        string price_group_id FK
+        decimal price_amount
+        date effective_from
+        date effective_to
+        timestamp last_updated
+        timestamp created_at
+    }
+
+    STORE_ASSIGNMENTS {
+        int id PK
+        int store_id
+        string price_group_id FK
+        date effective_from
+        date effective_to
+        timestamp last_updated
+        timestamp created_at
+    }
+
+    ETL_RUNS {
+        int id PK
+        uuid job_id
+        timestamp run_timestamp
+        string status
+        int records_processed
+        text error_message
+        string source_file_path
+        timestamp started_at
+        timestamp completed_at
+    }
+----
+
+==== Table Purposes
+
+|===
+|Table |Purpose |Key Constraints
+
+|**products**
+|Product master data from D365 Commerce
+|Primary key on product_id; product_name required
+
+|**price_groups**
+|Regional pricing groups (NSW, VIC, QLD, etc.)
+|Primary key on price_group_id; region_code validated against Australian states
+
+|**product_prices**
+|Effective-dated pricing by product and price group
+|Composite unique key (product_id, price_group_id, effective_from); price_amount must be > 0; effective_to must be after effective_from
+
+|**store_assignments**
+|Store-to-price-group mappings
+|Composite unique key (store_id, price_group_id, effective_from); supports temporal assignment changes
+
+|**etl_runs**
+|ETL job execution audit trail
+|Unique job_id; status constrained to (IN_PROGRESS, SUCCESS, FAILED); computed duration_seconds field
+|===
+
+==== Indexing Strategy
+
+|===
+|Index |Purpose |Query Pattern
+
+|idx_products_category
+|Filter products by category
+|Category-based pricing queries
+
+|idx_products_last_updated
+|Identify recently updated products
+|ETL incremental processing
+
+|idx_price_groups_region
+|Regional price group lookups
+|Store location-based pricing
+
+|idx_product_prices_product
+|Find all prices for a product
+|Product detail API queries
+
+|idx_product_prices_price_group
+|Find all products in a price group
+|Regional product listing
+
+|idx_product_prices_effective_dates
+|Temporal price queries (current/future pricing)
+|Date-range price validity checks
+
+|idx_store_assignments_store
+|Find price group for a store
+|Store-specific pricing API
+
+|idx_etl_runs_status
+|Monitor running/failed ETL jobs
+|Operational dashboards
+
+|idx_etl_runs_timestamp
+|Recent job history
+|Troubleshooting and auditing
+|===
+
+=== External System Adapters
+
+==== D365 Commerce Adapter (Anti-Corruption Layer)
+
+**Port**: `ID365CommercePort` (defined in Application layer)
+
+**Adapter**: `D365CommerceS3Adapter` (Infrastructure layer)
+
+**Purpose**: Protects ProductCatalog domain from D365 Commerce data model and Azure infrastructure dependencies.
+
+**Integration Flow**:
+
+[source,mermaid]
+----
+sequenceDiagram
+    participant ETL as ETL Pipeline
+    participant ACL as D365 Commerce ACL
+    participant S3 as S3 Bucket (Cross-Account)
+    participant Parquet as Parquet Parser
+    participant Domain as Domain Model
+
+    ETL->>ACL: FetchLatestPricingExport()
+    ACL->>S3: List objects (pricing/* prefix)
+    S3-->>ACL: Return file list (sorted by modified date)
+    ACL->>S3: Download latest Parquet file
+    S3-->>ACL: Parquet data stream
+    ACL->>Parquet: Parse Parquet schema
+    Parquet-->>ACL: Structured data records
+
+    loop For each record
+        ACL->>ACL: Translate D365 terminology → OTR domain language
+        Note over ACL: ItemId → ProductId<br/>UnitPrice → PriceAmount<br/>PriceGroupCode → PriceGroup
+    end
+
+    ACL->>Domain: Return PricingDataExport (domain model)
+    Domain-->>ETL: Ready for validation
+----
+
+**Translation Responsibilities**:
+
+|===
+|D365 Commerce Term |OTR Domain Term |Translation Rule
+
+|ItemId
+|ProductId
+|Direct mapping (string value preserved)
+
+|UnitPrice
+|PriceAmount
+|Convert to decimal with 2 decimal places
+
+|PriceGroupCode
+|PriceGroup
+|Map code to value object with region metadata
+
+|EffectiveDate
+|EffectiveFrom
+|Parse ISO 8601 date string to date type
+
+|ExpirationDate
+|EffectiveTo
+|Nullable date; null means "no expiry"
+
+|StoreNumber
+|StoreId
+|Convert string to integer store identifier
+|===
+
+**Data Contract**:
+
+- **Format**: Apache Parquet (columnar storage for efficient processing)
+- **Location**: S3 bucket with cross-account IAM role access (Azure → AWS)
+- **Frequency**: Hourly export (D365 Commerce scheduled job)
+- **File Naming**: `pricing-export-{yyyyMMddHHmmss}.parquet`
+- **Schema Version**: Versioned using Parquet metadata field `schema_version`
+
+=== Infrastructure Services
+
+==== API Gateway Cache Adapter
+
+**Port**: `ICachePort` (defined in Application layer)
+
+**Adapter**: `ApiGatewayCacheAdapter` (Infrastructure layer)
+
+**Purpose**: Provide distributed caching for pricing queries to reduce database load and improve API response times.
+
+**Cache Strategy**:
+
+|===
+|Operation |Behaviour |TTL
+
+|Get
+|Retrieve value from distributed cache; deserialize from JSON; return null on miss
+|N/A (read-only)
+
+|Set
+|Serialize value to JSON; store in distributed cache with time-to-live
+|5 minutes (pricing data refreshes hourly)
+
+|Invalidate
+|Remove key from cache (triggered after ETL pipeline completes)
+|N/A (immediate deletion)
+|===
+
+**Caching Layer**: API Gateway integrated cache (managed by AWS)
+
+**Cache Key Format**: `pricing:{query_type}:{parameters_hash}`
+
+**Examples**:
+- `pricing:by_product:398602`
+- `pricing:by_store:19598`
+- `pricing:by_price_group:POS-AU-NAT`
+
+==== CloudWatch Observability Adapter
+
+**Port**: `IObservabilityPort` (defined in Application layer)
+
+**Adapter**: `CloudWatchObservabilityAdapter` (Infrastructure layer)
+
+**Purpose**: Provide structured logging and custom metrics for operational visibility.
+
+**Logging Strategy**:
+
+|===
+|Log Level |Use Case |Destination
+
+|Information
+|Successful operations, ETL progress, cache hits/misses
+|CloudWatch Logs (standard output)
+
+|Warning
+|Validation failures, cache unavailability, retryable errors
+|CloudWatch Logs (standard error)
+
+|Error
+|ETL failures, database connection errors, unhandled exceptions
+|CloudWatch Logs (standard error) + CloudWatch Alarms
+|===
+
+**Metrics Strategy**:
+
+- **Namespace**: `ProductCatalog` (custom namespace for service-specific metrics)
+- **Dimensions**: Environment (dev/staging/prod), Region (ap-southeast-2)
+- **Publishing**: Asynchronous fire-and-forget (no blocking on metrics API calls)
+- **Aggregation**: CloudWatch aggregates metrics per minute for dashboard display
+
+== AWS Infrastructure
+
+=== Service Architecture
+
+[source]
+----
+┌─────────────────────────────────────────────────────────────┐
+│  API Clients (Mobile App, DMB Platform)                      │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+                      ↓
+        ┌─────────────────────────────┐
+        │  API Gateway                 │
+        │  - OAuth 2.0 Authentication  │
+        │  - Rate Limiting             │
+        │  - Cache Layer               │
+        │  - WAF Protection            │
+        └──────────┬──────────────────┘
+                   │
+                   ↓
+        ┌─────────────────────────────┐
+        │  ECS Fargate                 │
+        │  - ProductCatalog API        │
+        │  - Auto-scaling (2-10 tasks) │
+        │  - Health checks             │
+        └──────┬──────────────┬────────┘
+               │              │
+               ↓              ↓
+    ┌──────────────┐   ┌──────────────┐
+    │ RDS PostgreSQL│   │ Secrets Mgr  │
+    │ - Multi-AZ    │   │ - OAuth keys │
+    │ - Automated   │   │ - DB creds   │
+    │   backups     │   └──────────────┘
+    └──────────────┘
+               ↑
+               │
+    ┌──────────────────────────┐
+    │  ETL Pipeline             │
+    │  - AWS Glue Jobs (hourly) │
+    │  - Lambda validators      │
+    │  - S3 data source         │
+    └──────────────────────────┘
+----
+
+=== Infrastructure Components
+
+==== Compute: ECS Fargate
+
+**Service**: ProductCatalog API
+
+**Configuration**:
+- Task Definition: 2 vCPU, 4 GB memory
+- Auto-scaling: 2-10 tasks based on CPU/memory
+- Health check: `/health` endpoint
+- Deployment: Rolling update
+
+**Task IAM Role Permissions**:
+- Read from RDS PostgreSQL
+- Read from S3 (pricing exports)
+- Publish to EventBridge
+- Read from Secrets Manager
+- Write CloudWatch metrics/logs
+
+==== Database: Amazon RDS PostgreSQL
+
+**Instance**: db.t3.medium (2 vCPU, 4 GB RAM)
+
+**Configuration**:
+- Multi-AZ deployment for high availability
+- Automated backups (7-day retention)
+- Automated patching (maintenance window: Sunday 2AM AEST)
+- Storage: 100 GB GP3 SSD, auto-scaling enabled
+- Encryption at rest: AWS KMS
+- Encryption in transit: TLS 1.2+
+
+**Performance**:
+- Read IOPS: 3000 baseline
+- Connection pool: 100 connections
+- Query timeout: 30 seconds
+
+==== API Gateway
+
+**Type**: HTTP API (lower cost than REST API)
+
+**Configuration**:
+- OAuth 2.0 JWT authorizer
+- Throttling: 1000 requests/second per API key
+- Burst: 2000 requests
+- Cache TTL: 5 minutes (for pricing queries)
+- CORS: Enabled for mobile app domain
+- Custom domain: `api.otr.com.au/product-catalog/v1`
+
+**WAF Rules**:
+- Rate limiting: 100 requests/5 minutes per IP
+- Geo-restriction: Australia only
+- SQL injection protection
+- XSS protection
+
+==== ETL Pipeline: AWS Glue + Lambda
+
+**Glue Job**: `ProductCatalog-ETL-Hourly`
+
+**Schedule**: Cron expression `0 * * * ? *` (hourly)
+
+**Configuration**:
+- 2 DPU (Data Processing Units)
+- Timeout: 15 minutes
+- Max retries: 2
+- Bookmark: Enabled (incremental processing)
+
+**Lambda Validator**: `ProductCatalog-DataValidator`
+
+**Trigger**: S3 object created in `pricing-exports/` prefix
+
+**Configuration**:
+- Memory: 512 MB
+- Timeout: 5 minutes
+- Runtime: .NET 6
+
+**Validation**:
+- Schema validation (Parquet schema matches contract)
+- Business rule validation (price > 0, valid store IDs)
+- Referential integrity (products exist before prices)
+
+==== Observability: CloudWatch
+
+**Metrics**:
+- `ProductCatalog.ApiLatency` (p50, p95, p99)
+- `ProductCatalog.ApiErrorRate` (4xx, 5xx)
+- `ProductCatalog.ETLJobDuration`
+- `ProductCatalog.ETLRecordsProcessed`
+- `ProductCatalog.CacheHitRate`
+
+**Alarms**:
+- P1: API error rate > 1% for 5 minutes
+- P1: ETL job failure
+- P2: API latency p95 > 500ms for 10 minutes
+- P2: Cache hit rate < 80%
+
+**Logs**:
+- Application logs: `/aws/ecs/product-catalog-api`
+- ETL logs: `/aws/glue/product-catalog-etl`
+- Retention: 30 days
+
+==== Secrets Management: AWS Secrets Manager
+
+**Secrets**:
+- `product-catalog/db-credentials` - PostgreSQL credentials
+- `product-catalog/oauth-client-secret` - OAuth client secret for DMB authentication
+- `product-catalog/d365-api-key` - D365 Commerce API key (future)
+
+**Rotation**:
+- Database credentials: Auto-rotation every 90 days
+- OAuth secrets: Manual rotation
+
+== Deployment Architecture
+
+=== Environment Strategy
+
+|===
+|Environment |Purpose |Infrastructure
+
+|**Development**
+|Developer testing
+|Single AZ, t3.micro RDS, 1 ECS task
+
+|**Staging**
+|Pre-production validation
+|Multi-AZ, t3.small RDS, 2 ECS tasks, mirrors production
+
+|**Production**
+|Live customer traffic
+|Multi-AZ, t3.medium RDS, auto-scaling ECS (2-10 tasks)
+|===
+
+=== Deployment Pipeline
+
+[source]
+----
+1. Git push to main branch
+2. GitHub Actions triggered
+3. Build Docker image
+4. Run unit tests
+5. Run integration tests (in-memory DB)
+6. Push image to ECR
+7. Deploy to Staging (ECS rolling update)
+8. Run smoke tests on Staging
+9. Manual approval gate
+10. Deploy to Production (ECS rolling update)
+11. Monitor CloudWatch alarms for 30 minutes
+12. Rollback if error rate > 1%
+----
+
+=== Disaster Recovery
+
+**RTO (Recovery Time Objective)**: 1 hour
+
+**RPO (Recovery Point Objective)**: 5 minutes
+
+**Backup Strategy**:
+- RDS automated backups: Daily snapshot, 7-day retention
+- Point-in-time recovery: 5-minute granularity
+- S3 pricing exports: Versioning enabled, 90-day retention
+
+**Recovery Procedure**:
+1. Restore RDS from latest snapshot
+2. Replay S3 pricing exports from last successful ETL job
+3. Update ECS service to use restored RDS endpoint
+4. Verify data integrity
+
+== Cost Optimization
+
+**Monthly Costs** (Production environment):
+
+- RDS PostgreSQL db.t3.medium Multi-AZ: ~$150
+- ECS Fargate (average 4 tasks): ~$120
+- API Gateway requests (1M/month): ~$3
+- CloudWatch logs/metrics: ~$20
+- Data transfer: ~$10
+- **Total: ~$303/month**
+
+**Optimization Strategies**:
+- Use HTTP API (not REST API) for lower cost
+- Cache responses at API Gateway (reduces ECS invocations)
+- Compress ETL data in S3 (reduces storage/transfer costs)
+- Right-size RDS instance based on actual load
+
+== Security
+
+=== Network Security
+
+- VPC with private subnets for RDS
+- Security groups: ECS → RDS only on port 5432
+- No public internet access to RDS
+- NAT Gateway for ECS outbound S3/Secrets Manager access
+
+=== Data Security
+
+- Encryption at rest: AWS KMS for RDS, S3
+- Encryption in transit: TLS 1.2+ for all connections
+- Secrets rotation: Automated for DB credentials
+- IAM roles (not API keys) for service-to-service auth
+
+=== Application Security
+
+- OAuth 2.0 client credentials flow for DMB authentication
+- JWT validation at API Gateway
+- Rate limiting per API key
+- WAF protection (SQL injection, XSS)
+- Input validation on all API endpoints
+
+== Monitoring & Alerting
+
+=== Key Metrics
+
+|===
+|Metric |Target |Alert Threshold
+
+|API Latency (p95)
+|< 500ms
+|> 1000ms for 5 minutes
+
+|API Error Rate
+|< 0.5%
+|> 1% for 5 minutes
+
+|ETL Success Rate
+|> 99%
+|Single failure
+
+|Cache Hit Rate
+|> 80%
+|< 70% for 10 minutes
+
+|RDS CPU
+|< 70%
+|> 85% for 10 minutes
+
+|RDS Connections
+|< 80
+|> 90
+|===
+
+=== Dashboards
+
+**ProductCatalog - API Performance**:
+- Request rate (requests/min)
+- Latency (p50, p95, p99)
+- Error rate (4xx, 5xx)
+- Cache hit rate
+
+**ProductCatalog - ETL Health**:
+- Job success/failure rate
+- Records processed per run
+- Job duration
+- Data freshness (time since last successful run)
+
+== References
+
+- xref:../bounded-contexts/product_catalog.adoc[ProductCatalog Bounded Context] (domain architecture)
+- xref:patterns:clean_architecture.adoc[Clean Architecture] (layering principles)
+- AWS Well-Architected Framework: https://aws.amazon.com/architecture/well-architected/

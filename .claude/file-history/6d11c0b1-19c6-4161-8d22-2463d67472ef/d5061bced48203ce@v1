@@ -1,0 +1,20 @@
+.PHONY: help pdf clean install
+
+help: ## Show this help message
+	@echo "Available targets:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
+
+install: ## Install required dependencies (asciidoctor-pdf and asciidoctor-diagram)
+	@echo "Installing AsciiDoc PDF dependencies..."
+	gem install asciidoctor-pdf
+	gem install asciidoctor-diagram
+	@echo "Done! Dependencies installed."
+
+pdf: ## Build all AsciiDoc files to PDF
+	@echo "Building PDFs from AsciiDoc files..."
+	./build-pdf.sh
+
+clean: ## Remove generated PDF files
+	@echo "Cleaning PDF directory..."
+	rm -rf pdf/
+	@echo "Done! PDF directory removed."

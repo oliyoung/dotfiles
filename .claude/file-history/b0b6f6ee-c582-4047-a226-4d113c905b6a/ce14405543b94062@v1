@@ -1,0 +1,371 @@
+= Backend-for-Frontend (BFF) Pattern
+:description: Backend-for-Frontend pattern for client-optimized APIs
+:keywords: bff, backend for frontend, api gateway, presentation layer
+
+== Overview
+
+The **Backend-for-Frontend (BFF)** pattern creates a separate backend service for each type of frontend client (mobile app, web app, partner integrations).
+
+**Pattern Type**: Presentation Layer / API Gateway pattern
+
+**Not to be confused with**: Domain Service or Application Service (see xref:clean_architecture.adoc[Clean Architecture])
+
+== Problem
+
+Different clients have different needs:
+
+- **Mobile app**: Needs aggregated data for dashboard, optimized for limited bandwidth
+- **Web app**: Needs detailed data for admin interfaces, supports complex queries
+- **Partner API**: Needs stable, versioned contracts with minimal fields
+
+A single "one-size-fits-all" API leads to:
+
+- Over-fetching (mobile gets data it doesn't need)
+- Under-fetching (requires multiple round-trips)
+- Client-side aggregation logic (duplicated across platforms)
+- API bloat (trying to serve all clients)
+
+== Solution
+
+Create a dedicated backend service for each frontend:
+
+[source]
+----
+Mobile App  → Mobile BFF    ┐
+                            ├→ Domain Services (LoyaltyService, ProfileService, etc.)
+Web App     → Web BFF       │
+                            │
+Partner     → Partner API   ┘
+----
+
+Each BFF:
+
+- Aggregates data from multiple domain services
+- Formats responses optimized for its client
+- Handles client-specific authentication/authorization
+- Translates between client needs and domain model
+
+== BFF vs Domain Service
+
+[IMPORTANT]
+====
+**A BFF is NOT a domain service**. It sits in the Presentation layer.
+
+|===
+|Aspect |BFF (Presentation Layer) |Domain Service (Domain/Application Layer)
+
+|**Purpose**
+|Format data for specific client
+|Implement business rules and use cases
+
+|**Contains**
+|API controllers, response formatting, client-specific logic
+|Aggregates, domain logic, application workflows
+
+|**Dependencies**
+|Calls Application layer use cases
+|No dependencies on outer layers
+
+|**Example**
+|`LoyaltyController` (REST endpoints for mobile)
+|`ProcessLoyaltyTransactionUseCase` (business workflow)
+
+|**Changes when**
+|Client needs change (new screen layout, performance optimization)
+|Business rules change (new reward calculation)
+|===
+
+A single bounded context can have BOTH:
+
+- Domain/Application layers (business logic)
+- BFF Presentation layer (client-optimized API)
+
+Example: **LoyaltyService** has:
+- Domain layer: `RewardTransaction` aggregate, business rules
+- Application layer: `ProcessLoyaltyTransactionUseCase`
+- Presentation layer (BFF): REST API controllers for mobile app
+====
+
+== OTR Implementation
+
+=== Mobile BFF
+
+Optimized for OTR mobile app:
+
+[source,csharp]
+----
+// Presentation/Controllers/LoyaltyController.cs
+[ApiController]
+[Route("api/mobile/v1/loyalty")]
+public class LoyaltyController : ControllerBase
+{
+    private readonly IGetCustomerDashboardUseCase _getDashboard;
+    private readonly IProcessTransactionUseCase _processTransaction;
+
+    // Mobile-optimized endpoint: single call gets entire dashboard
+    [HttpGet("dashboard")]
+    public async Task<MobileDashboardResponse> GetDashboard()
+    {
+        var customerId = User.GetCustomerId();
+
+        // Calls Application layer use case
+        var dashboard = await _getDashboard.Execute(customerId);
+
+        // Format for mobile client
+        return new MobileDashboardResponse
+        {
+            PointsBalance = dashboard.PointsBalance,
+            ActiveOffers = dashboard.Offers.Take(3).Select(MapToMobileOffer),
+            RecentTransactions = dashboard.Transactions.Take(5).Select(MapToMobileTransaction),
+            NextTier = dashboard.TierProgress.NextTier
+        };
+    }
+}
+----
+
+**Characteristics**:
+- Aggregates data from multiple use cases
+- Returns only what mobile needs (top 3 offers, 5 transactions)
+- Mobile-specific models (`MobileDashboardResponse`)
+
+=== Partner API
+
+Optimized for external partner integrations:
+
+[source,csharp]
+----
+// Presentation/Controllers/PartnerApiController.cs
+[ApiController]
+[Route("api/partner/v1/transactions")]
+public class PartnerApiController : ControllerBase
+{
+    private readonly IProcessTransactionUseCase _processTransaction;
+
+    // Partner-optimized: stable contract, minimal data
+    [HttpPost]
+    public async Task<PartnerTransactionResponse> ProcessTransaction(
+        [FromBody] PartnerTransactionRequest request)
+    {
+        // Map partner model → domain model
+        var input = new ProcessTransactionInput
+        {
+            TransactionId = request.ExternalTransactionId,
+            CustomerId = request.MemberId,
+            Amount = request.TotalAmount
+        };
+
+        // Call Application layer use case (same business logic as mobile)
+        var result = await _processTransaction.Execute(input);
+
+        // Map domain model → partner contract
+        return new PartnerTransactionResponse
+        {
+            TransactionId = result.TransactionId,
+            PointsAwarded = result.PointsEarned,
+            Status = result.Status
+        };
+    }
+}
+----
+
+**Characteristics**:
+- Stable, versioned contract (v1)
+- Partner-specific terminology ("MemberId" vs "CustomerId")
+- Minimal response (only what partner needs)
+- Same business logic as mobile (reuses application layer)
+
+== BFF Architecture Layers
+
+A BFF-enabled service has all Clean Architecture layers:
+
+[source]
+----
+┌─────────────────────────────────────────────────┐
+│  Presentation Layer (BFF)                       │
+│  - MobileBFF (optimized for mobile app)         │
+│  - WebBFF (optimized for admin web app)         │
+│  - PartnerAPI (stable contract for partners)    │
+└─────────────────────────────────────────────────┘
+                    ↓ calls
+┌─────────────────────────────────────────────────┐
+│  Application Layer                              │
+│  - Use Cases (ProcessTransaction, GetDashboard) │
+│  - Application Services                         │
+│  - DTOs                                         │
+└─────────────────────────────────────────────────┘
+                    ↓ uses
+┌─────────────────────────────────────────────────┐
+│  Domain Layer                                   │
+│  - Aggregates (RewardTransaction)               │
+│  - Domain Services                              │
+│  - Domain Events                                │
+└─────────────────────────────────────────────────┘
+                    ↓ depends on interfaces from
+┌─────────────────────────────────────────────────┐
+│  Infrastructure Layer                           │
+│  - EagleEye Adapter (ACL)                       │
+│  - Repository Implementations                   │
+│  - Event Bus Implementation                     │
+└─────────────────────────────────────────────────┘
+----
+
+== BFF Communication Patterns
+
+=== Single BFF per Bounded Context
+
+Each bounded context exposes its own BFF:
+
+[source]
+----
+Mobile App → LoyaltyService BFF      → Loyalty Application Layer
+          ↘ ProfileService BFF       → Profile Application Layer
+          ↘ EngagementService BFF    → Engagement Application Layer
+----
+
+**Characteristics**:
+- Mobile app calls multiple BFFs
+- Each BFF focused on single bounded context
+- Clear bounded context boundaries
+
+=== API Gateway + Multiple BFFs
+
+API Gateway routes to appropriate BFF:
+
+[source]
+----
+                              ┌→ LoyaltyService BFF
+Mobile App → API Gateway ────┼→ ProfileService BFF
+                              └→ EngagementService BFF
+----
+
+**Characteristics**:
+- Single entry point for mobile
+- API Gateway handles: routing, rate limiting, authentication
+- BFFs handle: aggregation, formatting
+
+=== Orchestration BFF
+
+Single BFF orchestrates multiple bounded contexts:
+
+[source]
+----
+Mobile App → Mobile BFF ─┬→ LoyaltyService (use cases)
+                         ├→ ProfileService (use cases)
+                         └→ EngagementService (use cases)
+----
+
+**Characteristics**:
+- Mobile BFF aggregates across bounded contexts
+- Mobile BFF handles cross-context queries
+- Risk: BFF becomes "mini-monolith"
+
+**OTR Approach**: Combination - each bounded context has its own BFF, with API Gateway for routing.
+
+== Anti-Patterns
+
+=== ❌ BFF Contains Business Logic
+
+**Wrong**:
+[source,csharp]
+----
+public class LoyaltyController
+{
+    [HttpPost("process")]
+    public async Task<IActionResult> ProcessTransaction(TransactionRequest request)
+    {
+        // ❌ Business logic in BFF
+        var points = request.Amount * 1.5; // Calculate points
+        if (customer.Tier == "Gold") points *= 1.2; // Tier bonus
+
+        await _repository.Save(new RewardTransaction { Points = points });
+        return Ok();
+    }
+}
+----
+
+**Right**:
+[source,csharp]
+----
+public class LoyaltyController
+{
+    private readonly IProcessTransactionUseCase _useCase;
+
+    [HttpPost("process")]
+    public async Task<IActionResult> ProcessTransaction(TransactionRequest request)
+    {
+        // ✅ BFF delegates to Application layer
+        var input = MapToUseCaseInput(request);
+        var result = await _useCase.Execute(input);
+        return Ok(MapToApiResponse(result));
+    }
+}
+----
+
+=== ❌ BFF Calls Other BFFs
+
+**Wrong**:
+[source,csharp]
+----
+public class LoyaltyController
+{
+    private readonly IProfileBffClient _profileBff; // ❌
+
+    [HttpGet("dashboard")]
+    public async Task<IActionResult> GetDashboard()
+    {
+        var profile = await _profileBff.GetProfile(); // ❌ BFF→BFF call
+        var points = await _loyaltyService.GetPoints();
+        return Ok(new { profile, points });
+    }
+}
+----
+
+**Right (Option 1 - Client aggregates)**:
+[source,csharp]
+----
+// Mobile app calls both BFFs
+const [profile, points] = await Promise.all([
+    profileApi.getProfile(),
+    loyaltyApi.getPoints()
+]);
+----
+
+**Right (Option 2 - Orchestration BFF)**:
+[source,csharp]
+----
+public class MobileDashboardController
+{
+    private readonly IGetProfileUseCase _getProfile;
+    private readonly IGetPointsUseCase _getPoints;
+
+    [HttpGet("dashboard")]
+    public async Task<IActionResult> GetDashboard()
+    {
+        // ✅ BFF calls Application layer use cases
+        var profile = await _getProfile.Execute(customerId);
+        var points = await _getPoints.Execute(customerId);
+        return Ok(new DashboardResponse { profile, points });
+    }
+}
+----
+
+== When to Use BFF
+
+**Use BFF when**:
+
+- Multiple client types with different data needs
+- Clients need aggregated data from multiple services
+- Client-specific performance optimizations required
+- Need to isolate clients from backend changes
+
+**Don't use BFF when**:
+
+- Single client type (just use Application layer directly)
+- Clients have identical data needs
+- Simple CRUD operations with no aggregation
+
+== References
+
+- Sam Newman, https://samnewman.io/patterns/architectural/bff/[Pattern: Backend For Frontend^]
+- Phil Calçado, https://philcalcado.com/2015/09/18/the_back_end_for_front_end_pattern_bff.html[The Back-end For Front-end Pattern (BFF)^]
+- xref:clean_architecture.adoc[Clean Architecture]

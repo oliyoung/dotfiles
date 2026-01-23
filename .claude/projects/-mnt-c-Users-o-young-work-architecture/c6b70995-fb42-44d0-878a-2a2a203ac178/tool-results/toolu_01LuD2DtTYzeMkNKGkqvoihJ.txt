@@ -1,0 +1,78 @@
+The file /mnt/c/Users/o.young/work/architecture/solution_architectures/salesforce_customer_support.adoc has been updated. Here's the result of running `cat -n` on a snippet of the edited file:
+   369→|===
+   370→
+   371→=== Service Catalogues
+   372→
+   373→==== Application Portfolio Catalogue
+   374→
+   375→[width="100%",cols="20%,15%,15%,15%,35%",options="header",]
+   376→|===
+   377→|Application |Lifecycle State |Owner |Hosting Platform |Description
+   378→
+   379→|*ProfileService*
+   380→|NEW
+   381→|OTR Platform Team
+   382→|AWS (TBD: Lambda/ECS/EKS)
+   383→|JIT Contact reconciliation with Salesforce, returns Salesforce Contact ID, foundation for Flybuys integration
+   384→
+   385→|*EngagementService*
+   386→|NEW
+   387→|OTR Platform Team
+   388→|AWS (TBD: Lambda/ECS/EKS)
+   389→|Customer feedback submission facade, ACL for Salesforce Case creation, Braze integration, webhook receiver
+   390→
+   391→|*Mobile App (iOS)*
+   392→|ACTIVE (UPDATE)
+   393→|OTR Mobile Team
+   394→|Apple App Store
+   395→|iOS native app with feedback form, integrate with ProfileService and EngagementService APIs
+   396→
+   397→|*Mobile App (Android)*
+   398→|ACTIVE (UPDATE)
+   399→|OTR Mobile Team
+   400→|Google Play Store
+   401→|Android native app with feedback form, integrate with ProfileService and EngagementService APIs
+   402→
+   403→|*Salesforce Service Cloud*
+   404→|ACTIVE (EXPAND)
+   405→|Viva Energy Salesforce Admin Team
+   406→|Salesforce (SaaS)
+   407→|Shared Viva Energy instance, System of Record for Contact and Case data, adding OTR digital customer support
+   408→
+   409→|*Braze*
+   410→|ACTIVE (EXTEND)
+   411→|OTR Marketing Team
+   412→|Braze (SaaS)
+   413→|Marketing automation platform, EngagementService triggers push notifications for Case updates
+   414→
+   415→|*D365 Customer Engagement*
+   416→|RETIRE
+   417→|OTR Support Team
+   418→|Microsoft Azure (SaaS)
+   419→|Legacy customer support platform, decommissioned within 90 days post-cutover
+   420→
+   421→|*App-Specific Customer Database*
+   422→|RETIRE
+   423→|OTR Platform Team
+   424→|AWS (RDS/DynamoDB)
+   425→|Legacy customer contact storage, one-time migration to Salesforce, then deprecated
+   426→
+   427→|*Event Bus*
+   428→|NEW
+   429→|OTR Platform Team
+   430→|AWS (SNS+SQS/EventBridge/Kinesis)
+   431→|Domain event publishing infrastructure for bounded context integration
+   432→
+   433→|*Contact Migration Tool*
+   434→|TEMPORARY
+   435→|OTR Platform Team
+   436→|AWS (Script/Lambda)
+   437→|One-time migration app database → Salesforce with upsert logic, retired after migration complete
+   438→
+   439→|===
+   440→
+   441→==== Technology Capability Requirements
+   442→
+   443→==== Feature Flag Register
+   444→
+   445→==== Data Entity Catalogue

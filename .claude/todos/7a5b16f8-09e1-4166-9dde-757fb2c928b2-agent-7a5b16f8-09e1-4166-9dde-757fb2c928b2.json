@@ -1,0 +1,42 @@
+[
+  {
+    "content": "Define MemberEnrolled event schema",
+    "status": "completed",
+    "activeForm": "Defining MemberEnrolled event schema"
+  },
+  {
+    "content": "Define PartnerUnlinked event schema",
+    "status": "pending",
+    "activeForm": "Defining PartnerUnlinked event schema"
+  },
+  {
+    "content": "Define GrantIssued event schema",
+    "status": "pending",
+    "activeForm": "Defining GrantIssued event schema"
+  },
+  {
+    "content": "Define GrantRedeemed event schema",
+    "status": "pending",
+    "activeForm": "Defining GrantRedeemed event schema"
+  },
+  {
+    "content": "Define PointsExpired event schema",
+    "status": "pending",
+    "activeForm": "Defining PointsExpired event schema"
+  },
+  {
+    "content": "Define PointsAdjusted event schema",
+    "status": "pending",
+    "activeForm": "Defining PointsAdjusted event schema"
+  },
+  {
+    "content": "Define MemberUnenrolled event schema",
+    "status": "pending",
+    "activeForm": "Defining MemberUnenrolled event schema"
+  },
+  {
+    "content": "Remove out-of-scope events (PointsEarned, FlybuysPointsRedeemed, PointsRedeemed)",
+    "status": "pending",
+    "activeForm": "Removing out-of-scope events"
+  }
+]

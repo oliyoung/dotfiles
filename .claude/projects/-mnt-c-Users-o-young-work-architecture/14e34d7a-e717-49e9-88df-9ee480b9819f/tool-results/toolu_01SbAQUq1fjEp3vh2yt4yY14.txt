@@ -1,0 +1,1475 @@
+diff --git a/projects/OTR_2025_01_flybuys_integration/_capabilities.adoc b/projects/OTR_2025_01_flybuys_integration/_capabilities.adoc
+index 182c1dd..89648f4 100644
+--- a/projects/OTR_2025_01_flybuys_integration/_capabilities.adoc
++++ b/projects/OTR_2025_01_flybuys_integration/_capabilities.adoc
+@@ -10,3 +10,4 @@
+ :TC-010: xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS] System Integration with xref:bounded-contexts:loyalty.adoc[Loyalty Service]
+ :TC-011: xref:bounded-contexts:mobile.adoc[Mobile Application] integration with xref:bounded-contexts:eagle_eye.adoc[EagleEye]
+ :TC-012: xref:bounded-contexts:mobile.adoc[Mobile Application] integration with xref:bounded-contexts:salesforce_crm.adoc[Salesforce CRM]
++:TC-013: Canonical OTRG Customer Identifier
+\ No newline at end of file
+diff --git a/projects/OTR_2025_01_flybuys_integration/_requirements.adoc b/projects/OTR_2025_01_flybuys_integration/_requirements.adoc
+deleted file mode 100644
+index 7a80586..0000000
+--- a/projects/OTR_2025_01_flybuys_integration/_requirements.adoc
++++ /dev/null
+@@ -1,17 +0,0 @@
+-:TR-001: All xref:ROOT:ubiquitous_language.adoc#customer[Customers] have a xref:ROOT:ubiquitous_language.adoc#Salesforce%2520Contact[Salesforce Contact] record in xref:bounded-contexts:salesforce_crm.adoc[Salesforce CRM]
+-:TR-002: All xref:ROOT:ubiquitous_language.adoc#customer[Customers] have a xref:ROOT:ubiquitous_language.adoc#viva-consumer-id-vci[VCI] part of their xref:ROOT:ubiquitous_language.adoc#loyalty-credential[Loyalty Credentials]
+-:TR-003: All xref:ROOT:ubiquitous_language.adoc#customer[Customers] have a xref:ROOT:ubiquitous_language.adoc#loyalty-wallet[Loyalty Wallet] part of their xref:ROOT:ubiquitous_language.adoc#loyalty-profile[Loyalty Profile]
+-:TR-004: xref:ROOT:ubiquitous_language.adoc#customer[Customers] have a single xref:ROOT:ubiquitous_language.adoc#loyalty-profile[Loyalty Profile]
+-:TR-005: xref:ROOT:ubiquitous_language.adoc#customer[Customers] are able to link and unlink their xref:ROOT:ubiquitous_language.adoc#flybuys-digital-identity[Flybuys Digital Identity] from any xref:bounded-contexts:mobile.adoc[Mobile Application]
+-:TR-006: xref:ROOT:ubiquitous_language.adoc#customer[Customers] can manage their xref:ROOT:ubiquitous_language.adoc#reward-preference[Reward Preference] (select and retain preference)
+-:TR-007: xref:bounded-contexts:flybuys.adoc[Flybuys] xref:ROOT:ubiquitous_language.adoc#Partner[Partner] transactions are posted to xref:bounded-contexts:flybuys.adoc[Flybuys] for points allocation to xref:ROOT:ubiquitous_language.adoc#flybuys-earning-rules[Earning Rules]
+-:TR-008: All OTRG Stores recognise any xref:ROOT:ubiquitous_language.adoc#loyalty-credential[Loyalty Credentials] and grant xref:ROOT:ubiquitous_language.adoc#flybuys-points[Flybuys Points] on fulfilled Transactions where a xref:ROOT:ubiquitous_language.adoc#customer[Customer] has a linked xref:ROOT:ubiquitous_language.adoc#flybuys-digital-identity[Flybuys Digital Identity]
+-:TR-009: Support for multiple POS barcode formats
+-:TR-010: Real-time partner points balance visibility
+-:TR-011: xref:bounded-contexts:flybuys.adoc[Flybuys] xref:ROOT:ubiquitous_language.adoc#Digital%2520Fuel%2520Dockets[Digital Fuel Dockets] are redeemable at xref:bounded-contexts:otr_pos.adoc[OTR POS] and xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS]
+-:TR-012: Two-step validation and redemption workflow
+-:TR-013: Web and Mobile Clients geographically show which Loyalty programmes are available at each store
+-:TR-014: All changes are communicated using a decoupled event-based architecture
+-:TR-015: Reporting requirements to be defined
+-:TR-016: xref:ROOT:ubiquitous_language.adoc#customer[Customers] have the ability to submit feedback or support requests through the xref:bounded-contexts:mobile.adoc[Mobile Application] through to the existing Customer Support workflows
+-:TR-017: All xref:ROOT:ubiquitous_language.adoc#customer[Customers] interactions with xref:bounded-contexts:flybuys.adoc[Flybuys] are logged for auditing and compliance purposes
+\ No newline at end of file
+diff --git a/projects/OTR_2025_01_flybuys_integration/architectural_definition.adoc b/projects/OTR_2025_01_flybuys_integration/architectural_definition.adoc
+index 5430bef..91d4c85 100644
+--- a/projects/OTR_2025_01_flybuys_integration/architectural_definition.adoc
++++ b/projects/OTR_2025_01_flybuys_integration/architectural_definition.adoc
+@@ -21,7 +21,8 @@
+ :description: Architecture Definition Document for Flybuys Coalition Loyalty Integration
+ :keywords: loyalty, flybuys, integration, architecture-definition, togaf, ddd
+ 
+-include::_requirements.adoc[]
++include::_business_requirements.adoc[]
++include::_technical_requirements.adoc[]
+ include::_capabilities.adoc[]
+ 
+ 
+@@ -111,7 +112,7 @@ flowchart LR
+ 
+ ==== Key Architectural Patterns
+ 
+-[width="100%",cols="19%,34%,47%",options="header",]
++[width="100%",cols="19%,34%,47%",options="header",stripes=even]
+ |===
+ |Pattern | Application | Rationale
+ | xref:patterns:anti_corruption_layer.adoc[Anti-Corruption Layer] | xref:bounded-contexts:loyalty.adoc[LoyaltyService] → xref:bounded-contexts:eagle_eye.adoc[EagleEye], xref:bounded-contexts:engagement.adoc[EngagementService] → xref:bounded-contexts:braze.adoc[Braze] | Isolates domain model from external system changes, translates between bounded contexts
+@@ -125,7 +126,7 @@ flowchart LR
+ 
+ == Technical Requirements
+ 
+-[width="100%",options="header"]
++[cols="20%,80%",width="100%",options="header", stripes=even]
+ |===
+ |ID |Description
+ 
+@@ -176,53 +177,69 @@ flowchart LR
+ 
+ | [[TR-016]] TR-016
+ | {TR-016}
++
++| [[TR-017]] TR-017
++| {TR-017}
++
++| [[TR-018]] TR-018
++| {TR-018}
++
++| [[TR-019]] TR-019
++| {TR-019}
+ |===
+ 
+ === Technical Requirements Mapping
+ 
+-[cols=",",options="header",]
++[cols="50%,50%",options="header",stripes=even]
+ |===
+ |Business Requirement | Technical Requirement
+-|LNKHL_001 | TR-005
+-|LNKHL_002 | TR-005
+-|LNKHL_003 | TR-004
+-|LNKHL_004 | TR-005
+-|LNKHL_005 | TR-005
+-|LNKHL_006 | TR-014
+-|LNKHL_007 | TR-014
+-|LNKHL_008 | TR-014
+-|LNKHL_009 | TR-014
+-|NTWHL_001 | TR-012
+-|NTWHL_002 | TR-012
+-|NTWHL_003 | TR-013
+-|NTWHL_003 | TR-013
+-|PEHL_001 | TR-012
+-|PEHL_002 |
+-|PEHL_003 | TR-010
+-|PEHL_004 | TR-012
+-|INAHL_001 | TR-008 TR-009
+-|INAHL_002 | TR-008 TR-009
+-|INAHL_003 | TR-008 TR-009
+-|INAHL_004 | TR-008 TR-009
+-|INAHL_005 | TR-008 TR-009
+-|INAHL_006 | TR-008 TR-009
+-|INSHL_001 | TR-008 TR-009
+-|INSHL_002 | TR-014
+-|TCRHL_001 | TR-007
+-|TCRHL_002 | TR-015
+-|TCRHL_003 | TR-015
+-|TCRHL_004 | TR-015
+-|TCRHL_005 | TR-015
+-|TCRHL_006 | TR-015
+-|TCRHL_007 | TR-015
+-|CEHL_001 | TR-016
+-|CEHL_002 | TR-016
+-|CEHL_003 | TR-016
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#LNKHL_001[LNKHL_001] {LNKHL_001} | <<TR-005>> {TR-005}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#LNKHL_002[LNKHL_002] {LNKHL_002} | <<TR-004>> {TR-004}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#LNKHL_003[LNKHL_003] {LNKHL_003} | <<TR-004>> {TR-004}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#LNKHL_004[LNKHL_004] {LNKHL_004} | <<TR-005>> {TR-005}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#LNKHL_005[LNKHL_005] {LNKHL_005} | <<TR-005>> {TR-005}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#LNKHL_006[LNKHL_006] {LNKHL_006} | <<TR-014>> {TR-014}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#LNKHL_007[LNKHL_007] {LNKHL_007} | <<TR-014>> {TR-014}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#LNKHL_008[LNKHL_008] {LNKHL_008} | <<TR-014>> {TR-014}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#LNKHL_009[LNKHL_009] {LNKHL_009} | <<TR-014>> {TR-014}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#NTWHL_001[NTWHL_001] {NTWHL_001} | <<TR-007>> {TR-007}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#NTWHL_001[NTWHL_001] {NTWHL_001} | <<TR-008>> {TR-008}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#NTWHL_002[NTWHL_002] {NTWHL_002} | <<TR-007>> {TR-007}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#NTWHL_002[NTWHL_002] {NTWHL_002} | <<TR-008>> {TR-008}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#NTWHL_003[NTWHL_003] {NTWHL_003} | <<TR-013>> {TR-013}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#PEHL_001[PEHL_001] {PEHL_001} | <<TR-007>> {TR-007}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#PEHL_001[PEHL_001] {PEHL_001} | <<TR-008>> {TR-008}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#PEHL_002[PEHL_002] {PEHL_002} | <<TR-007>> {TR-007}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#PEHL_002[PEHL_002] {PEHL_002} | <<TR-008>> {TR-008}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#PEHL_003[PEHL_003] {PEHL_003} | <<TR-007>> {TR-007}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#PEHL_004[PEHL_004] {PEHL_004} | <<TR-010>> {TR-010}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#INAHL_001[INAHL_001] {INAHL_001} | <<TR-007>> {TR-007}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#INAHL_001[INAHL_001] {INAHL_001} | <<TR-008>> {TR-008}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#INAHL_002[INAHL_002] {INAHL_002} | <<TR-010>> {TR-010}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#INAHL_003[INAHL_003] {INAHL_003} | <<TR-007>> {TR-007}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#INAHL_004[INAHL_004] {INAHL_004} | <<TR-008>> {TR-008}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#INAHL_004[INAHL_004] {INAHL_004} | <<TR-019>> {TR-019}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#INAHL_05[INAHL_005] {INAHL_005} | <<TR-008>> {TR-007}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#INAHL_05[INAHL_005] {INAHL_005} | <<TR-009>> {TR-008}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#INAHL_6[INAHL_006] {INAHL_006} | <<TR-008>> {TR-008}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#INSHL_1[INSHL_001] {INSHL_001} | <<TR-007>> {TR-007}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#INSHL_1[INSHL_001] {INSHL_001} | <<TR-008>> {TR-008}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#INSHL_2[INSHL_002] {INSHL_002} | <<TR-014>> {TR-014}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#TCRHL_001[TCRHL_001] {TCRHL_001} | <<TR-007>> {TR-007}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#TCRHL_002[TCRHL_002] {TCRHL_002} | <<TR-015>> {TR-015}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#TCRHL_003[TCRHL_003] {TCRHL_003} | <<TR-015>> {TR-015}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#TCRHL_004[TCRHL_004] {TCRHL_004} | <<TR-015>> {TR-015}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#TCRHL_005[TCRHL_005] {TCRHL_005} | <<TR-015>> {TR-015}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#TCRHL_006[TCRHL_006] {TCRHL_006} | <<TR-015>> {TR-015}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#TCRHL_007[TCRHL_007] {TCRHL_007} | <<TR-015>> {TR-015}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#CEHL_001[CEHL_001] {CEHL_001} | <<TR-016>> {TR-016}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#CEHL_002[CEHL_002] {CEHL_002} | <<TR-016>> {TR-016}
++| xref:projects:OTR_2025_01_flybuys_integration/business_requirements.adoc#CEHL_003[CEHL_003] {CEHL_003} | <<TR-016>> {TR-016}
+ |===
+ 
+ === Stakeholder Analysis
+ 
+-[width="100%",cols="20%,28%,10%,11%,31%",options="header",]
++[width="100%",cols="20%,28%,10%,11%,31%",options="header",stripes=even]
+ |===
+ |Stakeholder | Role | Interest Level | Influence Level | Engagement Strategy
+ |Darren Peisley | Business Owner | High | High | Steering, requirements sign-off
+@@ -247,7 +264,7 @@ flowchart LR
+ 
+ ==== Current Business Capability
+ 
+-[width="100%",cols="19%,7%,9%,4%,57%,4%",options="header",]
++[width="100%",cols="19%,7%,9%,4%,57%,4%",options="header", stripes=even]
+ |===
+ |L1 Domain | L2 Subdomain | L3 Capability | Owned By | Supporting Systems |Maturity Level
+ |xref:domains:loyalty.adoc[Loyalty Domain] | Preference Management |Reward Preference Management | Loyalty Team
+@@ -309,7 +326,7 @@ sequenceDiagram
+     Note over Customer,Flybuys: Pain Points:<br/>- No real-time adjudication<br/>- Manual CSV export/upload<br/>- 24+ hour delay<br/>- No retry logic<br/>- High support burden
+ ----
+ 
+-[width="100%",cols="21%,30%,15%,4%,13%,17%",options="header",]
++[width="100%",cols="21%,30%,15%,4%,13%,17%",options="header",stripes=even]
+ |===
+ |Actor | Activity | System | Duration | Value Added | Pain Points / Waste
+ |xref:ROOT:ubiquitous_language.adoc#Customer[Customer] | Present xref:ROOT:ubiquitous_language.adoc#Flybuys%2520Cardholder%2520Number[Flybuys Card] | xref:bounded-contexts:coupon_scanner.adoc[Coupon Scanner] | < 1 Sec | None | Significant delay, manual reconciliation
+@@ -324,7 +341,7 @@ sequenceDiagram
+ 
+ ==== Pain Points
+ 
+-[width="100%",cols="16%,38%,46%",options="header",]
++[width="100%",cols="16%,38%,46%",options="header",stripes=even]
+ |===
+ |Category | Pain Point | Business Impact
+ |Customer Experience | No linking process | Low adoption, no communication permissions
+@@ -337,7 +354,7 @@ sequenceDiagram
+ 
+ ==== Business Capability
+ 
+-[width="100%",cols="12%,15%,41%,7%,25%",options="header",]
++[width="100%",cols="12%,15%,41%,7%,25%",options="header",stripes=even]
+ |===
+ |L1 Domain | L2 Subdomain | L3 Capability | Owned By | Supporting Systems
+ |xref:domains:loyalty.adoc[Loyalty Domain] | Partner Integration |Partner Account Linking | OTR Digital IT |xref:bounded-contexts:profile.adoc[Profile Service], xref:bounded-contexts:oauth.adoc[OAuth Service]
+@@ -407,7 +424,7 @@ The diagrams above show happy path flows for business stakeholder understanding.
+ * *Event Propagation* - Timeline showing eventual consistency window and out-of-order event handling
+ * *OAuth Token Refresh* - Proactive refresh (50-minute timer) + error scenarios (token expiry, API unavailable)
+ 
+-[width="100%",cols="17%,31%,14%,3%,16%,19%",options="header",]
++[width="100%",cols="17%,31%,14%,3%,16%,19%",options="header",stripes=even]
+ |===
+ |Actor | Activity | System | Duration | Value Added | Pain Points / Waste
+ |xref:ROOT:ubiquitous_language.adoc#Customer[Customer] | Initiate
+@@ -485,7 +502,7 @@ customer of points earned | Notification delay if Event Bus has issues
+ 
+ ===== Business Capability Gaps
+ 
+-[width="100%",cols="20%,15%,25%,25%,8%,7%",options="header"]
++[width="100%",cols="20%,15%,25%,25%,8%,7%",options="header", stripes=even]
+ |===
+ |Capability |AS-IS State |TO-BE State |Gap Description |Priority |Effort
+ 
+@@ -548,7 +565,7 @@ customer of points earned | Notification delay if Event Bus has issues
+ 
+ ===== Technology Transformation Requirements
+ 
+-[width="100%",cols="12%,14%,30%,20%,24%",options="header",]
++[width="100%",cols="12%,14%,30%,20%,24%",options="header",stripes=even]
+ |===
+ |Technology Domain | AS-IS Technology | TO-BE Technology | Transformation Needed | Dependency / Risk
+ |Backend Services | Monolithic xref:bounded-contexts:otr_app_api.adoc[OTR App API] |Microservices (xref:bounded-contexts:profile.adoc[Profile Service], xref:bounded-contexts:loyalty.adoc[Loyalty Service])
+@@ -563,27 +580,27 @@ customer of points earned | Notification delay if Event Bus has issues
+ 
+ === Technical Capability Requirements
+ 
+-[width="100%",cols="10%,29%,61%",options="header"]
++[width="100%",cols="10%,29%,61%",options="header", stripes=even]
+ |===
+ | ID | Capability | Description
+ 
+-| [[TC-001]]
++| [[TC-001]] TC-001
+ | {TC-001}
+ | Asynchronous domain event publishing for engagement, recommendation, and analytics consumption
+ 
+-| [[TC-002]]
++| [[TC-002]] TC-002
+ | {TC-002}
+ | OAuth 2.0 authorisation flow with secure token management and consent handling
+ 
+-| [[TC-003]]
++| [[TC-003]] TC-003
+ | {TC-003}
+ | Customer choice enforcement across loyalty operations
+ 
+-| [[TC-004]]
++| [[TC-004]] TC-004
+ | {TC-004}
+ | Daily batch file generation and SFTP transmission to xref:bounded-contexts:flybuys.adoc[Flybuys] for points crediting
+ 
+-| [[TC-005]]
++| [[TC-005]] TC-005
+ | {TC-005}
+ a| xref:bounded-contexts:otr_pos.adoc[OTR POS] and
+    xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS] EAN-13 barcode scanning →
+@@ -591,39 +608,39 @@ a| xref:bounded-contexts:otr_pos.adoc[OTR POS] and
+    xref:bounded-contexts:salesforce_crm.adoc[Salesforce CRM] customer identity
+    (xref:ROOT:ubiquitous_language.adoc#viva-consumer-id-vci[VCI])
+ 
+-| [[TC-006]]
++| [[TC-006]] TC-006
+ | {TC-006}
+ | Real-time xref:bounded-contexts:flybuys.adoc[Flybuys] points balance queries in
+   xref:bounded-contexts:mobile.adoc[Mobile Application] with caching and circuit breaker
+ 
+-| [[TC-007]]
++| [[TC-007]] TC-007
+ | {TC-007}
+ a| xref:bounded-contexts:otr_pos.adoc[OTR POS] and
+    xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS] redemption of
+    xref:bounded-contexts:flybuys.adoc[Flybuys]
+    xref:ROOT:ubiquitous_language.adoc#digital-fuel-dockets[Digital Fuel Dockets]
+ 
+-| [[TC-008]]
++| [[TC-008]] TC-008
+ | {TC-008}
+ | Orchestration of payment data, customer preferences, and partner eligibility rules for rewards
+ 
+-| [[TC-009]]
++| [[TC-009]] TC-009
+ | {TC-009}
+   xref:bounded-contexts:loyalty.adoc[Loyalty Service]
+ | xref:ROOT:ubiquitous_language.adoc#anti-corruption-layer[Bidirectional ACL]
+   preventing payment and commerce domain coupling
+ 
+-| [[TC-010]]
++| [[TC-010]] TC-010
+ | {TC-010}
+ | xref:ROOT:ubiquitous_language.adoc#anti-corruption-layer[Bidirectional ACL]
+   preventing payment and commerce domain coupling
+ 
+-| [[TC-011]]
++| [[TC-011]] TC-011
+ | {TC-011}
+ | Facade service for xref:ROOT:ubiquitous_language.adoc#customer[Customer]
+   loyalty wallet data
+ 
+-| [[TC-012]]
++| [[TC-012]]  TC-012
+ | {TC-012}
+ | Facade service for xref:ROOT:ubiquitous_language.adoc#customer[Customer]
+   profile data access prior to Highlander migration
+@@ -633,86 +650,63 @@ a| xref:bounded-contexts:otr_pos.adoc[OTR POS] and
+ 
+ ==== Requirements Traceability
+ 
+-[width="100%",cols="15%,11%,41%,33%",options="header",]
++[width="100%",cols="34%,33%,33%",options="header",stripes=even]
+ |===
+-| ID
+ | Technical Requirement
+ | Technical Capability
+ | Implementation
+-| Location
+ 
+-| <<TR-001>>
+-| {TR-001}
+-| <<TC-011>> <<TC-012>>
+-| xref:bounded-contexts:profile.adoc[Profile Service] bounded context
+-| xref:bounded-contexts:profile.adoc[Profile Service] & xref:bounded-contexts:loyalty.adoc[Loyalty Service]
+-
+-| <<TR-002>>
+-| {TR-002}
+-| <<TC-011>> <<TC-012>>
+-| xref:bounded-contexts:profile.adoc[Profile Service] bounded context
+-| xref:bounded-contexts:profile.adoc[Profile Service] & xref:bounded-contexts:loyalty.adoc[Loyalty Service]
++| <<TR-001>> {TR-001}
++| <<TC-012>> {TC-012}
++| xref:bounded-contexts:profile.adoc[Profile Service]
+ 
+-| <<TR-003>>
+-| {TR-003}
+-| <<TC-011>> <<TC-012>>
+-| xref:bounded-contexts:profile.adoc[Profile Service] bounded context
+-| xref:bounded-contexts:profile.adoc[Profile Service] & xref:bounded-contexts:loyalty.adoc[Loyalty Service]
++| <<TR-002>> {TR-002}
++| <<TC-012>> {TC-012}
++| xref:bounded-contexts:loyalty.adoc[Loyalty Service] via xref:bounded-contexts:eagle_eye.adoc[EagleEye]
+ 
++| <<TR-003>> {TR-003}
++| <<TC-011>> {TC-011}
++| xref:bounded-contexts:loyalty.adoc[Loyalty Service] via xref:bounded-contexts:eagle_eye.adoc[EagleEye]
+ 
+-| <<TR-004>>
+-| {TR-004}
+-| <<TC-002>>
+-| OAuth 2.0 Account Linking
++| <<TR-004>> {TR-004}
++| <<TC-002>> {TC-003}
+ | xref:bounded-contexts:auth0.adoc[Auth0] via xref:bounded-contexts:flybuys.adoc[Flybuys]
+ 
+-| <<TR-005>>, <<TR-006>>
+-| {TR-005}, {TR-006}
+-| <<TC-003>>
+-| Reward Preference Selection
+-| xref:bounded-contexts:profile.adoc[Profile Service] via xref:bounded-contexts:mobile.adoc[Mobile Application]
++| <<TR-005>> {TR-005}
++| <<TC-003>> {TC-002}
++| xref:ubiquitous_language.adoc#reward-preference[Reward Preference] selection in xref:bounded-contexts:profile.adoc[Profile Service] via xref:bounded-contexts:mobile.adoc[Mobile Application]
+ 
+-| <<TR-007>>
+-| {TR-007}
+-| <<TC-004>>
+-| Transaction Posting to Flybuys
+-| xref:bounded-contexts:loyalty.adoc[Loyalty Service] via xref:bounded-contexts:edp.adoc[EDP]
++| <<TR-006>> {TR-006}
++| <<TC-003>> {TC-003}
++|  xref:ubiquitous_language.adoc#reward-preference[Reward Preference] selection in xref:bounded-contexts:profile.adoc[Profile Service] via xref:bounded-contexts:mobile.adoc[Mobile Application]
++
++| <<TR-007>> {TR-007}
++| <<TC-004>> {TC-004}
++| Transaction Posting to Flybuys xref:bounded-contexts:loyalty.adoc[Loyalty Service] via xref:bounded-contexts:edp.adoc[EDP]
++
++| <<TR-008>> {TR-008}
++| <<TC-005>> {TC-005}
++| xref:bounded-contexts:otr_pos.adoc[OTR POS] and xref:bounded-contexts:microsoft_dynamics_365_commerce.adoc[Microsoft Dynamics 365 Commerce]
++
++| <<TR-009>> {TR-009}
++| <<TC-005>> {TC-005}
++| xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS] barcode Integration with xref:bounded-contexts:microsoft_dynamics_365_commerce.adoc[Microsoft Dynamics 365 Commerce]
++
++| <<TR-010>> {TR-010}
++| <<TC-006>> {TC-006}
++| Flybuys Points Balance Query (Real-Time) xref:bounded-contexts:loyalty.adoc[Loyalty Service] via xref:bounded-contexts:mobile.adoc[Mobile Application]
++
++| <<TR-011>> {TR-011}
++| <<TC-007>> {TC-007}
++| Digital Fuel Dockets Query and Redemption xref:bounded-contexts:microsoft_dynamics_365_commerce.adoc[Microsoft Dynamics 365 Commerce] & xref:bounded-contexts:loyalty.adoc[Loyalty Service]
+ 
+-| <<TR-008>>, <<TR-008>>
+-| {TR-009}
+-| <<TC-005>>
+-| xref:bounded-contexts:otr_pos.adoc[OTR POS] and xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS] barcode Integration
+-| xref:bounded-contexts:microsoft_dynamics_365_commerce.adoc[Microsoft Dynamics 365 Commerce]
+-
+-|TR-010
+-|{TR-010}
+-|TC-006
+-|Flybuys Points Balance Query (Real-Time)
+-|xref:bounded-contexts:loyalty.adoc[Loyalty Service] via xref:bounded-contexts:mobile.adoc[Mobile Application]
+-
+-|TR-011
+-|{TR-011}
+-|TC-007
+-|Digital Fuel Dockets Query and Redemption
+-|xref:bounded-contexts:microsoft_dynamics_365_commerce.adoc[Microsoft Dynamics 365 Commerce] & xref:bounded-contexts:loyalty.adoc[Loyalty Service]
+-
+-|TR-012
+-|{TR-012}
+-|TC-008
+-|Two-Step Validation & Redemption
+-|xref:bounded-contexts:eagle_eye.adoc[EagleEye] via xref:bounded-contexts:loyalty.adoc[Loyalty Service]
+-
+-|All
+-|TC-009
+-|xref:ROOT:ubiquitous_language.adoc#Anti-Corruption%2520Layer%2520%28ACL[Bidirectional ACL]
+-|xref:bounded-contexts:microsoft_dynamics_365_commerce.adoc[Microsoft Dynamics 365 Commerce] & xref:bounded-contexts:loyalty.adoc[Loyalty Service]
+ |===
+ 
+ === Service Catalogues
+ 
+ ==== Application Portfolio Catalogue
+ 
+-[width="99%",cols="16%,27%,7%,7%,7%,29%,7%",options="header",]
++[width="99%",cols="16%,27%,7%,7%,7%,29%,7%",options="header",stripes=even]
+ |===
+ |Application | Type | Lifecycle Status | Lifecycle Stage | Owned By
+ |Business Capabilities Supported | Technology Stack
+@@ -784,7 +778,7 @@ implementing these capabilities are documented in the
+ xref:solution-architectures:flybuys_integration.adoc#Technology%2520Portfolio%2520Catalogue[Technology
+ Portfolio Catalogue] (Solution Architecture).
+ 
+-[width="99%",cols="18%,8%,41%,17%,16%",options="header",]
++[width="99%",cols="18%,8%,41%,17%,16%",options="header",stripes=even]
+ |===
+ |Capability | Category | Required Features | Architectural Pattern
+ |Standards/Compliance
+@@ -845,7 +839,7 @@ Phase Matrix] in Solution Architecture for:
+ 
+ ===== Infrastructure Flags
+ 
+-[width="100%",cols="22%,58%,7%,13%",options="header",]
++[width="100%",cols="22%,58%,7%,13%",options="header",stripes=even]
+ |===
+ |Flag Name | Purpose | Default | Managed By
+ |`OTR.Loyalty.Enabled` | Master switch for all loyalty features (bounded
+@@ -854,7 +848,7 @@ contexts) | Off | Platform Team
+ 
+ ===== Profile Service Flags
+ 
+-[width="99%",cols="37%,46%,6%,11%",options="header",]
++[width="99%",cols="37%,46%,6%,11%",options="header",stripes=even]
+ |===
+ |Flag Name | Purpose | Default | Managed By
+ |`OTR.Loyalty.PartnerLink.Flybuys` | Enable Flybuys OAuth linking flow in
+@@ -866,7 +860,7 @@ selection UI in mobile app | Off | Product Owner
+ 
+ ===== Loyalty Service Flags
+ 
+-[width="100%",cols="35%,49%,5%,11%",options="header",]
++[width="100%",cols="35%,49%,5%,11%",options="header",stripes=even]
+ |===
+ |Flag Name | Purpose | Default | Managed By
+ |`OTR.Loyalty.TransactionAdjudication` | Enable real-time Transaction
+@@ -887,7 +881,7 @@ Portfolio Catalogue] for implementation.
+ 
+ ==== Data Entity Catalogue
+ 
+-[width="100%",cols="27%,14%,5%,22%,3%,29%",options="header",]
++[width="100%",cols="27%,14%,5%,22%,3%,29%",options="header",stripes=even]
+ |===
+ |Entity | Owned By | Aggregate Type | Identifier | Lifecycle | Relationships
+ |xref:ROOT:ubiquitous_language.adoc#Partner%2520Link[PartnerLink]
+@@ -1052,7 +1046,7 @@ Docket]
+ 
+ ==== Integration Architecture
+ 
+-[width="100%",cols="15%,19%,26%,40%",options="header",]
++[width="100%",cols="15%,19%,26%,40%",options="header",stripes=even]
+ |===
+ |Integration | To | Pattern | Description
+ |xref:bounded-contexts:mobile.adoc[Mobile
+@@ -1081,7 +1075,7 @@ REST | Direct API calls for wallet
+ 
+ ==== Technical Debt
+ 
+-[width="100%",cols="37%,63%",options="header",]
++[width="100%",cols="37%,63%",options="header",stripes=even]
+ |===
+ |Debt | Description
+ |No Anti-Corruption Layer for EagleEye
+@@ -1114,112 +1108,95 @@ event bus for domain events
+ 
+ ==== Missing Capabilities
+ 
+-[width="100%",cols="15%,29%,56%",options="header",]
++[width="100%",cols="20%,20%,30%,30%",options="header",stripes=even]
+ |===
+-|Capability | Current State | Gap Description
+-|Canonical OTRG Customer Identifier
+-|xref:ROOT:ubiquitous_language.adoc#Customer%2520ID[Customer ID] at
+-xref:bounded-contexts:otr_pos.adoc[OTR POS] &
+-xref:bounded-contexts:mobile.adoc[Mobile
+-Application] Flybuys Account at
+-xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS] | There is
+-no brand-agnostic group-wide canonical customer identifier. Implement
+-xref:ROOT:ubiquitous_language.adoc#viva-consumer-id-vci[VCI] for all
+-xref:bounded-contexts:loyalty.adoc[Loyalty Service] (and
+-xref:bounded-contexts:engagement.adoc[Engagement Service])
+-transactions
++|ID | Capability |Current State |Gap Description
+ 
+-|Event-Driven Integration | None | No event bus; changes require
+-synchronous API polling; no published language for domain events
++| TC-013
++| {TC-013}
++|xref:ROOT:ubiquitous_language.adoc#customer-id[Customer ID] at xref:bounded-contexts:otr_pos.adoc[OTR POS] & xref:bounded-contexts:mobile.adoc[Mobile Application]; Flybuys Account at xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS]
++|No brand-agnostic group-wide canonical customer identifier. +
++Need to implement xref:ROOT:ubiquitous_language.adoc#viva-consumer-id-vci[VCI] for all xref:bounded-contexts:loyalty.adoc[Loyalty Service] and xref:bounded-contexts:engagement.adoc[Engagement Service] transactions.
+ 
+-|Integration of xref:bounded-contexts:otr_plus_pos.adoc[OTR+
+-POS] and xref:bounded-contexts:salesforce_crm.adoc[Salesforce
+-CRM] | None | Only xref:bounded-contexts:otr_plus_pos.adoc[OTR+
+-POS] connects to
+-xref:bounded-contexts:salesforce_crm.adoc[Salesforce CRM]
+-(via xref:bounded-contexts:coupon_scanner.adoc[Coupon
+-Scanner])
+-
+-|Integration xref:bounded-contexts:otr_plus_pos.adoc[OTR+
+-POS] and xref:bounded-contexts:eagle_eye.adoc[EagleEye] | None
+-|Only xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS]
+-connects to xref:bounded-contexts:eagle_eye.adoc[EagleEye] (via
+-xref:bounded-contexts:coupon_scanner.adoc[Coupon Scanner]))
+-
+-|Recognition of OTR App credentials at
+-xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS] | None | Only
+-xref:bounded-contexts:otr_pos.adoc[OTR POS] has barcode
+-recognition for legacy OTR App Loyalty
+-
+-|Recognition of xref:bounded-contexts:flybuys.adoc[Flybuys]
+-credentials at xref:bounded-contexts:otr_pos.adoc[OTR POS]
+-|None | Only xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS]
+-recognises Flybuys barcodes
+-
+-|Third-Party Account Linking | None | No OAuth infrastructure for partner
+-linking; xref:ROOT:ubiquitous_language.adoc#customer
+-[Customer]s cannot
+-connect coalition loyalty accounts
+-
+-|Reward Preference Management | None
+-|xref:ROOT:ubiquitous_language.adoc#Customer[Customers] with Flybuys
+-credentials have no
+-xref:ROOT:ubiquitous_language.adoc#reward-preference[Reward Preference]
+-within xref:bounded-contexts:otr_pos.adoc[OTR POS] scope
+-and are dependent on
+-xref:bounded-contexts:flybuys.adoc[Flybuys] to change
+-preferences at xref:bounded-contexts:otr_plus_pos.adoc[OTR+
+-POS]
+-
+-|Partner Transaction Posting | Partial
+-(xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS] manual
+-batch only) | xref:bounded-contexts:otr_plus_pos.adoc[OTR+
+-POS] has manual Flybuys batch files, and no
+-xref:bounded-contexts:flybuys.adoc[Flybuys]×xref:bounded-contexts:otr_pos.adoc[OTR
+-POS] integration or automated posting.
+-xref:bounded-contexts:flybuys.adoc[Flybuys] are changing their
+-data ingestion protocol.
+-
+-|Partner Balance Display | None | No real-time partner API integration;
+-xref:ROOT:ubiquitous_language.adoc#Customer[Customers] cannot view Flybuys
+-points in
+-xref:bounded-contexts:mobile.adoc[Mobile
+-Application]
++| TC-001
++| {TC-001}
++| None
++|No event bus infrastructure; changes require synchronous API polling; no published language for domain events.
+ 
+-|Digital Fuel Dockets Integration | None
+-|xref:bounded-contexts:flybuys.adoc[Flybuys]-issued dockets can
+-only be applied at
+-xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS], not at
+-xref:bounded-contexts:otr_pos.adoc[OTR POS]
++| TC-012
++| {TC-012}
++| None
++| Only xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS] connects to xref:bounded-contexts:salesforce_crm.adoc[Salesforce CRM] (via xref:bounded-contexts:coupon_scanner.adoc[Coupon Scanner]).
+ 
+-|Transaction Adjudication Logic | Partial
+-(xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS] only)
+-|xref:bounded-contexts:eagle_eye.adoc[EagleEye] handles basic
+-adjudication; no payment method awareness or partner exclusion rules
++| TC-011
++| {TC-011}
++| None
++| Only xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS] connects to xref:bounded-contexts:eagle_eye.adoc[EagleEye] (via xref:bounded-contexts:coupon_scanner.adoc[Coupon Scanner]).
+ 
+-|xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS] &
+-xref:bounded-contexts:coupon_scanner.adoc[Coupon Scanner]
+-Integration | Tightly coupled | Direct POS-to-loyalty coupling; payment
+-domain logic leaks into loyalty queries
++| TC-010
++| {TC-010}
++| None
++| Only xref:bounded-contexts:otr_pos.adoc[OTR POS] has simple barcode recognition for legacy OTR App Loyalty credentials.
+ 
+-|Integration between xref:bounded-contexts:otr_pos.adoc[OTR
+-POS] and xref:bounded-contexts:coupon_scanner.adoc[Coupon
+-Scanner] | None | There is no integration between
+-xref:bounded-contexts:otr_pos.adoc[OTR POS] and
+-xref:bounded-contexts:coupon_scanner.adoc[Coupon Scanner]
++| TC-011
++| {TC-011}
++| None
++| Only xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS] recognises Flybuys barcodes.
+ 
+-|Integration between
+-xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS] and
+-xref:bounded-contexts:mobile.adoc[Mobile
+-Application] | None | There is no integration between
+-xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS] and
+-xref:bounded-contexts:mobile.adoc[Mobile
+-Application]
++| TC-001
++| {TC-001}
++| None
++|No OAuth infrastructure for partner linking; xref:ROOT:ubiquitous_language.adoc#customer[Customers] cannot connect coalition loyalty accounts.
++
++| TC-003
++| {TC-003}
++| None
++|xref:ROOT:ubiquitous_language.adoc#Customer[Customers] with Flybuys credentials have no xref:ROOT:ubiquitous_language.adoc#reward-preference[Reward Preference] within xref:bounded-contexts:otr_pos.adoc[OTR POS] scope. +
++Dependent on xref:bounded-contexts:flybuys.adoc[Flybuys] to change preferences at xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS].
++
++| TC-004
++| {TC-004}
++|Partial (xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS] manual batch only)
++|xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS] uses manual Flybuys batch files. +
++No xref:bounded-contexts:flybuys.adoc[Flybuys] × xref:bounded-contexts:otr_pos.adoc[OTR POS] integration or automated posting. +
++xref:bounded-contexts:flybuys.adoc[Flybuys] is changing their data ingestion protocol.
++
++| TC-006
++| {TC-006}
++| None
++|No real-time partner API integration; xref:ROOT:ubiquitous_language.adoc#Customer[Customers] cannot view Flybuys points in xref:bounded-contexts:mobile.adoc[Mobile Application].
++
++| TC-007
++| {TC-007}
++| None
++|xref:bounded-contexts:flybuys.adoc[Flybuys]-issued dockets can only be applied at xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS], not at xref:bounded-contexts:otr_pos.adoc[OTR POS].
++
++| TC-008
++| {TC-008}
++|Partial (xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS] only)
++|xref:bounded-contexts:eagle_eye.adoc[EagleEye] handles basic adjudication only. +
++Missing payment method awareness and partner exclusion rules.
++
++| TC-010
++| {TC-010}
++|Tightly coupled
++|Direct POS-to-loyalty coupling creates architectural issues. +
++Payment domain logic leaks into loyalty queries.
++
++| TC-009
++| {TC-009}
++| None
++|No integration exists between xref:bounded-contexts:otr_pos.adoc[OTR POS] and xref:bounded-contexts:coupon_scanner.adoc[Coupon Scanner].
++
++| TC-010
++| {TC-010}
++| None
++|No integration exists between xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS] and xref:bounded-contexts:mobile.adoc[Mobile Application].
+ |===
+ 
+ ==== Missing Bounded Contexts
+ 
+-[width="100%",cols="21%,79%",options="header",]
++[width="100%",cols="21%,79%",options="header",stripes=even]
+ |===
+ |Service | Description
+ |xref:bounded-contexts:profile.adoc[Profile Service] | Customer
+@@ -1234,7 +1211,7 @@ location data for proximity features and store-specific offer targeting
+ 
+ ==== Missing Integration Patterns
+ 
+-[width="100%",cols="23%,77%",options="header",]
++[width="100%",cols="23%,77%",options="header",stripes=even]
+ |===
+ |Pattern | Description
+ |OAuth 2.0 Infrastructure | Secure token management, consent flow,
+@@ -1250,7 +1227,7 @@ model
+ 
+ === Target State Architecture
+ 
+-[width="100%",cols="23%,77%",options="header",]
++[width="100%",cols="23%,77%",options="header",stripes=even]
+ |===
+ |Principle | Description
+ |Single Source of Truth | Each domain concept has one system of record
+@@ -1281,7 +1258,7 @@ Contexts and integrated external systems
+ 
+ ==== Architectural Building Blocks (ABB)
+ 
+-[width="100%",cols="10%,68%,22%",options="header",]
++[width="100%",cols="10%,68%,22%",options="header",stripes=even]
+ |===
+ |ABB ID | ABB Name | Kind
+ |ABB-001 | link:#abb-001-profile-service[Profile Service] | Microservice
+@@ -1327,7 +1304,7 @@ Client
+ xref:ROOT:ubiquitous_language.adoc#Customer[Customer] profile management,
+ partner account linking, reward preference coordination
+ 
+-[width="100%",cols="12%,88%",options="header",]
++[width="100%",cols="12%,88%",options="header",stripes=even]
+ |===
+ |Relationship | Responsibility
+ |Owns | `PartnerLink` aggregate (partner linking state, reward
+@@ -1346,7 +1323,7 @@ Service])
+ 
+ ====== Aggregates
+ 
+-[width="100%",cols="11%,33%,10%,46%",options="header",]
++[width="100%",cols="11%,33%,10%,46%",options="header",stripes=even]
+ |===
+ |Aggregate Name | Description | Identifier | Properties
+ |`PartnerLink` | Represents a linked third-party partner account
+@@ -1361,7 +1338,7 @@ Service])
+ 
+ ====== Domain Events Published by Profile Service
+ 
+-[width="100%",cols="35%,65%",options="header",]
++[width="100%",cols="35%,65%",options="header",stripes=even]
+ |===
+ |Event Name | Description
+ |`PartnerLinked` | Customer successfully linked a partner account
+@@ -1376,7 +1353,7 @@ Service])
+ 
+ ====== Domain Events Consumed by Profile Service
+ 
+-[width="100%",cols="22%,22%,56%",options="header",]
++[width="100%",cols="22%,22%,56%",options="header",stripes=even]
+ |===
+ |Event Name | Published By | Purpose
+ |`CustomerEnrolled` | xref:bounded-contexts:loyalty.adoc[Loyalty
+@@ -1385,7 +1362,7 @@ Service] | Track which customers have active loyalty wallets
+ 
+ ====== Domain Services
+ 
+-[width="100%",cols="31%,69%",options="header",]
++[width="100%",cols="31%,69%",options="header",stripes=even]
+ |===
+ |Service Name | Responsibility
+ |`IPartnerLinkingService` | OAuth authorisation flow orchestration, token
+@@ -1400,7 +1377,7 @@ linking status
+ See link:#Feature_Flag_Register[Feature Flag Register §3.2.3]
+ for complete catalogue.
+ 
+-[cols=",",options="header",]
++[cols=",",options="header",stripes=even]
+ |===
+ |Flag Name | Phase Introduced
+ |`OTR.Loyalty.PartnerLink.Flybuys` | AS-2 Linking
+@@ -1409,7 +1386,7 @@ for complete catalogue.
+ 
+ ====== External Dependencies
+ 
+-[width="100%",cols="14%,24%,5%,5%,52%",options="header",]
++[width="100%",cols="14%,24%,5%,5%,52%",options="header",stripes=even]
+ |===
+ |Dependency Name | Integration Pattern | Direction | Type | Purpose
+ |xref:bounded-contexts:oauth.adoc[OAuth Service]
+@@ -1432,7 +1409,7 @@ system of record
+ Loyalty transaction orchestration, partner integration facade,
+ Transaction Adjudication audit trail, *Loyalty Credential resolution*.
+ 
+-[width="100%",cols="7%,93%",options="header",]
++[width="100%",cols="7%,93%",options="header",stripes=even]
+ |===
+ |Relationship | Responsibility
+ |Owns | `RewardTransaction` aggregate (Transaction Adjudication audit
+@@ -1485,7 +1462,7 @@ responses to POS-compatible format
+ 
+ *Domain Translations (POS → LoyaltyService)*:
+ 
+-[width="100%",cols="24%,29%,47%",options="header",]
++[width="100%",cols="24%,29%,47%",options="header",stripes=even]
+ |===
+ |D365 Commerce Concept | Loyalty Domain Concept | Translation Logic
+ |`SalesTransaction` | Basket (for adjudication) | Extract line items,
+@@ -1501,7 +1478,7 @@ resolution
+ 
+ *Domain Translations (LoyaltyService → POS)*:
+ 
+-[width="100%",cols="25%,23%,52%",options="header",]
++[width="100%",cols="25%,23%,52%",options="header",stripes=even]
+ |===
+ |Loyalty Domain Concept | D365 Commerce Concept | Translation Logic
+ |`PointsEarned` | `LoyaltyRewardPoints` | Convert domain event to D365
+@@ -1583,7 +1560,7 @@ sequenceDiagram
+ 
+ ====== Resolution Logic
+ 
+-[width="100%",cols="53%,16%,31%",options="header",]
++[width="100%",cols="53%,16%,31%",options="header",stripes=even]
+ |===
+ |Credential Type | Barcode Encodes | Resolution Method
+ |xref:bounded-contexts:mobile.adoc[OTR Mobile /
+@@ -1612,7 +1589,7 @@ to avoid POS checkout delays
+ 
+ ====== Aggregates
+ 
+-[width="100%",cols="29%,25%,6%,40%",options="header",]
++[width="100%",cols="29%,25%,6%,40%",options="header",stripes=even]
+ |===
+ |Aggregate Name | Description | Identifier | Properties
+ |xref:ROOT:ubiquitous_language.adoc#Reward%2520Transaction[Reward
+@@ -1628,7 +1605,7 @@ Transaction] | Represents a customer transaction for reward adjudication
+ 
+ ====== Domain Events
+ 
+-[width="100%",cols="29%,71%",options="header",]
++[width="100%",cols="29%,71%",options="header",stripes=even]
+ |===
+ |Event Name | Description
+ |`CustomerEnrolled` | Customer enrolled in loyalty program (EagleEye
+@@ -1647,7 +1624,7 @@ transaction
+ 
+ ====== Domain Services
+ 
+-[width="100%",cols="28%,72%",options="header",]
++[width="100%",cols="28%,72%",options="header",stripes=even]
+ |===
+ |Service Name | Responsibility
+ |`ITransactionAdjudicationService` | Orchestrates Transaction
+@@ -1665,7 +1642,7 @@ for SFTP transmission
+ See link:#Feature_Flag_Register[Feature Flag Register §3.2.3]
+ for complete catalogue.
+ 
+-[cols=",",options="header",]
++[cols=",",options="header",stripes=even]
+ |===
+ |Flag Name | Phase Introduced
+ |`OTR.Loyalty.TransactionAdjudication` | AS-3 Grants
+@@ -1675,7 +1652,7 @@ for complete catalogue.
+ 
+ ====== Dependencies
+ 
+-[width="100%",cols="20%,37%,5%,11%,27%",options="header",]
++[width="100%",cols="20%,37%,5%,11%,27%",options="header",stripes=even]
+ |===
+ |Dependency Name | Integration Pattern | Direction | Type | Purpose
+ |xref:bounded-contexts:profile.adoc[Profile Service] | Open Host
+@@ -1705,7 +1682,7 @@ linking status
+ 
+ Store location data, proximity features, service area management.
+ 
+-[width="100%",cols="10%,90%",options="header",]
++[width="100%",cols="10%,90%",options="header",stripes=even]
+ |===
+ |Relationship | Responsibility
+ |Owns | `Store` aggregate (store location, brand, capabilities, operating
+@@ -1720,7 +1697,7 @@ Dynamics 365 Commerce])
+ 
+ ====== Core Aggregates
+ 
+-[width="100%",cols="11%,25%,7%,57%",options="header",]
++[width="100%",cols="11%,25%,7%,57%",options="header",stripes=even]
+ |===
+ |Aggregate Name | Description | Identifier | Properties
+ |`Store` | Represents a retail store location | `StoreId` | `StoreName`,
+@@ -1729,7 +1706,7 @@ Dynamics 365 Commerce])
+ 
+ ====== Dependencies
+ 
+-[width="100%",cols="38%,18%,8%,7%,29%",options="header",]
++[width="100%",cols="38%,18%,8%,7%,29%",options="header",stripes=even]
+ |===
+ |Dependency Name | Integration Pattern | Direction | Type | Purpose
+ |xref:bounded-contexts:microsoft_dynamics_365_commerce.adoc[Microsoft
+@@ -1765,7 +1742,7 @@ catalogue, location data
+ 
+ ===== System of Record Boundaries
+ 
+-[width="100%",cols="21%,9%,70%",options="header",]
++[width="100%",cols="21%,9%,70%",options="header",stripes=even]
+ |===
+ |System Name | Type | System of Record For
+ |xref:bounded-contexts:oauth.adoc[OAuth Service]
+@@ -1820,7 +1797,7 @@ xref:bounded-contexts:loyalty.adoc[Loyalty Service] domain
+ 
+ ====== Key Events
+ 
+-[width="99%",cols="41%,25%,34%",options="header",]
++[width="99%",cols="41%,25%,34%",options="header",stripes=even]
+ |===
+ |Event Name | Published By | Consumed By
+ |`TransactionAdjudicated` | `LoyaltyService` | `EngagementService`
+@@ -1940,7 +1917,7 @@ Event published when transaction adjudication fails due to system errors
+ 
+ ====== Event Consumers
+ 
+-[width="100%",cols="21%,31%,48%",options="header",]
++[width="100%",cols="21%,31%,48%",options="header",stripes=even]
+ |===
+ |Service | Event | Responsibility
+ |xref:bounded-contexts:loyalty.adoc[Loyalty Service]
+@@ -2051,7 +2028,7 @@ Dynamics 365 Commerce])
+ 
+ ====== Topics
+ 
+-[cols=",",options="header",]
++[cols=",",options="header",stripes=even]
+ |===
+ |Topic Name | Description
+ |`profile-events` | Partner linking and reward preference events
+@@ -2069,7 +2046,7 @@ By xref:ROOT:ubiquitous_language.adoc#viva-consumer-id-vci[VCI]
+ 
+ === Architecture Decisions
+ 
+-[width="100%",cols="3%,4%,,15%,9%,23%,19%,27%",options="header",]
++[width="100%",cols="3%,4%,,15%,9%,23%,19%,27%",options="header",stripes=even]
+ |===
+ |ADR | Decision | Status | Context | Decision | Rationale | Alternatives
+ Considered | Consequences
+@@ -2429,7 +2406,7 @@ xref:bounded-contexts:otr_plus_pos.adoc[OTR+ POS]
+ During migration, legacy OTR App API and new bounded contexts coexist
+ across architecture states:
+ 
+-[width="100%",cols="15%,85%",options="header",]
++[width="100%",cols="15%,85%",options="header",stripes=even]
+ |===
+ |Architecture State | Description
+ |AS-1 Foundation | New services deployed but not used (feature flag
+@@ -2470,7 +2447,7 @@ xref:bounded-contexts:engagement.adoc[Engagement Service]
+ This Architecture Definition Document covers the following technical
+ capabilities:
+ 
+-[width="100%",cols="47%,53%",options="header",]
++[width="100%",cols="47%,53%",options="header",stripes=even]
+ |===
+ |Included Capability | Architectural Description
+ |Third-Party Partner Account Linking | OAuth 2.0 infrastructure for
+@@ -2510,7 +2487,7 @@ transmission to Flybuys with reconciliation
+ The following capabilities are *out of scope* for this Architecture
+ Definition:
+ 
+-[width="100%",cols="22%,62%,16%",options="header",]
++[width="100%",cols="22%,62%,16%",options="header",stripes=even]
+ |===
+ |Excluded Capability | Architectural Rationale | Reference
+ |Shell Card account linking | Separate partner integration
+@@ -2543,7 +2520,7 @@ activation during transaction; deferred pending Flybuys API availability
+ 
+ ==== Architectural Dependencies on Future Initiatives
+ 
+-[width="99%",cols="14%,50%,36%",options="header",]
++[width="99%",cols="14%,50%,36%",options="header",stripes=even]
+ |===
+ |Dependency Initiative | Architectural Constraint | Impact if Not
+ Delivered
+@@ -2560,7 +2537,7 @@ insecurely in application database
+ 
+ === Technical Risks and Mitigation
+ 
+-[width="100%",cols="3%,4%,12%,13%,41%,27%",options="header",]
++[width="100%",cols="3%,4%,12%,13%,41%,27%",options="header",stripes=even]
+ |===
+ |Risk ID | Risk Name | Impact | Probability | Mitigation | Contingency
+ |RISK-001 | Flybuys API Availability | *High*: Customers cannot link
+@@ -2605,7 +2582,7 @@ from Kinesis/Event Hub, reprocess via admin tool)
+ 
+ === Assumptions
+ 
+-[width="100%",cols="4%,43%,34%,19%",options="header",]
++[width="100%",cols="4%,43%,34%,19%",options="header",stripes=even]
+ |===
+ |ID | Assumption | Impact if Invalid | Validation Approach
+ |ASM-01 | xref:bounded-contexts:flybuys.adoc[Flybuys] maintains 99.5% API uptime and adheres to published SLA | Customer-facing features (balance queries, digital dockets) degraded; circuit breaker fallback required | Monthly SLA reviews with Flybuys; API health monitoring
+@@ -2624,7 +2601,7 @@ from Kinesis/Event Hub, reprocess via admin tool)
+ 
+ === Constraints
+ 
+-[width="100%",cols="5%,6%,45%,44%",options="header",]
++[width="100%",cols="5%,6%,45%,44%",options="header",stripes=even]
+ |===
+ |ID | Constraint Type | Description | Architectural Impact
+ |CON-001 | Regulatory | Must comply with Australian Privacy Principles (APP) for customer data collection and consent | OAuth flow requires explicit consent; customer can opt-out; audit logging mandatory
+@@ -2646,7 +2623,7 @@ from Kinesis/Event Hub, reprocess via admin tool)
+ 
+ == Non-Functional Requirements
+ 
+-[width="100%",cols="6%,8%,22%,64%",options="header",]
++[width="100%",cols="6%,8%,22%,64%",options="header",stripes=even]
+ |===
+ |ID | Category | Requirement | Target
+ |NFR-001 | Performance | xref:bounded-contexts:profile.adoc[Profile
+@@ -2709,7 +2686,7 @@ retry)
+ 
+ === Key Metrics
+ 
+-[width="100%",cols="28%,50%,22%",options="header",]
++[width="100%",cols="28%,50%,22%",options="header",stripes=even]
+ |===
+ |Service/Component | Metric | Unit/Description
+ |xref:bounded-contexts:profile.adoc[Profile Service] | API latency
+@@ -2748,7 +2725,7 @@ breaker trips | count per day
+ 
+ === Alerting Thresholds
+ 
+-[width="100%",cols="9%,53%,38%",options="header",]
++[width="100%",cols="9%,53%,38%",options="header",stripes=even]
+ |===
+ |Severity | Alert Condition | Notification Channel
+ |Critical | xref:bounded-contexts:profile.adoc[Profile Service] API
+@@ -2766,7 +2743,7 @@ alert to OTR Digital IT Team
+ 
+ === Dashboards
+ 
+-[width="100%",cols="31%,69%",options="header",]
++[width="100%",cols="31%,69%",options="header",stripes=even]
+ |===
+ |Dashboard Name | Key Metrics Displayed
+ |xref:bounded-contexts:profile.adoc[Profile Service] Health | API
+diff --git a/projects/OTR_2025_01_flybuys_integration/business_requirements.adoc b/projects/OTR_2025_01_flybuys_integration/business_requirements.adoc
+index 2a21ab9..ea10925 100644
+--- a/projects/OTR_2025_01_flybuys_integration/business_requirements.adoc
++++ b/projects/OTR_2025_01_flybuys_integration/business_requirements.adoc
+@@ -1,8 +1,12 @@
+-= Business Requirements: Flybuys Integration
++= Business Requirements
+ :toc: left
+ :toclevels: 2
+ :sectnums:
+ 
++include::_business_requirements.adoc[]
++include::_technical_requirements.adoc[]
++include::_capabilities.adoc[]
++
+ == Overview
+ 
+ The high-level requirements are supported by the artefacts below, which inform the HLD.
+@@ -24,55 +28,55 @@ NOTE: High Level Requirements are documented/signed off at a specific point in t
+ | Comments/Questions
+ 
+ | [[LNKHL_001]] LNKHL_001
+-| Enable customers to link their Flybuys membership to the App using the standard Flybuys linking process.
++| {LNKHL_001}
+ | Must have
+ | Yes
+ |
+ 
+ | [[LNKHL_002]] LNKHL_002
+-| Upon successful Flybuys account linking, both apps (OTR and SPS) will display a cobranded App Barcode and wallet card that incorporates Flybuys branding.
++| {LNKHL_002}
+ | Must have
+ | Yes
+ | Note: Linking Flybuys to one app does not link to the other app. Rationale: Customers will generally use one app or the other. FM: this is to be consistent across the OTR apps. Requirement approved by Frankie.
+ 
+ | [[LNKHL_003]] LNKHL_003
+-| The cobranded barcode displayed in the App will be the same as the standard OTR barcode, with visual cobranding only.
++| {LNKHL_003}
+ | Must have
+ | Yes
+ |
+ 
+ | [[LNKHL_004]] LNKHL_004
+-| The App will provide the ability to link Flybuys accounts via the appropriate option (i.e. the hamburger menu).
++| {LNKHL_004}
+ | Must have
+ | Yes
+ | Reference the wireframes
+ 
+ | [[LNKHL_005]] LNKHL_005
+-| The App will provide the ability to unlink Flybuys accounts via the appropriate option (i.e. the hamburger menu).
++| {LNKHL_005}
+ | Must have
+ | Yes
+ | Reference the wireframes
+ 
+ | [[LNKHL_006]] LNKHL_006
+-| The system will record the date and time of each linking and unlinking event and sync this data with both the CRM and Braze platforms.
++| {LNKHL_006}
+ | Must have
+ | Yes
+ |
+ 
+ | [[LNKHL_007]] LNKHL_007
+-| The system will send transactional email confirmations to customers upon successful linking or unlinking of their Flybuys account.
++| {LNKHL_007}
+ | Must have
+ | Yes
+ | Minimum requirement as we need to provide positive confirmation to customer when they have completed an action.
+ 
+ | [[LNKHL_008]] LNKHL_008
+-| The system will send push notifications to customers upon successful linking or unlinking of their Flybuys account.
++| {LNKHL_008}
+ | Must have
+ | Yes
+ | Further discussions required with Tech about APNS (Apple) & FCM (Google) push notification support.
+ 
+ | [[LNKHL_009]] LNKHL_009
+-| The system will support marketing campaigns from Flybuys, OTR, and Reddy Express to promote account linking, including the use of in-app promotional tiles within OTR App.
++| {LNKHL_009}
+ | Should have
+ | Yes
+ | This requirement is impacted by the SFMC→Braze migration.
+@@ -81,7 +85,7 @@ NOTE: High Level Requirements are documented/signed off at a specific point in t
+ 
+ == Network and How to Find Flybuys
+ 
+-[cols="1,1,5,2,1,3", options="header"]
++[cols="1,5,2,1,3", options="header"]
+ |===
+ | HL REQ ID
+ | High Level Requirement Description
+@@ -90,25 +94,25 @@ NOTE: High Level Requirements are documented/signed off at a specific point in t
+ | Comments/Questions
+ 
+ | [[NTWHL_001]] NTWHL_001
+-| Flybuys points will be able earned for all products capable of being purchased or preordered in the OTR App or the QSRs using OTR POS (e.g. includes Oporto, Subway, WIAB, Krispy Kreme and Moe's Hot Dog but exclude Hungry Jack and GYG)
++| {NTWHL_001}
+ | Must have
+ | Yes
+ |
+ 
+ | [[NTWHL_002]] NTWHL_002
+-| If the convenience brand is REXP or OTR, customers will earn Flybuys points regardless of the fuel brand, including Shell, Liberty, and Caltex etc)
++| {NTWHL_002}
+ | Must have
+ | Yes
+ |
+ 
+ | [[NTWHL_003]] NTWHL_003
+-| A store finder feature will be enhanced on the app to allow customers to easily locate what Loyalty programs are available by store location (including QSRs).
++| {NTWHL_003}
+ | Must have
+ | Yes
+ | Store locator is currently available on the app. The enhanced feature and will need to be addressed on the roadmap along with Fuel Gamification, Delivery etc.
+ 
+ | [[NTWHL_004]] NTWHL_004
+-| The store finder/map feature need to be accessible outside the app as the map will need to be linked to the T&C's from the website.
++| {NTWHL_004}
+ | Could have
+ | Yes
+ | OTRG to produce and maintain site information on these maps. This will sit on the Reddy or OTR domain (Shell domain isn't required). Alternatively, a site list can be included in the published T&Cs on the websites if needed.
+@@ -117,7 +121,7 @@ NOTE: High Level Requirements are documented/signed off at a specific point in t
+ 
+ == Points Earning
+ 
+-[cols="1,1,5,2,1,3", options="header"]
++[cols="1,5,2,1,3", options="header"]
+ |===
+ | HL REQ ID
+ | High Level Requirement Description
+@@ -135,25 +139,25 @@ NOTE: High Level Requirements are documented/signed off at a specific point in t
+ | Solution will need to accommodate different earn rates. In-app earn rates can be different to that of In-store earn rates. Rates, products/category can change from time to time.
+ 
+ | [[PEHL_002]] PEHL_002
+-| Applicable points earned at a transaction level will be a queryable field at a transaction level (ie. at time of transaction, they were a linked member and had or had not selected to get SPS savings)
++| {PEHL_002}
+ | Must have
+ | Yes
+ |
+ 
+ | [[PEHL_003]] PEHL_003
+-| Standard exclusions and volume limits will apply where eligible fuel types capped at 150L of eligible fuel type per transaction and excluding Adblue, Lotteries, and Tobacco products from points accrual.
++| {PEHL_003}
+ | Must have
+ | Yes
+ |
+ 
+ | [[PEHL_004]] PEHL_004
+-| The accumulative Flybuys points earned by a customer through OTR Group will be displayed in both the OTR and SPS Apps.
++| {PEHL_004}
+ | Won't have
+ | Yes
+ | Confirmed by @frankie.mullaly to DELAY until future release, complexity of defining different points earnt as the rationale for change
+ 
+ | [[PEHL_005]] PEHL_005
+-| OTR-Led Bonus points earned through occasional "Bonus Points Campaigns" will not be displayed at the transaction level within the App.
++| {PEHL_005}
+ | Must have
+ | Yes
+ | Mechanics of OTR-led campaigns needs to be confirmed outside FB integration work by @Isha Bakshi and @Paola Buchan.
+@@ -162,7 +166,7 @@ NOTE: High Level Requirements are documented/signed off at a specific point in t
+ 
+ == Points Earning In-App
+ 
+-[cols="1,1,5,2,1,3", options="header"]
++[cols="1,5,2,1,3", options="header"]
+ |===
+ | HL REQ ID
+ | High Level Requirement Description
+@@ -171,37 +175,37 @@ NOTE: High Level Requirements are documented/signed off at a specific point in t
+ | Comments/Questions
+ 
+ | [[INAHL_001]] INAHL_001
+-| The customer will earn Flybuys points on FUEL unless they have selected SPS discounts. The customer will earn Flybuys points on non-fuel purchases on non-fuel discounts, even if they have selected SPS discounts.
++| {INAHL_001}
+ | Must have
+ | Yes
+ | To complete linking customers must select to earn FB points or scan pump save discounts on fuel - cannot complete linking without this
+ 
+ | [[INAHL_002]] INAHL_002
+-| The app will provide data to accurately calculate the applicable points earned and must display these points as per the approved wireframe and on the proforma invoice.
++| {INAHL_002}
+ | Must have
+ | Yes
+ | Example of Proforma Invoice.docx
+ 
+ | [[INAHL_003]] INAHL_003
+-| No points will be earned on fuel transactions where SPS CPL discount is selected.
++| {INAHL_003}
+ | Must have
+ | Yes
+ |
+ 
+ | [[INAHL_004]] INAHL_004
+-| Points on Fuel in App are only earned when payment is successfully processed.
++| {INAHL_004}
+ | Must have
+ | Yes
+ |
+ 
+ | [[INAHL_005]] INAHL_005
+-| For failed In App payments, points are earned when PayNow is completed.
++| {INAHL_005}
+ | Must have
+ | Yes
+ |
+ 
+ | [[INAHL_006]] INAHL_006
+-| When bonus points campaigns are active, the App will display only base points earned, excluding any bonus points from the displayed total.
++| {INAHL_006}
+ | Should have
+ | Yes
+ | App will show the points earnt on that transaction, irrespective of any other bonus points campaigns running at that time
+@@ -212,7 +216,7 @@ NOTE: High Level Requirements are documented/signed off at a specific point in t
+ 
+ NOTE: Customers will earn Flybuys points for in-store purchase at REXP is by scanning the Flybuys App or Flybuys card (as per current process).
+ 
+-[cols="1,1,5,2,1,3", options="header"]
++[cols="1,5,2,1,3", options="header"]
+ |===
+ | HL REQ ID
+ | High Level Requirement Description
+@@ -221,7 +225,7 @@ NOTE: Customers will earn Flybuys points for in-store purchase at REXP is by sca
+ | Comments/Questions
+ 
+ | [[INSHL_001]] INSHL_001
+-| Customer will earn Flybuys point for in-store OTR purchase when: +
++| {INSHL_001} when: +
+  +
+ * The customer has linked their Flybuys account and scans their OTR app, SPS app, Apple Wallet, Google Wallet during the transaction OR +
+ * The customer scans their Flybuys app or Flybuys physical card during the transaction
+@@ -230,7 +234,7 @@ NOTE: Customers will earn Flybuys points for in-store purchase at REXP is by sca
+ | Updated by @frankie.mullaly
+ 
+ | [[INSHL_002]] INSHL_002
+-| The app must notify unlinked guests during eligible in-store purchases to link their Flybuys account before completing payment, enabling them to earn points.
++| {INSHL_002}
+ | Won't have
+ | No
+ |
+@@ -239,16 +243,12 @@ NOTE: Customers will earn Flybuys points for in-store purchase at REXP is by sca
+ 
+ == Tracking, Calculation of Flybuys Points Earned, Reporting
+ 
+-[cols="1,1,5,2,1,3", options="header"]
++[cols="1,5,2,1,3", options="header"]
+ |===
+-| HL REQ ID
+-| High Level Requirement Description
+-| MoSCoW
+-| Approved (Y/N)
+-| Comments/Questions
++| HL REQ ID | High Level Requirement Description | MoSCoW | Approved (Y/N) | Comments/Questions
+ 
+ | [[TCRHL_001]] TCRHL_001
+-| The system must implement a process for OTR app, SPS app and In-store OTR to identify Flybuys points earned via OTR+ POS transactions. This process must: +
++| {TCRHL_001} This process must: +
+  +
+ * Identify all relevant transactions. +
+ * Validate purchased products against exclusion tables. +
+@@ -259,13 +259,13 @@ NOTE: Customers will earn Flybuys points for in-store purchase at REXP is by sca
+ | Importing data to Braze, as a field will be used to measure user engagement with the Flybuys program. Currently there are BAU issues of tagging bonus point at REXP (maybe reviewed as we move to the Strategic Data Solution) - @Oli Young
+ 
+ | [[TCRHL_002]] TCRHL_002
+-| The system must provide dashboard functionality (ie. Power BI) to display Flybuys points earned, segmented by store and by channel (ie. in-app OTR, in-store OTR, campaign name, site name, point type - base or bonus, operating brand - OTR or REXP etc)
++| {TCRHL_002}, segmented by store and by channel (ie. in-app OTR, in-store OTR, campaign name, site name, point type - base or bonus, operating brand - OTR or REXP etc)
+ | Must have
+ | Yes
+ |
+ 
+ | [[TCRHL_003]] TCRHL_003
+-| Flybuys points invoices must be generated with transaction lines split and separated by: +
++| {TCRHL_003} by: +
+  +
+ * Brand: REXP and OTR +
+ * Points Type: Standard and Bonus +
+@@ -276,7 +276,7 @@ NOTE: Customers will earn Flybuys points for in-store purchase at REXP is by sca
+ |
+ 
+ | [[TCRHL_004]] TCRHL_004
+-| The system must provide the ability to query and generate reports on daily points-earn files to: +
++| {TCRHL_004} to: +
+  +
+ * Validate monthly billing. +
+ * Monitor earning trends. +
+@@ -286,10 +286,7 @@ NOTE: Customers will earn Flybuys points for in-store purchase at REXP is by sca
+ |
+ 
+ | [[TCRHL_005]] TCRHL_005
+-| The system will have the capability to: +
+- +
+-* Generate reports or +
+-* Expose relevant data for querying and analysis of Flybuys points earning.
++| {TRCHL_005}
+ | Must have
+ | Yes
+ | Examples of reporting: +
+@@ -299,10 +296,7 @@ NOTE: Customers will earn Flybuys points for in-store purchase at REXP is by sca
+ * Points for instore transactions
+ 
+ | [[TCRHL_006]] TCRHL_006
+-| The system will provide the capability for end users to: +
+- +
+-* Easily query FB points earning data. +
+-* Obtain insights into earning activities.
++| {TRCHL_006}
+ | Must have
+ | Yes
+ |
+@@ -333,7 +327,7 @@ The invoicing, billing, and finance processes for points earned through in‑sto
+ 
+ == Customer Experience
+ 
+-[cols="1,1,5,2,1,3", options="header"]
++[cols="1,5,2,1,3", options="header"]
+ |===
+ | HL REQ ID
+ | High Level Requirement Description
+@@ -342,7 +336,7 @@ The invoicing, billing, and finance processes for points earned through in‑sto
+ | Comments/Questions
+ 
+ | [[CEHL_001]] CEHL_001
+-| The system will provide an interface accessible to Customer Experience Team that displays Flybuys account linking and unlinking details including: +
++| {CEHL_001} that displays Flybuys account linking and unlinking details including: +
+  +
+ * Date and time of account linking. +
+ * Date and time of account unlinking. +
+@@ -360,13 +354,13 @@ The invoicing, billing, and finance processes for points earned through in‑sto
+ 19/12/25 Approved by Frankie
+ 
+ | [[CEHL_001b]] CEHL_001b
+-| All feedback and data related to Flybuys to be housed in Salesforce (including app feedback) - using this as the one source of truth.
++| {CEHL_001b}
+ | Should have
+ | Yes
+ | @Fiona Cheung FM added this in as 1b, split this out as a 'should have' given the dependency of getting Salesforce for Adam's team
+ 
+ | [[CEHL_002]] CEHL_002
+-| The in-app and website feedback forms will be updated to include "Flybuys Feedback" as a selectable subject option to cover REXP and OTR feedback.
++| {CEHL_002}
+ | Should have
+ | Yes
+ | 12/12/25 - Discussed with Adam and Jack, decision is to following existing BAU process for any Flybuys queries (ie refer customer to Flybuys contact centre). Any feedback received from existing channels, it is categorized internally by the Customer Experience Team. +
+@@ -376,7 +370,7 @@ Future idea - create AI chatbot to support feedback (out of scope for this initi
+ @Fiona Cheung - the MoSCoW has been updated, changed by Darren as biz owner of app and flybuys we need this level of detail
+ 
+ | [[CEHL_003]] CEHL_003
+-| Compensate customers with free Flybuys points using OTR/Viva systems.
++| {CEHL_003}
+ | Won't have
+ | No
+ | Requirement raised by Adam for consideration. However, a current BAU process exists for compensating customers, where free coffee credits are provided when customers request Flybuys points. +
+diff --git a/projects/OTR_2025_01_flybuys_integration/initiative.adoc b/projects/OTR_2025_01_flybuys_integration/initiative.adoc
+index f72ab82..7360015 100644
+--- a/projects/OTR_2025_01_flybuys_integration/initiative.adoc
++++ b/projects/OTR_2025_01_flybuys_integration/initiative.adoc
+@@ -198,7 +198,7 @@ sequenceDiagram
+ 
+ Phased Rollout via Feature Flags
+ 
+-[cols="1,2,1,2"]
++[cols="1,2,2", options="header", stripe="even"]
+ |===
+ | Phase | Capability Enabled | Success Criteria
+ 
+@@ -207,15 +207,15 @@ Phased Rollout via Feature Flags
+ | Baseline established
+ 
+ | *TS-1: Foundation*
+-| Profile Service (dual-write to legacy)
+-| 100% response parity with legacy API
++| xref:bounded-contexts:profile.adoc[Profile Service], xref:bounded-contexts:loyalty.adoc[Loyalty Service], xref:bounded-contexts:feature_flag.adoc[Feature Flags]
++|
+ 
+ | *TS-2: Linking*
+-| OAuth account linking, balance queries
+-| >95% OAuth success rate
++| xref:bounded-contexts:oauth.adoc[OAuth account linking], Flybuys balance queries
++| >95% OAuth success rate, Flybuys balance is accessible
+ 
+ | *TS-3: Grants*
+-| Transaction adjudication, POS barcode scanning, batch file posting
++| xref:ROOT:ubiquitous_language.adoc#transaction-adjudication[Transaction adjudication], POS barcode scanning, batch file posting
+ | >98% batch acknowledgement within 24 hours
+ 
+ | *TS-4: Target State*
+diff --git a/projects/OTR_2025_01_flybuys_integration/solution_architecture.adoc b/projects/OTR_2025_01_flybuys_integration/solution_architecture.adoc
+index dce1c9e..4fb1fcd 100644
+--- a/projects/OTR_2025_01_flybuys_integration/solution_architecture.adoc
++++ b/projects/OTR_2025_01_flybuys_integration/solution_architecture.adoc
+@@ -108,7 +108,7 @@ This solution architecture references detailed technical specifications:
+ <<<
+ == Key Technology Decisions
+ 
+-[cols="1,2,4,3"]
++[cols="1,2,4,3", stripe="even"]
+ |===
+ | ID | Kind | Description | Rationale
+ 
+@@ -231,7 +231,7 @@ This section maps the conceptual *Architecture Building Blocks* (ABBs) defined i
+ 
+ This catalogue lists all technology components required to implement the Flybuys Integration solution, mapped to the xref:projects:OTR_2025_01_flybuys_integration/architectural_definition.adoc#Technology%2520Capability%2520Requirements[Technology Capability Requirements] defined in the Architecture Definition.
+ 
+-[cols="1,1,3,1,2,1"]
++[cols="1,1,3,1,2,1", options="header", stripe="even"]
+ |===
+ | Component | Category | Technology Stack | Lifecycle Stage | Rationale | Standards/Patterns
+ 
+@@ -326,7 +326,7 @@ This catalogue lists all technology components required to implement the Flybuys
+ 
+ === Solution Building Block Mapping
+ 
+-[cols="1,3,2,3,4"]
++[cols="1,3,2,3,4", stripe="even", options="header"]
+ |===
+ | ABB ID | ABB Name | SBB ID | SBB Name | Technology Product/Component
+ 
+diff --git a/ubiquitous_language.adoc b/ubiquitous_language.adoc
+index f3079c5..95e02d9 100644
+--- a/ubiquitous_language.adoc
++++ b/ubiquitous_language.adoc
+@@ -128,6 +128,12 @@ This document defines the shared vocabulary used across OTRG Digital's platform.
+ 
+ === Points & Rewards
+ 
++==== Earning and Redemption Rules
++
++- Rules governing how, when and where points are earned and redeemed
++- Configurable without code changes
++- Managed by link:bounded_context/external/eagle_eye.adoc[EagleEye] through link:bounded_context/loyalty.adoc[Loyalty Service]
++
+ ==== Points
+ 
+ - Currency earned through purchases and redeemed for rewards
+warning: in the working copy of 'projects/OTR_2025_01_flybuys_integration/_capabilities.adoc', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'projects/OTR_2025_01_flybuys_integration/initiative.adoc', CRLF will be replaced by LF the next time Git touches it

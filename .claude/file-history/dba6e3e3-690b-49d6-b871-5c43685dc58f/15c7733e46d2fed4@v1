@@ -1,0 +1,85 @@
+= OTR Digital Architecture Documentation
+:toc: left
+:toclevels: 3
+:sectanchors:
+
+Welcome to the OTR Digital Architecture documentation. This documentation describes the Domain-Driven Design (DDD) architecture for OTR Group's digital platform.
+
+== Overview
+
+This architecture repository uses Context Mapper (CML) files to model bounded contexts (Loyalty, Payment, Engagement, Delivery, Location, Recommendation), domain aggregates, and system integrations following strategic DDD patterns.
+
+**Important:** This architecture represents a *target state vision*. The platform will evolve incrementally from the current AWS-based monolithic API ("OTR App API") to this DDD architecture through phased extraction of bounded contexts.
+
+== Architecture Components
+
+=== Bounded Contexts
+
+Bounded contexts define the boundaries of different business capabilities within the OTR platform. Each bounded context has its own domain model and is responsible for specific business functions.
+
+* xref:bounded-contexts:loyalty.adoc[Loyalty Service]
+* xref:bounded-contexts:payment.adoc[Payment Service]
+* xref:bounded-contexts:engagement.adoc[Engagement Service]
+* xref:bounded-contexts:location.adoc[Location Service]
+* xref:bounded-contexts:recommendation.adoc[Recommendation Service]
+* xref:bounded-contexts:profile.adoc[Profile Service]
+* xref:bounded-contexts:handover.adoc[Handover Service]
+* xref:bounded-contexts:fuel.adoc[Fuel Service]
+
+=== External Integrations
+
+* xref:bounded-contexts:eagle_eye.adoc[Eagle Eye] - SaaS Loyalty Engine
+* xref:bounded-contexts:braze.adoc[Braze] - Marketing Automation
+* xref:bounded-contexts:flybuys.adoc[Flybuys] - Coalition Loyalty Partner
+* xref:bounded-contexts:salesforce_crm.adoc[Salesforce CRM] - Customer Profile System
+* xref:bounded-contexts:microsoft_entra_external_id.adoc[Microsoft Entra External ID] - Customer Identity and Access Management
+
+=== Domains
+
+Domain definitions provide the core business concepts and rules that span across bounded contexts.
+
+* xref:domains:loyalty.adoc[Loyalty Domain]
+* xref:domains:payment.adoc[Payment Domain]
+* xref:domains:engagement.adoc[Engagement Domain]
+* xref:domains:location.adoc[Location Domain]
+* xref:domains:recommendation.adoc[Recommendation Domain]
+
+=== Solution Architectures
+
+Solution architectures describe end-to-end implementations of specific business capabilities.
+
+* xref:solution-architectures:flybuys_integration.adoc[Flybuys Integration]
+* xref:solution-architectures:salesforce_customer_support.adoc[Salesforce Customer Support]
+
+=== Events
+
+* xref:events:event_catalog.adoc[Event Catalog] - Domain events published across the system
+
+== Key Architectural Patterns
+
+=== Integration Patterns
+
+1. **Anti-Corruption Layer (ACL)** - Protects core services from external system changes
+2. **Customer-Supplier with Conformist** - External systems we don't control
+3. **Open Host Service (OHS) + Published Language (PL)** - Event-driven internal integration
+4. **Backend-for-Frontend (BFF)** - Simplified APIs for presentation layers
+
+=== Domain-Driven Design Principles
+
+This architecture follows DDD strategic and tactical patterns:
+
+* **Bounded Contexts** - Clear boundaries between business capabilities
+* **Aggregates** - Transactional consistency boundaries
+* **Domain Events** - Asynchronous communication between contexts
+* **Ubiquitous Language** - Shared vocabulary between business and technical teams
+
+== Reference
+
+* xref:ubiquitous_language.adoc[Ubiquitous Language] - Glossary of domain terms
+
+== Technical Stack
+
+* **Backend Services**: C#/.NET
+* **Mobile Development**: Kotlin Multiplatform, SwiftUI, Jetpack Compose
+* **Integration**: REST APIs, Event Bus, Webhooks
+* **Cloud Platforms**: AWS (Mobile App), Azure (Back Office)

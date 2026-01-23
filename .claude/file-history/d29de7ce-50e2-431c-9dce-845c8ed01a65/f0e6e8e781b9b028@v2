@@ -1,0 +1,461 @@
+= Flybuys Strategic Data Integration
+:domain: Loyalty
+:domain-architect: O.Young@otr.com.au
+:project: OTR-2026-04
+:doctype: article
+:attribute: https://vivaenergy.atlassian.net/wiki/spaces/VER/pages/10172891188/DATA-SD-03-02-05+FlyBuys+Loyalty+Transaction+File+-+As+Build+In+Progress
+:toc: left
+:toclevels: 3
+:sectanchors:
+:sectlinks:
+:sectnums:
+:icons: font
+:source-highlighter: highlightjs
+:experimental:
+
+<<<
+== What This Initiative Covers
+
+An existing production data integration that sends Flybuys member transaction and product hierarchy data from Reddy Express stores to Flybuys via SFTP. Currently operating on a weekly schedule, this initiative documents the as-is state and planned changes: transitioning to daily transfers with updated SFTP configuration (TS-2), followed by expansion to OTR convenience stores and mobile application(TS-3).
+
+[cols="1,3"]
+|===
+| Feature | Description
+
+| Daily transaction file export
+| Automated daily extraction of Flybuys member transactions from D365 Commerce via Microsoft Fabric pipelines to SFTP
+
+| Product hierarchy file export
+| Daily export of Reddy Express product categorisation structure (4-level hierarchy) to support Flybuys promotional analytics
+
+| SFTP secure transfer
+| Encrypted file transfer to Flybuys SFTP server with daily scheduled delivery
+
+| Pause/resume capability
+| Ability to pause daily transfers during promotional periods or operational maintenance windows
+
+| Multi-brand expansion ready
+| Foundation to extend transaction sharing from Reddy Express stores to OTR convenience stores
+
+| Outbound metadata framework
+| Reusable Microsoft Fabric pipeline pattern for partner data exports using metadata-driven configuration
+|===
+
+<<<
+== Architecture Approach
+
+This is a **Customer-Supplier integration** where OTRG acts as the supplier (data provider) and Flybuys is the customer (data consumer). The solution conforms to Flybuys' data format requirements and SFTP delivery mechanism, as they are the upstream partner in the coalition loyalty relationship.
+
+The current architecture provides a repeatable pattern for sharing transactional data with external loyalty partners while maintaining clear boundaries: OTRG owns the data extraction and delivery; Flybuys owns the consumption and analytics.
+
+=== Design Principles
+
+==== Back-office native tooling
+
+Uses Azure-based Microsoft Fabric and Azure Data Factory for data extraction, as D365 Commerce and transaction data reside in the Azure back-office domain.
+
+==== Conform to partner requirements
+
+Flybuys specifies the file format, delivery mechanism (SFTP), and scheduling. The solution adapts to their integration contract rather than negotiating changes.
+
+==== Daily batch is sufficient
+
+Promotional analytics don't require real-time data. Daily overnight batch processing (planned for TS-2) meets business requirements with simpler implementation than real-time streaming.
+
+==== Metadata-driven configuration
+
+Uses Fabric's outbound metadata framework to make the pipeline reusable for other partners (Shell, future coalition programs) without code changes.
+
+==== Encrypted transfer
+
+Applies PGP encryption for files in transit to meet data security requirements for member transaction data.
+
+=== Microsoft Fabric Data Pipeline
+
+Transaction and product data extraction pipeline (currently operational)
+
+- Extracts Flybuys member transactions from D365 Commerce (RAW layer)
+- Joins with member lookup table to enrich with full Flybuys card numbers
+- Applies product hierarchy categorisation (4-level Reddy Express product taxonomy)
+- Generates two files per run: Transaction File and Product Hierarchy File
+- Stores files in ADLS before SFTP transfer
+- Metadata-driven configuration (workspace: `PRP_LH_CM_Raw`, notebook: `NB_CM_Outbound_FB_Trans_Extract`)
+
+=== Azure Data Factory SFTP Integration
+
+Secure file transfer orchestration (currently operational)
+
+- Monitors ADLS locations for new transaction and product hierarchy files
+- Encrypts files using PGP before transfer
+- Transfers files to Flybuys SFTP server via secure connection
+- Current schedule: weekly on Mondays (TS-2 changes to daily)
+- Pause/resume control mechanism using ADF control flow activities
+- Pipeline: `PL_CM_process_FB_Trans_outbound_extract`
+
+=== Transaction Data Scope
+
+Flybuys member transactions only
+
+- Filters for transactions with Flybuys barcode present (`fb.flybuysbarcode is not null`)
+- Includes posted transactions (`entrystatus in (0,2)`)
+- Sales transactions only (`type = 2`)
+- Enriched with member lookup to provide full Flybuys card number
+- Captures discounts, GST, returns, tender types, and basket quantities
+
+=== Product Hierarchy Data
+
+Reddy Express product categorisation structure
+
+- 4-level category hierarchy from D365 EcoRes product taxonomy
+- Maps Reddy Express products to Retail Product Category hierarchy
+- Provides category codes and names at each level
+- Supports Flybuys promotional analytics and category-based offers
+
+=== Integration Points
+
+[cols="1,3"]
+|===
+| Integration | Description
+
+| D365 Commerce
+| Source system for transaction data (POS channel) and product hierarchy (EcoRes category tables)
+
+| Microsoft Fabric
+| Data extraction and transformation pipelines (workspace: `PRP_LH_CM_Raw`)
+
+| Azure Data Lake Storage (ADLS)
+| Staging location for transaction and product hierarchy files before SFTP transfer
+
+| Azure Data Factory (ADF)
+| SFTP orchestration, file encryption, scheduling, and control flow management
+
+| Flybuys SFTP Server
+| Destination for daily transaction and product hierarchy files (external partner system)
+
+| Member Lookup Table
+| OTRG member data joined to enrich Flybuys barcode with full card number
+|===
+
+<<<
+== Key Capabilities Delivered
+
+[cols="1,2,2"]
+|===
+| Capability | How It Works | Business Value
+
+| *Daily Transaction Sharing*
+| Automated Fabric pipeline extracts Flybuys member transactions from D365 Commerce and transfers via SFTP
+| Enables Flybuys to attribute Reddy Express purchases to member accounts, powering coalition loyalty points accrual
+
+| *Product Hierarchy Export*
+| Daily export of Reddy Express product categorisation (4-level hierarchy) to support category-based promotions
+| Allows Flybuys to run targeted category promotions (e.g., "Earn 5x points on Beverages") at Reddy Express stores
+
+| *Pause/Resume Control*
+| ADF control flow allows Flybuys or OTRG operations to pause daily transfers during promotional windows
+| Operational flexibility to halt data flow during system maintenance or promotional campaign transitions
+
+| *Encrypted File Transfer*
+| PGP encryption applied before SFTP transfer to Flybuys server
+| Protects member transaction data in transit, meeting data security and privacy requirements
+
+| *Multi-Brand Foundation*
+| Metadata-driven pipeline design allows reuse for OTR convenience stores with configuration changes only
+| TS-3 expansion will leverage existing pipelines without rebuilding; pattern applicable to future partners (Shell)
+
+| *Transaction Data Enrichment*
+| Joins Flybuys barcode with member lookup table to provide full card numbers and member identifiers
+| Ensures Flybuys receives complete member identifiers for accurate points attribution
+
+| *Audit Trail & Monitoring*
+| Fabric metadata framework logs pipeline execution, file generation, and SFTP transfer status
+| Operations team has visibility into data delivery success/failure for troubleshooting and SLA compliance
+|===
+
+<<<
+== Customer Journey
+
+=== Transaction Data Flow (As-Is: Weekly; TS-2: Daily)
+
+. Customer with Flybuys card shops at Reddy Express and scans Flybuys barcode at POS
+. Transaction recorded in D365 Commerce with Flybuys barcode linked
+. *Fabric pipeline extracts Flybuys member transactions* (as-is: weekly Monday; TS-2: daily)
+. Pipeline joins with member lookup table to enrich with full Flybuys card number
+. *Transaction file and Product Hierarchy file generated* and stored in ADLS
+. ADF monitors ADLS for new files
+. ADF encrypts files with PGP
+. *Files transferred to Flybuys SFTP server* (as-is: current location; TS-2: new SFTP target)
+. Flybuys ingests files and attributes transactions to member accounts
+. *Flybuys member earns coalition loyalty points* for Reddy Express purchases
+
+[mermaid]
+----
+sequenceDiagram
+    actor Customer as Flybuys Member
+    participant POS as D365 Commerce<br/>POS Channel
+    participant Fabric as Microsoft Fabric<br/>Pipeline
+    participant ADLS as Azure Data Lake<br/>Storage
+    participant ADF as Azure Data Factory<br/>SFTP Pipeline
+    participant SFTP as Flybuys<br/>SFTP Server
+    participant Flybuys as Flybuys<br/>Platform
+
+    Note over Customer,Flybuys: Daily Transaction Data Flow
+
+    Customer ->> POS: Scan Flybuys barcode at checkout
+    POS ->> POS: Record transaction with Flybuys barcode
+
+    Note over Fabric,Flybuys: Daily Scheduled Export (01:00 UTC)
+    Fabric ->> POS: Extract Flybuys member transactions (SQL query)
+    Fabric ->> Fabric: Join with member lookup table
+    Fabric ->> Fabric: Generate Transaction File + Product Hierarchy File
+    Fabric ->> ADLS: Store files (Member_Transactions/ & Product_Hierarchy/)
+
+    ADLS ->> ADF: Trigger SFTP pipeline (file watch)
+    ADF ->> ADF: PGP encrypt files
+    ADF ->> SFTP: Transfer encrypted files via SFTP
+    SFTP ->> Flybuys: Ingest transaction and product data
+    Flybuys ->> Flybuys: Attribute transactions to member accounts
+    Flybuys -->> Customer: Award coalition loyalty points
+----
+
+=== Pause/Resume Control Flow
+
+. Flybuys or OTRG operations team requests pause of daily transfers
+. Operations team accesses ADF control mechanism
+. *Daily SFTP transfer schedule paused* via ADF control flow activity
+. No files transferred during pause period (previous day's data held in ADLS)
+. Operations team resumes transfers when ready
+. *ADF pipeline resumes daily schedule*
+. Backlog of files transferred (if applicable)
+
+[mermaid]
+----
+sequenceDiagram
+    actor Ops as Operations Team
+    participant ADF as Azure Data Factory<br/>Control Flow
+    participant ADLS as Azure Data Lake<br/>Storage
+    participant SFTP as Flybuys<br/>SFTP Server
+
+    Note over Ops,SFTP: Pause Request Scenario
+    Ops ->> ADF: Request pause of daily transfers
+    ADF ->> ADF: Update control flag (pause=true)
+    Note over ADF,SFTP: Daily schedule runs but skip SFTP transfer
+    ADF ->> ADLS: Files continue to accumulate
+
+    Note over Ops,SFTP: Resume Request Scenario
+    Ops ->> ADF: Request resume of daily transfers
+    ADF ->> ADF: Update control flag (pause=false)
+    ADF ->> ADLS: Check for backlog files
+    alt Backlog exists
+        ADF ->> SFTP: Transfer backlog files (catch-up)
+    end
+    ADF ->> SFTP: Resume daily scheduled transfers
+----
+
+<<<
+== Implementation Phases
+
+Current production state (TS-0, TS-1 complete) and planned changes (TS-2 onwards)
+
+[cols="2,2,1,2"]
+|===
+| Phase | Capability Enabled | Users | Success Criteria
+
+| *TS-0: Foundation (COMPLETE)*
+| Fabric pipeline development, D365 Commerce data extraction, member lookup integration, ADLS storage, metadata framework
+| Development team
+| Transaction and product hierarchy SQL queries validated, Fabric notebook operational, ADLS file storage configured
+
+| *TS-1: Reddy Express Production (COMPLETE)*
+| Reddy Express stores sending Flybuys transaction data weekly via SFTP
+| Reddy Express stores
+| Weekly file transfers successful, Flybuys ingestion validated, coalition points attribution working
+
+| *TS-2: REXP Automated Daily Ingestion (PLANNED - Target: March 31, 2026)*
+| Update SFTP target location and change cadence from weekly (Monday) to daily; Flybuys automated ingestion using existing REXP manual feed as baseline; partner side changes to upload location and cadence; share IDA for REXP data currently ingested manually for Flybuys approval
+| Reddy Express stores
+| Daily transfers operational by March 31st, new SFTP location validated, zero data loss during migration, Flybuys confirms automated ingestion working, SSH key pair established for new SFTP user (create SSH private key and share linked public key with Flybuys), IDA approval received from Flybuys, partner confirms work effort is small and aligns with dependency timeline
+
+| *TS-3: OTR Store Integration (PLANNED - Target: April-May 2026)*
+| Extend transaction data sharing to OTR convenience stores (1000+ locations); OTR files aligned to same structure/attributes as REXP for consistency; discovery initiated with sample file containing dummy data
+| Reddy Express stores + OTR convenience stores
+| OTR transactions flowing to Flybuys, product hierarchy extended to include OTR convenience products, no disruption to Reddy Express data flow; delivery contingent on OTR sample file with production-similar data availability (expected post-March production dates); discovery validated with dummy data sample file; OTR confirms ability to control data shape and align to REXP structure/attributes; final timeline dependent on OTR readiness and data availability
+
+| *TS-4: Full Rollout Validation (PLANNED)*
+| All Reddy Express stores and OTR convenience stores operational with daily transfers
+| All OTRG stores (Reddy Express + convenience)
+| >99% daily transfer success rate, Flybuys SLA compliance, zero member complaints about missing points
+
+| *TS-5: Target State - Multi-Partner Foundation (FUTURE)*
+| Pipeline pattern reusable for other coalition partners (Shell Price Save, future partners)
+| All loyalty partners
+| Metadata-driven configuration allows new partner onboarding with configuration changes only (no code changes)
+|===
+
+*Planned Rollout Strategy*:
+- *TS-2*: SFTP configuration changes to be tested in non-production environment first; parallel run with old and new SFTP locations for 7 days; cutover during low-volume period (weekend); SSH key pair creation and public key sharing with Flybuys for new SFTP user; IDA for REXP data shared with Flybuys (Oli) for approval; leverages existing REXP manual feed infrastructure to accelerate automated ingestion setup
+- *TS-3*: Discovery phase initiated with OTR sample file containing dummy data; pilot planned for 5-10 OTR convenience stores for 30 days to validate product hierarchy mapping and transaction data quality pending availability of production-similar data (expected post-March); phased rollout by region (SA, VIC, NSW, QLD) over 8 weeks; rollback plan retains Reddy Express-only configuration; OTR confirms ability to align data structure/attributes with REXP for consistency
+
+<<<
+== Non-Functional Requirements (Current & Target)
+
+[cols="1,2,2"]
+|===
+| Requirement | Target | How We Achieve It
+
+| *Data Freshness*
+| As-is: Weekly (D-7); TS-2 target: Daily (D-1 data delivered by 02:00 UTC)
+| As-is: Weekly Monday schedule; TS-2: Fabric pipeline scheduled at 01:00 UTC daily; ADF SFTP transfer completes within 1 hour; typical end-to-end processing time 45 minutes
+
+| *Data Completeness*
+| 100% of Flybuys member transactions captured (zero data loss)
+| SQL query filters on posted transactions (`entrystatus in (0,2)`); Fabric pipeline retry logic on transient failures; daily reconciliation report comparing transaction count vs POS count
+
+| *SFTP Transfer Success Rate*
+| As-is: 100% weekly transfers; Target: >99% daily transfers (TS-2)
+| Current: ADF retry logic with exponential backoff (3 retries, 5-15-30 minute intervals); automated alerts on failure; manual intervention playbook exists
+
+| *Data Security*
+| Encrypted in transit, secure SFTP access, member data protected
+| PGP encryption applied before SFTP transfer; Flybuys SFTP server requires SSH key authentication; no member PII beyond Flybuys card number and transaction details
+
+| *Scalability*
+| As-is: Reddy Express stores only; TS-3 target: 1000+ OTR convenience stores, 50k+ daily transactions
+| Current architecture: Fabric pipeline scales horizontally; ADLS storage virtually unlimited; SFTP bandwidth sufficient for 50MB daily files (current typical size 5-10MB)
+
+| *Operational Flexibility*
+| Pause/resume capability, manual re-run of failed transfers
+| ADF control flow activities enable pause/resume; Fabric notebook can be manually triggered for specific date ranges; ADLS retains files for 90 days for reprocessing
+
+| *Monitoring & Alerting*
+| Pipeline failure alerts within 15 minutes, daily success/failure dashboard
+| Fabric metadata framework logs execution status; ADF monitoring with CloudWatch-equivalent alerts; operations dashboard shows daily transfer status and file counts
+
+| *Data Residency*
+| Transaction data stored in Australia (ap-southeast-2 equivalent Azure region)
+| ADLS and Fabric workspaces in Azure Australia East region; D365 Commerce production in Australia region; SFTP transfer to Flybuys (Australian partner)
+|===
+
+<<<
+== Risks & Mitigation (Current & Planned)
+
+[cols="1,1,2"]
+|===
+| Risk | Impact | Mitigation
+
+| *D365 Commerce data quality issues*
+| Incomplete or incorrect transaction data sent to Flybuys
+| SQL query validation in development; daily reconciliation report comparing transaction count and total sales value vs POS reporting; automated alerts on data anomalies (e.g., zero transactions on non-holiday weekday)
+
+| *Fabric pipeline failures*
+| Transfer missed, Flybuys members don't receive points timely
+| Current mitigation: Fabric pipeline retry logic; automated alerts to operations team; manual re-run capability; SLA with Flybuys allows T+2 delivery for failed T+1 transfers
+
+| *SFTP connectivity issues*
+| Files not delivered to Flybuys server
+| Current mitigation: ADF retry logic with exponential backoff; automated alerts; ADLS retains files for 90 days for manual re-transfer; Flybuys operations contact established for server-side issues
+
+| *Member lookup table data lag*
+| New Flybuys members missing from enrichment join, incomplete card numbers
+| Member lookup table refreshed daily before transaction pipeline runs; fallback to Flybuys barcode if full card number unavailable (Flybuys can resolve during ingestion)
+
+| *OTR product hierarchy mapping gaps (TS-3 risk)*
+| OTR convenience products not correctly categorised for Flybuys promotions
+| Planned mitigation: Pilot phase validation with 5-10 convenience stores; product hierarchy mapping review with Flybuys before full rollout; fallback to generic "Convenience" category for unmapped products
+
+| *OTR sample data availability delays (TS-3 risk)*
+| Production-similar data for OTR not available until post-March, blocking TS-3 timeline validation and discovery
+| Planned mitigation: Two-phase approach - initial discovery with dummy data sample file provided by Oli; full validation and pilot contingent on production-similar data availability (expected April-May); OTR confirms data structure/attributes can be aligned with REXP to reduce integration complexity; timeline flexibility built into TS-3 planning to accommodate data readiness dependency
+
+| *SFTP target migration failures (TS-2 risk)*
+| Data loss or duplication during SFTP location cutover; SSH key configuration issues preventing authentication
+| Planned mitigation: Parallel run for 7 days (send to both old and new SFTP locations); Flybuys confirms receipt at new location before disabling old location; rollback plan retains old SFTP configuration; SSH key pair generation and testing in non-production environment before production cutover; public key shared with Flybuys for new SFTP user setup; IDA for REXP data shared with Flybuys (Oli) for approval to ensure data contract alignment
+
+| *Pause mechanism misconfiguration*
+| Transfers paused unintentionally, or resume forgotten
+| Current mitigation: ADF control flow activity with explicit enable/disable flag; operations runbook with checklist; automated alert planned if pause duration exceeds 7 days (requires approval for extended pause)
+
+| *Data volume growth exceeding SFTP limits*
+| Large file sizes cause SFTP transfer timeouts or failures
+| Monitor file size trends; compress files if size exceeds 100MB; negotiate with Flybuys for alternative transfer mechanism (e.g., Azure Blob Storage) if SFTP proves insufficient
+|===
+
+<<<
+== Key Decisions Made
+
+[cols="1,2,2"]
+|===
+| Decision | Rationale | Trade-off Accepted
+
+| *Azure/Fabric platform (not AWS)*
+| D365 Commerce and transaction data reside in Azure back-office domain; Microsoft Fabric native integration with D365 data
+| Cross-cloud complexity if future AWS-based loyalty services need this data (TS-3 may require Azure → AWS data pipeline)
+
+| *SFTP delivery mechanism (not API)*
+| Flybuys specifies SFTP as integration method; conformist pattern applies (we adapt to their requirements)
+| No real-time data availability; daily batch latency (T+1 data); SFTP operational overhead vs API simplicity
+
+| *Daily batch (not real-time)*
+| Flybuys promotional analytics don't require real-time data; daily batch simpler to implement and operate
+| Flybuys members see coalition points T+1 (not immediately after purchase); acceptable for coalition loyalty use case
+
+| *Metadata-driven pipeline (not hardcoded)*
+| Reusable pattern for future partners (Shell, other coalition programs); configuration changes only for new partners
+| Additional complexity in metadata framework setup; justified by multi-partner expansion roadmap
+
+| *PGP encryption (not TLS-only)*
+| Flybuys requires PGP-encrypted files for data security compliance
+| Operational overhead of PGP key management; acceptable for member transaction data protection
+
+| *Weekly schedule (as-is) → Daily (TS-2 change)*
+| Initial production deployment used weekly schedule for pilot validation; daily schedule required for Flybuys SLA and improved member experience
+| Weekly schedule provides delayed points attribution; daily schedule increases operational load but meets business requirements
+
+| *Customer-Supplier with Conformist pattern*
+| Flybuys is upstream partner controlling data format and delivery mechanism; we conform to avoid integration negotiation complexity
+| Less control over data format and delivery mechanism; acceptable for coalition loyalty partnership
+
+| *No Anti-Corruption Layer*
+| Transaction data is generic (sales transactions); no Reddy Express-specific domain model requiring protection
+| Direct coupling to Flybuys data format; future format changes require pipeline updates; acceptable given stable Flybuys API contract
+
+| *Leverage existing REXP manual feed for TS-2*
+| REXP manual feed already in place; Flybuys can use it as baseline for automated ingestion setup; accelerates March 31st target date
+| Dependency on Flybuys partner to configure automated ingestion on their side; IDA sharing required (manual ingestion did not have IDA); acceptable given partner confirms small work effort and timeline alignment
+
+| *OTR data structure alignment with REXP (TS-3)*
+| OTR confirms ability to control data shape and align transaction/product hierarchy files to same structure/attributes as REXP
+| Reduces integration complexity and testing effort; promotes operational consistency; OTR inherits REXP data contract; acceptable given single pipeline codebase supports both brands with minimal configuration changes
+|===
+
+<<<
+== Future Capacity Delivered
+
+[cols="1,3"]
+|===
+| Stream | Capacity
+
+| *Multi-Partner Data Sharing Pattern*
+| Metadata-driven Fabric pipeline pattern reusable for Shell Price Save, future coalition partners, and promotional partners (AFL, Budget Direct)
+
+| *OTR Store Transaction Visibility*
+| TS-3 establishes OTR convenience store transaction data flow to external partners, enabling future coalition loyalty and promotional partnerships
+
+| *Cross-Brand Product Hierarchy*
+| Extended product categorisation framework supports Reddy Express and OTR convenience products in unified taxonomy
+
+| *Data Export Foundation*
+| ADLS and Fabric pipeline infrastructure reusable for other back-office data exports
+
+| *Partner Integration Playbook*
+| Operational runbooks and technical patterns documented for onboarding future loyalty and promotional partners with SFTP or API-based integrations
+
+| *Azure-AWS Cross-Cloud Pattern*
+| Establishes precedent for back-office (Azure) to customer-facing (AWS) data pipelines; TS-3 may require xref:bounded-contexts:loyalty_service.adoc[LoyaltyService] integration on AWS to consume Flybuys transaction data
+
+| *Coalition Loyalty Expansion*
+| Proves viability of coalition loyalty partnerships beyond Flybuys; opens strategic options for multi-brand loyalty programs across OTR Group portfolio
+
+| *Other Brands Integration (Future - Oct 2026)*
+| Extension of transaction data sharing to other OTR Group brands beyond Reddy Express and OTR convenience stores; attribute/structure consistency maintained with REXP and OTR for operational simplicity; requires separate Statement of Work when ready for ingestion
+|===

@@ -1,0 +1,40 @@
+     1→/*
+     2→ * Handover Domain Definition
+     3→ * ===========================
+     4→ *
+     5→ * See handover-domain.md for plain English explanation and domain structure documentation.
+     6→ */
+     7→
+     8→Domain HandoverDomain {
+     9→    domainVisionStatement = "Define and govern the business meaning of a product moving from fulfilled to customer-owned."
+    10→
+    11→    Subdomain OrderFulfilment {
+    12→        type = CORE_DOMAIN
+    13→        domainVisionStatement = "Manage delivery order life-cycle from placement to completion, including Click & Collect and Home Delivery"
+    14→    }
+    15→
+    16→    Subdomain DeliveryProviderIntegration {
+    17→        type = SUPPORTING_DOMAIN
+    18→        domainVisionStatement = "Integrate with third-party delivery platforms (DoorDash, Uber Eats, Deliveroo) for driver dispatch and tracking"
+    19→    }
+    20→
+    21→    Subdomain DeliveryTracking {
+    22→        type = SUPPORTING_DOMAIN
+    23→        domainVisionStatement = "Track delivery orders in real-time and provide status updates to customers"
+    24→    }
+    25→
+    26→    Subdomain FulfilmentCoordination {
+    27→        type = SUPPORTING_DOMAIN
+    28→        domainVisionStatement = "Coordinate order preparation and handoff between stores and delivery drivers"
+    29→    }
+    30→
+    31→    Subdomain DeliveryFeeCalculation {
+    32→        type = SUPPORTING_DOMAIN
+    33→        domainVisionStatement = "Calculate delivery fees based on distance, order value, and delivery zone"
+    34→    }
+    35→}
+    36→
+
+<system-reminder>
+Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+</system-reminder>

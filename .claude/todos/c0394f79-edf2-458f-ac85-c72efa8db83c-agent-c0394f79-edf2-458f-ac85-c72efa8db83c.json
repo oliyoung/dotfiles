@@ -1,0 +1,62 @@
+[
+  {
+    "content": "Phase 1: Create new document structure outline",
+    "status": "in_progress",
+    "activeForm": "Creating structure outline"
+  },
+  {
+    "content": "Phase 1: Map existing content to new sections",
+    "status": "pending",
+    "activeForm": "Mapping content"
+  },
+  {
+    "content": "Phase 2: Add Vision and Architectural Approach",
+    "status": "pending",
+    "activeForm": "Adding vision and approach"
+  },
+  {
+    "content": "Phase 2: Restructure Executive Summary",
+    "status": "pending",
+    "activeForm": "Restructuring executive summary"
+  },
+  {
+    "content": "Phase 3: Create Technical Architecture section",
+    "status": "pending",
+    "activeForm": "Creating technical architecture"
+  },
+  {
+    "content": "Phase 3: Extract Baseline Architecture from TS-0",
+    "status": "pending",
+    "activeForm": "Extracting baseline"
+  },
+  {
+    "content": "Phase 3: Convert Key Tech Decisions to ADRs",
+    "status": "pending",
+    "activeForm": "Converting to ADRs"
+  },
+  {
+    "content": "Phase 4: Add Non-Functional Requirements",
+    "status": "pending",
+    "activeForm": "Adding NFRs"
+  },
+  {
+    "content": "Phase 4: Add Monitoring and Observability",
+    "status": "pending",
+    "activeForm": "Adding monitoring"
+  },
+  {
+    "content": "Phase 4: Add Assumptions and Constraints",
+    "status": "pending",
+    "activeForm": "Adding assumptions"
+  },
+  {
+    "content": "Phase 5: Validate and cross-reference",
+    "status": "pending",
+    "activeForm": "Validating document"
+  },
+  {
+    "content": "Commit and push restructured document",
+    "status": "pending",
+    "activeForm": "Committing changes"
+  }
+]

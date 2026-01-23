@@ -1,0 +1,800 @@
+     1→/*
+     2→ * LoyaltyService - Bounded Context Definition
+     3→ * ============================================
+     4→ *
+     5→ * Core BFF service for loyalty programme management across all VER brands.
+     6→ *
+     7→ * See loyalty.adoc for comprehensive architecture documentation, decision log, and patterns.
+     8→ */
+     9→
+    10→import "../domains/loyalty.cml"
+    11→import "profile.cml"
+    12→
+    13→BoundedContext LoyaltyService implements LoyaltyDomain {
+    14→
+    15→    type = APPLICATION
+    16→
+    17→    // Strategic DDD Classification: CORE_DOMAIN | SUPPORTING_DOMAIN | GENERIC_DOMAIN
+    18→    // CORE_DOMAIN: Primary competitive differentiator - loyalty programmes are critical for customer retention
+    19→    // and lifetime value in convenience retail
+    20→    strategicClassification = "CORE_DOMAIN"
+    21→
+    22→    domainVisionStatement = "Manages loyalty programmes, reward calculations, and partner integrations across all VER brands (OTR, REXP, SMGB). Abstracts loyalty engine capabilities and handles transaction adjudication."
+    23→
+    24→    responsibilities = "Transaction adjudication recording",
+    25→                      "Partner link status tracking",
+    26→                      "Orchestration of loyalty operations across EagleEye, CRM, and partner systems",
+    27→                      "Event translation from EagleEye webhooks to OTR domain events",
+    28→                      "Backend-for-Frontend (BFF) facade for mobile app loyalty features"
+    29→
+    30→    implementationTechnology = "Azure Functions, .NET Core, Eagle Eye API, Azure Key Vault, Event Bus"
+    31→
+    32→    // ========================================================================
+    33→    // SECTION 1: CORE AGGREGATES
+    34→    // ========================================================================
+    35→    // Aggregates represent transactional consistency boundaries.
+    36→    // Each aggregate root controls access to entities within its boundary.
+    37→    // ========================================================================
+    38→
+    39→    // 1.1 RewardTransaction Aggregate
+    40→    // ---------------------------------
+    41→    // Records the result of transaction adjudication and rewards awarded.
+    42→    // Stores minimal transaction context for customer reward history display.
+    43→    // Full basket details are NOT stored (owned by POS/Transaction context).
+    44→    //
+    45→    // Two-Phase Adjudication:
+    46→    // - Created ONLY in Phase 2 (Redemption) after payment captured
+    47→    // - Phase 1 (Validation) returns provisional rewards but does NOT create aggregate
+    48→    // - Stores payment method used to enable audit trail and reconciliation
+    49→    //
+    50→    // Invariants:
+    51→    // - Must reference a source transaction ID
+    52→    // - Transaction amount must be positive
+    53→    // - Payment method must be present (required for validation)
+    54→    // - If eligible, must have a reward grant
+    55→    //
+    56→    // Bounded Context Note:
+    57→    // - Basket line items are passed to EagleEye but NOT persisted
+    58→    // - Only summary (itemCount, itemSummary) stored for guest history display
+    59→    // - Source transaction ID references POS system for full basket details
+    60→    // - Payment method stored for eligibility audit (e.g., grant exclusions, co-brand bonuses)
+    61→    Aggregate RewardTransaction {
+    62→        Entity RewardTransactionRecord {
+    63→            aggregateRoot
+    64→
+    65→            - RewardTransactionId id
+    66→            - TransactionId sourceTransactionId  // Reference to POS transaction
+    67→            - String VivaConsumerId              // Salesforce guest identifier
+    68→            - Money transactionAmount
+    69→            - int itemCount                      // e.g., "2 items"
+    70→            - String itemSummary                 // e.g., "Fuel, Coffee" (for display)
+    71→            - DateTime transactionDate
+    72→            - StoreId storeId
+    73→            - PaymentMethod paymentMethod        // Payment method used (affects eligibility)
+    74→            - RewardPreference preferenceUsed
+    75→            - Set<LoyaltyScheme> schemesParticipated  // Schemes posted to (FLYBUYS, INTERNAL_OTR)
+    76→            - EligibilityStatus eligibility
+    77→            - RewardGrant grant
+    78→            - AdjudicationStatus status          // SUCCESS, NOT_ELIGIBLE, SERVICE_UNAVAILABLE
+    79→            - DateTime adjudicatedAt
+    80→        }
+    81→
+    82→        ValueObject RewardPreference {
+    83→            - PreferenceType type  // FLYBUYS_POINTS, SPS_FUEL_DISCOUNT, OTR_REWARDS
+    84→        }
+    85→
+    86→        ValueObject EligibilityStatus {
+    87→            - boolean isEligible
+    88→            - List<String> exclusionReasons
+    89→        }
+    90→
+    91→        ValueObject RewardGrant {
+    92→            - ProfileService.PartnerType partner
+    93→            - Money amount
+    94→            - int points
+    95→            - GrantType type  // BASE, BONUS, PROMOTIONAL
+    96→        }
+    97→
+    98→        ValueObject AdjudicationStatus {
+    99→            - StatusType status  // SUCCESS, NOT_ELIGIBLE, SERVICE_UNAVAILABLE, VALIDATION_FAILED
+   100→        }
+   101→
+   102→        ValueObject PaymentMethod {
+   103→            // Payment method metadata affecting reward eligibility
+   104→            // Different payment methods have different earning rules:
+   105→            // - Promotional grants/discounts may exclude certain amounts from points
+   106→            // - Co-branded cards may have bonus earning rates
+   107→            // - BNPL/gift cards may have restricted eligibility
+   108→
+   109→            - PaymentMethodType type           // Payment method category
+   110→            - boolean hasActiveGrants          // Active promotional grants (e.g., fuel discounts)
+   111→            - List<String> grantIdentifiers    // Grant IDs affecting eligibility (excludes amounts)
+   112→            - Map<String, String> metadata     // Payment-method-specific data (e.g., co-brand partner, issuer)
+   113→        }
+   114→
+   115→        enum PaymentMethodType {
+   116→            SHELL_CARD,          // Shell fuel card (may have promotional grants)
+   117→            CO_BRANDED_CARD,     // Co-branded loyalty cards (e.g., Flybuys credit card)
+   118→            CREDIT_CARD,         // Standard credit card
+   119→            DEBIT_CARD,          // Standard debit card
+   120→            DIGITAL_WALLET,      // Apple Pay, Google Pay, Samsung Pay
+   121→            BNPL,                // Buy Now Pay Later (Afterpay, Zip, etc.)
+   122→            GIFT_CARD,           // Gift card or voucher
+   123→            CASH,                // Cash payment
+   124→            OTHER                // Other payment types
+   125→        }
+   126→
+   127→        enum LoyaltyScheme {
+   128→            // Loyalty schemes configured in EagleEye for dual-track points accrual
+   129→            // All schemes updated atomically during transaction adjudication (all-or-nothing)
+   130→
+   131→            FLYBUYS,             // Flybuys partner scheme (transmitted to Flybuys via batch)
+   132→            INTERNAL_OTR         // Internal OTR points scheme (dormant, not customer-visible)
+   133→        }
+   134→    }
+   135→
+   136→    // 1.2 PartnerLink Aggregate - MOVED TO PROFILESERVICE
+   137→    // ----------------------------------------------------
+   138→    // This aggregate has been MOVED to ProfileService bounded context.
+   139→    //
+   140→    // Rationale:
+   141→    // - Partner linking is customer profile data, not loyalty transaction data
+   142→    // - ProfileService is natural home for customer relationships
+   143→    // - Reduces LoyaltyService complexity to single aggregate (RewardTransaction)
+   144→    //
+   145→    // Migration Impact:
+   146→    // - LoyaltyService queries ProfileService synchronously for partner link status
+   147→    // - Pattern: GET /profiles/{vci}/partner-links
+   148→    // - Similar to how LoyaltyService queries EagleEye (real-time orchestration)
+   149→    //
+   150→    // See: bounded-contexts/profile.cml for PartnerLink aggregate definition
+   151→
+   152→    // NOTE: Multiple Aggregates REMOVED - Owned by Other Contexts
+   153→    // =============================================================
+   154→    //
+   155→    // Owned by EagleEye AIR platform (queried via ACL):
+   156→    // - Wallet: Grants, fuel discounts, product offers, entitlements
+   157→    // - PointsLedger: Points balance, transactions, expiry tracking
+   158→    // - Membership: Member enrollment, tier levels, tier progression
+   159→    // - Campaigns/Promotions: Promotional campaigns, eligibility rules, reward multipliers
+   160→    //
+   161→    // Owned by SubscriptionService bounded context:
+   162→    // - Subscription: Subscription plans, billing, payment coordination
+   163→    // - Integrates with payment gateway (Stripe/etc.) for recurring billing
+   164→    // - LoyaltyService subscribes to subscription life-cycle events
+   165→    //
+   166→    // See: EagleEye ACL (application-layer/eagleeye-acl.md) for query translations
+   167→
+   168→    // ========================================================================
+   169→    // FINAL AGGREGATES IN LOYALTYSERVICE
+   170→    // ========================================================================
+   171→    // After bounded context analysis, LoyaltyService owns only:
+   172→    // 1. RewardTransaction - Audit trail of transaction adjudication results
+   173→    //
+   174→    // PartnerLink aggregate MOVED to ProfileService (customer profile data).
+   175→    // Everything else is owned by other bounded contexts or queried from EagleEye.
+   176→    // ========================================================================
+   177→    // ========================================================================
+   178→    // SECTION 2: DOMAIN EVENTS
+   179→    // ========================================================================
+   180→    // Events published to Event Bus for downstream consumption.
+   181→    // Follows Event-Carried State Transfer pattern with full context.
+   182→    //
+   183→    // Event Sources:
+   184→    // 1. LoyaltyService aggregates (RewardTransaction, PartnerLink)
+   185→    // 2. EagleEye webhooks → translated by ACL → published as domain events
+   186→    // 3. EagleEye API responses → translated by ACL → published as domain events
+   187→    //
+   188→    // Note: Even though EagleEye owns points, tiers, campaigns, and wallet,
+   189→    // LoyaltyService acts as the event publisher, translating EagleEye's
+   190→    // notifications into OTR's domain language for other bounded contexts.
+   191→    // ========================================================================
+   192→
+   193→    // --- Transaction Events (Source: LoyaltyService aggregate) ---
+   194→
+   195→    DomainEvent MemberEnrolled {
+   196→        - String VivaConsumerId           // Salesforce guest identifier
+   197→        - MemberId memberId
+   198→        - DateTime enrolledAt
+   199→        - String source  // MOBILE_APP, WEB_APP, IN_STORE
+   200→    }
+   201→
+   202→    DomainEvent MembershipSuspended {
+   203→        - String VivaConsumerId           // Salesforce guest identifier
+   204→        - DateTime suspendedAt
+   205→        - String reason
+   206→    }
+   207→
+   208→    DomainEvent MembershipReactivated {
+   209→        - String VivaConsumerId           // Salesforce guest identifier
+   210→        - DateTime reactivatedAt
+   211→    }
+   212→
+   213→    // --- Transaction & Points Events ---
+   214→
+   215→    DomainEvent TransactionAdjudicated {
+   216→        - RewardTransactionId rewardTransactionId
+   217→        - TransactionId sourceTransactionId
+   218→        - String VivaConsumerId           // Salesforce guest identifier
+   219→        - Money amount
+   220→        - int itemCount
+   221→        - String itemSummary
+   222→        - DateTime transactionDate
+   223→        - StoreId storeId
+   224→        - boolean isEligible
+   225→        - List<String> exclusionReasons
+   226→        - AdjudicationStatus status
+   227→    }
+   228→
+   229→    // --- Points Events (Source: EagleEye webhook → ACL translation) ---
+   230→
+   231→    DomainEvent PointsEarned {
+   232→        - String VivaConsumerId           // Salesforce guest identifier
+   233→        - int points
+   234→        - LoyaltyScheme scheme            // Scheme where points were earned (FLYBUYS, INTERNAL_OTR)
+   235→        - RewardTransactionId rewardTransactionId
+   236→        - TransactionId sourceTransactionId
+   237→        - String itemSummary  // For display: "Fuel, Coffee"
+   238→        - DateTime earnedAt
+   239→        - String earnType  // BASE, BONUS, PROMOTIONAL
+   240→        - int newBalance
+   241→    }
+   242→
+   243→    DomainEvent PointsRedeemed {
+   244→        - String VivaConsumerId           // Salesforce guest identifier
+   245→        - int points
+   246→        - LoyaltyScheme scheme            // Scheme where points were redeemed
+   247→        - String redemptionType  // FUEL_DISCOUNT, PRODUCT_OFFER, PARTNER_TRANSFER
+   248→        - DateTime redeemedAt
+   249→        - String redemptionReference
+   250→        - int remainingBalance
+   251→    }
+   252→
+   253→    DomainEvent PointsExpired {
+   254→        - String VivaConsumerId           // Salesforce guest identifier
+   255→        - int pointsExpired
+   256→        - LoyaltyScheme scheme            // Scheme where points expired
+   257→        - DateTime expiredAt
+   258→        - String expiryReason
+   259→        - int remainingBalance
+   260→    }
+   261→
+   262→    DomainEvent PointsAdjusted {
+   263→        - String VivaConsumerId           // Salesforce guest identifier
+   264→        - int pointsAdjustment
+   265→        - LoyaltyScheme scheme            // Scheme where points were adjusted
+   266→        - DateTime adjustedAt
+   267→        - String reason
+   268→        - String performedBy
+   269→        - int newBalance
+   270→    }
+   271→
+   272→    // --- Wallet Events (Source: EagleEye webhook → ACL translation) ---
+   273→
+   274→    DomainEvent GrantIssued {
+   275→        - String VivaConsumerId           // Salesforce guest identifier
+   276→        - String grantId  // EagleEye grant ID
+   277→        - String grantType  // FUEL_DISCOUNT, PRODUCT_OFFER, POINTS
+   278→        - Money value
+   279→        - DateTime issuedAt
+   280→        - DateTime expiresAt
+   281→    }
+   282→
+   283→    DomainEvent GrantRedeemed {
+   284→        - String VivaConsumerId           // Salesforce guest identifier
+   285→        - String grantId
+   286→        - DateTime redeemedAt
+   287→        - TransactionId sourceTransactionId
+   288→    }
+   289→
+   290→    // --- Partner Events - MOVED TO PROFILESERVICE ---
+   291→    // These events are now published by ProfileService:
+   292→    // - PartnerLinked
+   293→    // - PartnerUnlinked
+   294→    // - PartnerLinkChanged
+   295→    // - RewardPreferenceChanged
+   296→    //
+   297→    // LoyaltyService may consume these events if needed for auditing/analytics,
+   298→    // but primarily queries ProfileService synchronously for partner link status.
+   299→
+   300→    // --- Flybuys-Specific Events (Source: Flybuys webhook → ACL translation) ---
+   301→    // These events are specific to Flybuys integration and published in OTR domain language.
+   302→
+   303→    DomainEvent FlybuysPointsEarned {
+   304→        - String VivaConsumerId           // Salesforce guest identifier
+   305→        - String flybuysMemberId          // Flybuys member number
+   306→        - int pointsEarned
+   307→        - int newBalance
+   308→        - TransactionId sourceTransactionId
+   309→        - DateTime earnedAt
+   310→        - String earnType  // TRANSACTION, BOOSTER, PROMOTIONAL
+   311→    }
+   312→
+   313→    DomainEvent FlybuysBalanceUpdated {
+   314→        - String VivaConsumerId           // Salesforce guest identifier
+   315→        - String flybuysMemberId
+   316→        - int previousBalance
+   317→        - int newBalance
+   318→        - int pointsChange                // Delta (positive or negative)
+   319→        - DateTime updatedAt
+   320→        - String changeReason             // EARNED, REDEEMED, ADJUSTED, EXPIRED
+   321→    }
+   322→
+   323→    DomainEvent PartnerAccountLinked {
+   324→        - String VivaConsumerId           // Salesforce guest identifier
+   325→        - String flybuysMemberId
+   326→        - DateTime linkedAt
+   327→        - String linkMethod               // OAUTH_MOBILE_APP, POS_CARD_SCAN
+   328→        - String brandContext             // OTR, SPS
+   329→    }
+   330→
+   331→    DomainEvent PartnerAccountUnlinked {
+   332→        - String VivaConsumerId           // Salesforce guest identifier
+   333→        - String flybuysMemberId
+   334→        - DateTime unlinkedAt
+   335→        - String reason                   // USER_REQUEST, ACCOUNT_CLOSED, TOKEN_REVOKED
+   336→        - String brandContext             // OTR, SPS
+   337→    }
+   338→
+   339→    DomainEvent FlybuysDealerTransactionPosted {
+   340→        - String flybuysMemberId
+   341→        - String dealerId                 // Shell dealer ID
+   342→        - Money transactionAmount
+   343→        - int pointsEarned
+   344→        - DateTime transactionDate
+   345→        - String terminalId
+   346→        - boolean isSuccessful
+   347→    }
+   348→
+   349→    // --- Partner Batch Processing Events (Source: LoyaltyService batch job) ---
+   350→    // These events capture DOMAIN FACTS about partner transaction posting.
+   351→    // The business fact is: "Transactions were posted to partner on this date"
+   352→    //
+   353→    // NOTE: CSV file generation, SFTP transmission, scheduling (01:00 UTC) are
+   354→    // APPLICATION/INFRASTRUCTURE concerns documented in application layer.
+   355→
+   356→    DomainEvent DailyPointsFileGenerated {
+   357→        // Published when daily partner points file has been generated
+   358→        // (Business fact: "We identified and classified these transactions for partner posting")
+   359→
+   360→        - Date processingDate               // Business day being processed (e.g., 2026-01-14)
+   361→        - PartnerType partner               // FLYBUYS, future partners
+   362→        - int transactionCount              // Total transactions included
+   363→        - int basePointsTotal               // Total base points across all transactions
+   364→        - int bonusPointsTotal              // Total bonus points across all transactions
+   365→        - int totalPoints                   // basePointsTotal + bonusPointsTotal
+   366→        - String fileId                     // Unique identifier for reconciliation
+   367→        - DateTime generatedAt
+   368→    }
+   369→
+   370→    DomainEvent DailyPointsFileTransmitted {
+   371→        // Published when file has been successfully transmitted to partner
+   372→        // (Business fact: "We posted these transactions to partner")
+   373→
+   374→        - String fileId                     // Links to DailyPointsFileGenerated
+   375→        - Date processingDate
+   376→        - PartnerType partner
+   377→        - String transmissionId             // Partner's acknowledgment ID (if available)
+   378→        - TransmissionStatus status         // TRANSMITTED, FAILED, ACKNOWLEDGED
+   379→        - DateTime transmittedAt
+   380→    }
+   381→
+   382→    DomainEvent DailyPointsFileAcknowledged {
+   383→        // Published when partner acknowledges file receipt and processing
+   384→        // (Business fact: "Partner confirmed processing with these results")
+   385→
+   386→        - String fileId
+   387→        - Date processingDate
+   388→        - PartnerType partner
+   389→        - int successfulTransactions        // Accepted by partner
+   390→        - int failedTransactions            // Rejected by partner (retry required)
+   391→        - List<String> failureReasons       // Business reasons for rejection
+   392→        - DateTime acknowledgedAt
+   393→    }
+   394→
+   395→    enum TransmissionStatus {
+   396→        TRANSMITTED,        // File uploaded successfully
+   397→        FAILED,            // Transmission failed (network, auth, etc.)
+   398→        ACKNOWLEDGED,      // Partner confirmed receipt
+   399→        REJECTED           // Partner rejected file (format, validation, etc.)
+   400→    }
+   401→
+   402→    // ========================================================================
+   403→    // SECTION 3: ORCHESTRATION & QUERY SERVICES
+   404→    // ========================================================================
+   405→    // These services orchestrate calls to EagleEye and other external systems.
+   406→    // They do NOT manage local aggregates - they are facades/adapters for
+   407→    // querying and coordinating external loyalty platform operations.
+   408→    //
+   409→    // Pattern: Backend-for-Frontend (BFF) orchestration services
+   410→    // ========================================================================
+   411→
+   412→    Service TransactionSummaryService {
+   413→        // Generate human-readable item summary from basket
+   414→        // (Domain logic - operates on transaction data, not external calls)
+   415→        generateItemSummary(@List<BasketItem> items) : String
+   416→
+   417→        // Count total items in basket
+   418→        countItems(@List<BasketItem> items) : int
+   419→    }
+   420→
+   421→    Service PointsQueryService {
+   422→        // Query upcoming expiry schedule from EagleEye
+   423→        // (Orchestration - calls EagleEye API, no local aggregate)
+   424→        getExpirySchedule(@String VivaConsumerId) : List<ExpirySchedule>
+   425→
+   426→        // Query points balance from EagleEye for a specific scheme
+   427→        getPointsBalance(@String VivaConsumerId, @LoyaltyScheme scheme) : int
+   428→
+   429→        // Query all scheme balances from EagleEye (for analytics, backoffice)
+   430→        getAllSchemeBalances(@String VivaConsumerId) : Map<LoyaltyScheme, int>
+   431→
+   432→        // Query customer-visible balance (currently FLYBUYS only)
+   433→        getCustomerVisibleBalance(@String VivaConsumerId) : int
+   434→
+   435→        // Query points ledger/history from EagleEye for a specific scheme
+   436→        getPointsHistory(@String VivaConsumerId, @LoyaltyScheme scheme) : List<PointsTransaction>
+   437→    }
+   438→
+   439→
+   440→    Service ProfileServiceIntegration {
+   441→        // Query ProfileService for partner link status during transaction adjudication
+   442→        // (Synchronous queries - similar pattern to EagleEye queries)
+   443→
+   444→        // Query partner link status for customer
+   445→        getPartnerLinkStatus(@String VivaConsumerId) : PartnerLinkStatus
+   446→
+   447→        // Query reward preference for customer
+   448→        getRewardPreference(@String VivaConsumerId) : ProfileService.RewardPreferenceType
+   449→
+   450→        // Get all partner links for customer
+   451→        getPartnerLinks(@String VivaConsumerId) : List<PartnerLinkInfo>
+   452→    }
+   453→
+   454→    ValueObject PartnerLinkStatus {
+   455→        - boolean isLinked
+   456→        - ProfileService.PartnerType partner
+   457→        - String externalMemberId
+   458→        - ProfileService.RewardPreferenceType rewardPreference
+   459→    }
+   460→
+   461→    ValueObject PartnerLinkInfo {
+   462→        - ProfileService.PartnerType partner
+   463→        - String externalMemberId
+   464→        - ProfileService.LinkState linkState
+   465→        - ProfileService.RewardPreferenceType rewardPreference
+   466→    }
+   467→
+   468→    Service TransactionClassifier {
+   469→        // DOMAIN SERVICE: Contains business rules for classifying transactions
+   470→        // for partner points posting (Flybuys batch file generation).
+   471→        //
+   472→        // This is DOMAIN logic because:
+   473→        // - Classification rules (base vs bonus points) are business rules
+   474→        // - Would exist even if Flybuys switched from batch files to real-time API
+   475→        // - Contains payment-method-specific eligibility logic
+   476→        //
+   477→        // Payment Method Rules:
+   478→        // - Promotional grants/discounts: Exclude grant amounts from point calculation
+   479→        // - Co-branded cards: Apply partner-specific bonus rates
+   480→        // - Restricted payment types: BNPL, gift cards may have limited eligibility
+   481→        // - Payment method metadata stored in RewardTransaction drives classification
+   482→        //
+   483→        // NOTE: Actual batch file generation (CSV format, SFTP transmission, scheduling)
+   484→        // is APPLICATION/INFRASTRUCTURE concern and documented separately.
+   485→
+   486→        // Classify transaction for Flybuys points posting
+   487→        // Applies business rules: fuel 1pt/L, retail 1pt/$1, product exclusions, payment method rules
+   488→        classifyForFlybuys(@RewardTransactionRecord transaction, @PartnerLinkInfo link) : PointsClassification
+   489→
+   490→        // Determine if transaction is eligible for partner points
+   491→        // Business rules: payment method eligibility, product exclusions, site type
+   492→        isEligibleForPartnerPoints(@RewardTransactionRecord transaction, @ProfileService.PartnerType partner) : boolean
+   493→
+   494→        // Apply payment-method-specific exclusions
+   495→        // Examples: Shell Card grants, co-branded bonus rates, BNPL restrictions
+   496→        applyPaymentMethodRules(@RewardTransactionRecord transaction, @PaymentMethod paymentMethod) : Money
+   497→
+   498→        // Calculate base points (standard earn rate)
+   499→        // Applies to net transaction amount after payment-method exclusions
+   500→        calculateBasePoints(@Money eligibleAmount, @TransactionType type) : int
+   501→
+   502→        // Calculate bonus points (promotional multipliers, campaigns)
+   503→        calculateBonusPoints(@RewardTransactionRecord transaction, @List<Campaign> activeCampaigns) : int
+   504→    }
+   505→
+   506→    Service CampaignQueryService {
+   507→        // Query campaign eligibility from EagleEye
+   508→        // (Orchestration - calls EagleEye API, no local aggregate)
+   509→        getCampaignEligibility(@String VivaConsumerId, @CampaignId campaignId) : boolean
+   510→
+   511→        // Query all active campaigns for guest from EagleEye
+   512→        getActiveCampaigns(@String VivaConsumerId) : List<Campaign>
+   513→
+   514→        // Query campaign details from EagleEye
+   515→        getCampaignDetails(@CampaignId campaignId) : Campaign
+   516→    }
+   517→
+   518→    Service WalletQueryService {
+   519→        // Query wallet contents from EagleEye (grants, offers, discounts)
+   520→        // (Orchestration - calls EagleEye API, no local aggregate)
+   521→        getWallet(@String VivaConsumerId) : Wallet
+   522→
+   523→        // Query active grants from EagleEye
+   524→        getActiveGrants(@String VivaConsumerId) : List<Grant>
+   525→
+   526→        // Query stored value balance from EagleEye
+   527→        getStoredValueBalance(@String VivaConsumerId) : Money
+   528→    }
+   529→
+   530→    // ========================================================================
+   531→    // PARTNER INTEGRATION ABSTRACTION
+   532→    // ========================================================================
+   533→    // Generic partner service interfaces enable partner flexibility without
+   534→    // imposing ACL translation overhead on partners with stable APIs.
+   535→    //
+   536→    // Pattern: Conformist implementations behind generic domain interfaces
+   537→    // ----------------------------------------------------------------------
+   538→    // - Domain defines generic IPartnerPointsService, IPartnerLinkingService
+   539→    // - Infrastructure provides partner-specific implementations:
+   540→    //   * FlybuysPointsService (Conformist - no translation, stable API)
+   541→    //   * ShellPointsService (future - TBD pattern based on Shell API stability)
+   542→    // - Domain code uses generic interfaces, stays partner-agnostic
+   543→    // - Each partner implementation chooses appropriate pattern:
+   544→    //   * Conformist if API stable (Flybuys, industry standards like OAuth)
+   545→    //   * ACL if API unstable or vendor-specific (protect domain from changes)
+   546→    //
+   547→    // Benefits:
+   548→    // - Domain stays partner-agnostic (can swap/add partners)
+   549→    // - No translation overhead for stable APIs (Conformist)
+   550→    // - Future partners can choose ACL if needed (API instability)
+   551→    // - Implementation pattern choice separated from domain design
+   552→    //
+   553→    // Flybuys Integration (Conformist Implementation):
+   554→    // - FlybuysPointsService directly uses Flybuys REST API contracts
+   555→    // - No ACL translation (Flybuys API is stable, well-documented, OAuth 2.0 standard)
+   556→    // - Maps generic method calls → Flybuys API endpoints
+   557→    // - Rationale: Flybuys partnership is time-bound (2-3 years), API mature,
+   558→    //   ACL overhead not justified for industry-standard OAuth + REST APIs
+   559→    // ========================================================================
+   560→
+   561→    Service IPartnerPointsService {
+   562→        // Generic interface for partner points operations
+   563→        // Implementations: FlybuysPointsService (Conformist), ShellPointsService (future)
+   564→
+   565→        // Get customer's points balance with partner
+   566→        getPointsBalance(@String externalMemberId, @ProfileService.PartnerType partner) : int
+   567→
+   568→        // Get points expiry schedule from partner
+   569→        getExpirySchedule(@String externalMemberId, @ProfileService.PartnerType partner) : List<PointsExpiry>
+   570→
+   571→        // Validate external member ID with partner system
+   572→        validateMembership(@String externalMemberId, @ProfileService.PartnerType partner) : boolean
+   573→
+   574→        // Post transaction to partner for points accrual
+   575→        // (Real-time posting if partner supports, otherwise queued for batch)
+   576→        postTransaction(@PartnerTransaction transaction) : PartnerPostingResult
+   577→    }
+   578→
+   579→    Service IPartnerLinkingService {
+   580→        // Generic interface for partner account linking operations
+   581→        // Implementations: FlybuysLinkingService (OAuth 2.0 via Auth0), future partners
+   582→
+   583→        // Initiate OAuth linking flow (returns authorisation URL)
+   584→        initiateOAuthFlow(@String VivaConsumerId, @ProfileService.PartnerType partner) : OAuthauthorisationUrl
+   585→
+   586→        // Complete OAuth linking (called after OAuth callback)
+   587→        completeOAuthFlow(@String authorisationCode, @String codeVerifier) : PartnerLinkResult
+   588→
+   589→        // Revoke partner linking and tokens
+   590→        revokePartnerLink(@PartnerLinkId linkId) : boolean
+   591→
+   592→        // Refresh expired access token
+   593→        refreshAccessToken(@String oauthProviderId) : OAuthToken
+   594→    }
+   595→
+   596→    Service IPartnerDocketService {
+   597→        // Generic interface for partner digital docket/voucher operations
+   598→        // Implementations: FlybuysDocketService (fuel dockets from Coles), future partners
+   599→
+   600→        // Get available digital dockets for customer
+   601→        getAvailableDockets(@String externalMemberId, @ProfileService.PartnerType partner) : List<DigitalDocket>
+   602→
+   603→        // Redeem digital docket during transaction
+   604→        redeemDocket(@String docketId, @TransactionId transactionId) : DocketRedemptionResult
+   605→
+   606→        // Validate docket eligibility (fuel amount, expiry, etc.)
+   607→        validateDocket(@String docketId, @Money transactionAmount) : boolean
+   608→    }
+   609→
+   610→    // ========================================================================
+   611→    // BARCODE RESOLUTION SERVICE (Strangler Fig Pattern)
+   612→    // ========================================================================
+   613→    // This service strangles the legacy "Coupon Scanner" system used in REXP stores.
+   614→    //
+   615→    // Legacy (Current REXP):
+   616→    // - POS → Coupon Scanner (single-serving legacy solution)
+   617→    // - Limited barcode pattern matching
+   618→    // - No integration with OTR loyalty systems
+   619→    // - No guest identity resolution
+   620→    //
+   621→    // Target State (TO-BE):
+   622→    // - POS → D365 Commerce → LoyaltyService.BarcodeResolutionService
+   623→    // - Unified barcode handling across OTR and REXP stores
+   624→    // - Guest identity resolution (barcode → VivaConsumerId)
+   625→    // - Partner linking status (Flybuys, Shell, OTR)
+   626→    // - Reward preference lookup for transaction adjudication
+   627→    //
+   628→    // Pattern: Strangler Fig
+   629→    // - New functionality built in LoyaltyService
+   630→    // - Legacy Coupon Scanner gradually retired as REXP stores convert to OTR
+   631→    // - D365 Commerce POS calls LoyaltyService directly (no legacy dependency)
+   632→    // ========================================================================
+   633→
+   634→    Service BarcodeResolutionService {
+   635→        // DOMAIN SERVICE: Resolve barcode to guest identity and partner linking status
+   636→        // Enables POS to determine customer, reward preference, and apply appropriate rewards
+   637→        //
+   638→        // Strangler Fig: Replaces legacy "Coupon Scanner" with proper domain service
+   639→
+   640→        // Resolve barcode to guest identity and linking information
+   641→        // Handles multiple barcode types: OTR loyalty card, Flybuys card, Shell card
+   642→        resolveBarcode(@String barcode) : BarcodeResolution
+   643→
+   644→        // Determine barcode type from pattern (12-digit Flybuys, 13-digit OTR, etc.)
+   645→        identifyBarcodeType(@String barcode) : BarcodeType
+   646→
+   647→        // Validate barcode format and checksum
+   648→        validateBarcode(@String barcode) : boolean
+   649→
+   650→        // Look up guest by OTR loyalty barcode
+   651→        resolveOTRBarcode(@String barcode) : String  // Returns VivaConsumerId
+   652→
+   653→        // Look up guest by linked Flybuys barcode
+   654→        resolveFlybuysBarcode(@String flybuysMemberId) : String  // Returns VivaConsumerId (if linked)
+   655→
+   656→        // Look up guest by linked Shell card barcode
+   657→        resolveShellBarcode(@String shellCardNumber) : String  // Returns VivaConsumerId (if linked)
+   658→    }
+   659→
+   660→    // ========================================================================
+   661→    // SECTION 4: SHARED VALUE OBJECTS
+   662→    // ========================================================================
+   663→    // Reusable value objects used across multiple aggregates.
+   664→    // ========================================================================
+   665→
+   666→    ValueObject Money {
+   667→        - Decimal amount
+   668→        - String currency  // AUD, USD
+   669→    }
+   670→
+   671→    ValueObject StoreId {
+   672→        - String id
+   673→    }
+   674→
+   675→    ValueObject ProductCategory {
+   676→        - String code
+   677→        - String name
+   678→        - boolean isEligibleForRewards
+   679→        - Decimal rewardMultiplier
+   680→    }
+   681→
+   682→    ValueObject TransactionId {
+   683→        - String id  // POS transaction ID
+   684→    }
+   685→
+   686→    ValueObject RewardTransactionId {
+   687→        - String id  // LoyaltyService reward transaction ID
+   688→    }
+   689→
+   690→    ValueObject LedgerEntryId {
+   691→        - String id
+   692→    }
+   693→
+   694→    ValueObject MemberId {
+   695→        - String id
+   696→    }
+   697→
+   698→    ValueObject CampaignId {
+   699→        - String id
+   700→    }
+   701→
+   702→    ValueObject SubscriptionId {
+   703→        - String id
+   704→    }
+   705→
+   706→    ValueObject PointsTransactionId {
+   707→        - String id
+   708→    }
+   709→
+   710→    ValueObject PaymentMethodId {
+   711→        - String id
+   712→    }
+   713→
+   714→    ValueObject PartnerLinkId {
+   715→        - String id
+   716→    }
+   717→
+   718→    ValueObject BarcodeResolution {
+   719→        // Result of barcode resolution service
+   720→        // Provides guest identity, partner linking status, and reward preference
+   721→
+   722→        - String barcode                    // Scanned barcode value
+   723→        - BarcodeType barcodeType          // OTR_LOYALTY, FLYBUYS, SHELL_CARD, UNKNOWN
+   724→        - boolean isValid                   // Barcode format valid
+   725→        - String VivaConsumerId            // Guest identifier (null if not found)
+   726→        - boolean isLinked                  // Partner account linked to OTR customer
+   727→        - ProfileService.RewardPreferenceType rewardPreference  // Guest's reward preference (if found)
+   728→        - String externalMemberId          // Partner member number (for linked accounts)
+   729→        - ResolutionStatus status          // RESOLVED, NOT_LINKED, NOT_FOUND, INVALID_BARCODE
+   730→    }
+   731→
+   732→    enum BarcodeType {
+   733→        OTR_LOYALTY,                       // OTR loyalty card barcode (13-digit)
+   734→        FLYBUYS,                           // Flybuys member barcode (12-digit)
+   735→        SHELL_CARD,                        // Shell fuel card barcode
+   736→        UNKNOWN                            // Unrecognised barcode pattern
+   737→    }
+   738→
+   739→    enum ResolutionStatus {
+   740→        RESOLVED,                          // Guest found, can apply rewards
+   741→        NOT_LINKED,                        // Valid partner barcode but not linked to OTR account
+   742→        NOT_FOUND,                         // Valid barcode format but no guest found
+   743→        INVALID_BARCODE                    // Invalid barcode format or checksum
+   744→    }
+   745→
+   746→    ValueObject PointsClassification {
+   747→        // DOMAIN VALUE OBJECT: Result of transaction classification for partner points posting
+   748→        // Contains business rules output: base points, bonus points, exclusions
+   749→
+   750→        - int basePoints                    // Standard earn rate (fuel: 1pt/L, retail: 1pt/$1)
+   751→        - int bonusPoints                   // Promotional multipliers, campaign bonuses
+   752→        - int totalPoints                   // basePoints + bonusPoints
+   753→        - List<String> exclusionReasons     // Product exclusions (tobacco, gift cards, etc.)
+   754→        - boolean isEligible                // Overall eligibility for partner points
+   755→        - TransactionClassificationType classificationType  // BASE_ONLY, BASE_AND_BONUS, EXCLUDED
+   756→    }
+   757→
+   758→    enum TransactionClassificationType {
+   759→        BASE_ONLY,              // Standard earn rate only (no active promotions)
+   760→        BASE_AND_BONUS,         // Base earn + promotional bonus points
+   761→        EXCLUDED                // Transaction not eligible (exclusions apply)
+   762→    }
+   763→
+   764→    // ========================================================================
+   765→    // SECTION 5: REPOSITORIES (Persistence Abstractions)
+   766→    // ========================================================================
+   767→    // Repository interfaces define persistence operations for owned aggregates.
+   768→    // Implementation details handled by infrastructure layer.
+   769→    //
+   770→    // LoyaltyService owns ONLY 1 aggregate, therefore ONLY 1 repository:
+   771→    // - RewardTransactionRepository: Persists transaction adjudication audit trail
+   772→    //
+   773→    // NO repositories for:
+   774→    // - PartnerLink (moved to ProfileService)
+   775→    // - Member, Ledger, Subscription, Campaign (owned by EagleEye or other bounded contexts)
+   776→    // ========================================================================
+   777→
+   778→    // Repository RewardTransactionRepository
+   779→}
+   780→
+   781→// ============================================================================
+   782→// END OF BOUNDED CONTEXT
+   783→// ============================================================================
+   784→//
+   785→// Implementation Notes:
+   786→// - ONLY 1 aggregate: RewardTransaction (PartnerLink moved to ProfileService)
+   787→// - Persistence: Cosmos DB (partitioned by VivaConsumerId) for owned aggregates only
+   788→// - Events published to Event Bus topic: "loyalty-events"
+   789→// - Orchestration services implemented as Azure Functions calling EagleEye APIs
+   790→// - ACL implemented for EagleEye API integration (translates to OTR domain model)
+   791→// - Flybuys uses Conformist pattern (no ACL, conform to their API)
+   792→// - Points expiry, tier evaluation, campaign management: ALL handled by EagleEye
+   793→// - LoyaltyService queries EagleEye in real-time (no local caching/replication)
+   794→// - LoyaltyService queries ProfileService synchronously for partner link status
+   795→// - Partner linking, reward preferences: ProfileService owns, LoyaltyService queries
+   796→// ============================================================================
+
+<system-reminder>
+Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+</system-reminder>

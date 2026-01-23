@@ -1,0 +1,686 @@
+= Subway Digital Menu Board Integration - Architecture Definition
+:project-name: OTR-003
+:togaf-adm-phase: Phase C: Information Systems Architectures
+:document-type: Architecture Definition Document
+:status: Development
+:version: 0.1
+:domain: ProductCatalog
+:programme-lead: TBD
+:domain-architect: O.Young@otr.com.au
+:business-owner: TBD
+:solution-architecture: xref:solution-architectures:subway_dmb.adoc[Solution Architectures/Subway DMB Integration]
+:doctype: article
+:toc: left
+:toclevels: 4
+:sectanchors:
+:sectlinks:
+:sectnums:
+:icons: font
+:source-highlighter: highlightjs
+:experimental:
+:description: Architecture Definition Document for Subway Digital Menu Board pricing integration with Amped Digital
+:keywords: subway, pricing, digital-menu-board, amped-digital, integration, architecture-definition, togaf, cross-cloud
+
+== Executive Summary
+
+*Project:* Subway Digital Menu Board (DMB) pricing integration with Amped Digital vendor
+
+*Scope:* Ecommerce team (AWS) consuming pricing data from back-office domain (Azure) to expose via REST API
+
+*Approach:* Domain-driven integration pattern with clear bounded contexts and data contracts between domains
+
+*Bounded Context:* xref:bounded-contexts:product_catalog.adoc[ProductCatalogService] - Facade/ACL layer that translates D365 Commerce pricing into AWS-native API
+
+*Platform Rationale:* Ecommerce team operates on AWS due to existing commercial agreement, making AWS the standard platform for all customer-facing workloads.
+
+== Phase A: Architecture Vision
+
+=== Business Context
+
+*Business Driver:* Enable digital menu boards across Subway stores operated by OTR
+
+*Stakeholders:*
+
+* Subway Operations (business owner)
+* Amped Digital (external vendor/consumer)
+* Ecommerce Team (solution owner - your team, AWS domain)
+* Back-Office Data Team (data provider - MJ/Grant's teams, Azure domain)
+
+=== Architecture Principles Applied
+
+. *Domain Separation:* Clear boundaries between back-office (Azure) and ecommerce (AWS) domains
+. *Platform Consistency:* Use established platform within each domain (Azure for back-office, AWS for ecommerce)
+. *Loose Coupling:* Interface via data contract, not technology dependencies
+. *Single Responsibility:* Each domain owns its implementation details
+. *Technology Alignment:* Use native cloud services within each domain
+
+=== Strategic Context: Multi-Cloud Operating Model
+
+*OTR Technology Landscape:*
+
+[mermaid]
+----
+graph TB
+    subgraph "OTR Group Technology"
+        BO[Back-Office Domain<br/>Azure Platform]
+        EC[Ecommerce Domain<br/>AWS Platform]
+    end
+
+    subgraph "Back-Office (Azure)"
+        D365[D365 Commerce]
+        ERP[ERP/Finance]
+        DATA[Data & Reporting]
+        HR[HR Systems]
+    end
+
+    subgraph "Ecommerce (AWS)"
+        APP[OTR Mobile App]
+        WEB[eCommerce Sites]
+        DMB[Digital Menu Boards]
+        B2C[SMGB B2C]
+        DIGITAL[Digital Experiences]
+    end
+
+    BO --> D365
+    BO --> ERP
+    BO --> DATA
+    BO --> HR
+
+    EC --> APP
+    EC --> WEB
+    EC --> DMB
+    EC --> B2C
+    EC --> DIGITAL
+
+    style EC fill:#ff9,stroke:#333,stroke-width:3px
+    style BO fill:#0078d4,color:#fff,stroke:#333,stroke-width:2px
+----
+
+*Platform Strategy:*
+
+* *Back-Office Domain (Azure):* D365 Commerce, Enterprise Data Platform, corporate systems
+* *Ecommerce Domain (AWS):* Customer-facing applications, digital experiences, external integrations
+* *Rationale:* Existing commercial agreement with AWS for ecommerce workloads
+* *Operating Model:* Each domain uses its native platform; cross-domain integration via data contracts
+
+*Why AWS for Ecommerce:*
+
+OTR has an existing commercial agreement with AWS that covers ecommerce team workloads. This makes AWS the established platform for all customer-facing solutions, including:
+
+* OTR Mobile App
+* eCommerce websites
+* SMGB B2C platform
+* External-facing APIs (including Subway DMB)
+
+All ecommerce team infrastructure, tooling, expertise, and operations are standardised on AWS.
+
+=== Success Criteria
+
+* Pricing API available to Amped Digital with 99.9% uptime
+* Price updates reflect in API within 1 hour of D365 changes
+* Consistent with ecommerce team's AWS platform standards
+* Scalable to additional consumers (OTR App, SMGB Online, etc.)
+
+== Phase B: Business Architecture
+
+=== Business Capabilities
+
+[mermaid]
+----
+graph TD
+    A[Subway Store Operations] --> B[Menu Pricing Management]
+    B --> C[Price Configuration in D365]
+    B --> D[Price Distribution to Channels]
+    D --> E[Digital Menu Boards]
+    D --> F[Point of Sale Systems]
+    D --> G[Mobile Apps]
+    D --> H[eCommerce]
+
+    E --> I[Price Display to Customers]
+    F --> I
+    G --> I
+    H --> I
+
+    style E fill:#ff9,stroke:#333,stroke-width:2px
+    style G fill:#ff9,stroke:#333,stroke-width:2px
+    style H fill:#ff9,stroke:#333,stroke-width:2px
+----
+
+_Orange = AWS-hosted (Ecommerce team)_
+
+=== Organizational Structure
+
+[mermaid]
+----
+graph TB
+    subgraph "OTR Group Technology Domains"
+        BO[Back-Office Domain<br/>Azure Platform]
+        EC[Ecommerce Domain<br/>AWS Platform]
+
+        BO -->|Data Provider| INT[Integration Layer]
+        EC -->|Service Provider| INT
+    end
+
+    subgraph "Back-Office Domain"
+        D365[D365 Commerce]
+        DATA[Data & Reporting Team<br/>Grant's Team]
+        ERP[ERP/Finance Systems]
+    end
+
+    subgraph "Ecommerce Domain"
+        APP[OTR Mobile App]
+        WEB[eCommerce Sites]
+        DMB[Digital Menu Boards]
+        B2C[SMGB B2C]
+        TEAM[Ecommerce Team<br/>Your Team]
+    end
+
+    style EC fill:#ff9,stroke:#333,stroke-width:3px
+    style TEAM fill:#9f9,stroke:#333,stroke-width:2px
+----
+
+*Domain Ownership:*
+
+* *Back-Office:* MJ's team (D365), Grant's team (Data & Reporting)
+* *Ecommerce:* Your team (customer-facing APIs and applications)
+* *Platform:* Back-office uses Azure, Ecommerce uses AWS (per commercial agreement)
+
+=== Business Process Flow
+
+. *Price Management:* Operations team sets prices in D365 Commerce (Azure)
+. *Price Export:* Back-office exports pricing data to AWS (cross-cloud)
+. *Price Distribution:* Ecommerce team distributes to various consumption channels (AWS)
+. *Price Display:* Customers see consistent pricing across touchpoints
+. *Price Updates:* Changes propagate within defined SLA (1 hour)
+
+== Phase C: Information Systems Architecture
+
+=== Application Architecture
+
+[mermaid]
+----
+graph TB
+    subgraph "Back-Office Domain (Azure)"
+        D365[D365 Commerce<br/>Pricing System]
+        DL[Azure Data Lake<br/>Export Storage]
+        EDP[Enterprise Data Platform<br/>Transformation Layer]
+        D365 --> DL
+        DL --> EDP
+
+        style D365 fill:#0078d4,color:#fff
+        style DL fill:#0078d4,color:#fff
+        style EDP fill:#0078d4,color:#fff
+    end
+
+    subgraph "Domain Interface"
+        S3[S3 Bucket<br/>otr-pricing-exports]
+        DC[Data Contract<br/>Schema & SLA]
+        EDP -->|Hourly Export| S3
+        S3 -.->|Conforms to| DC
+
+        style DC fill:#f96,stroke:#333,stroke-width:4px
+    end
+
+    subgraph "Ecommerce Domain (AWS)"
+        ETL[AWS Glue/Lambda<br/>ETL Pipeline]
+        RDS[(RDS PostgreSQL<br/>Pricing Database)]
+        API[API Gateway + ECS<br/>Pricing API Service]
+        S3 --> ETL
+        ETL --> RDS
+        RDS --> API
+
+        style ETL fill:#ff9900,color:#000
+        style RDS fill:#ff9900,color:#000
+        style API fill:#ff9900,color:#000
+    end
+
+    subgraph "External Consumer"
+        AD[Amped Digital<br/>DMB Platform]
+        API -->|REST API| AD
+    end
+----
+
+=== Application Component Catalog
+
+[cols="1,1,2,1,3"]
+|===
+|Component |Domain |Technology |Owner |Purpose
+
+|D365 Commerce
+|Back-Office
+|Microsoft Dynamics 365
+|Back-Office Team
+|Source of truth for pricing
+
+|Azure Data Lake
+|Back-Office
+|ADLS Gen2
+|Back-Office Team
+|Staging area for exports
+
+|Enterprise Data Platform
+|Back-Office
+|Microsoft Fabric
+|Back-Office Team
+|Data transformation
+
+|S3 Export Bucket
+|Ecommerce
+|Amazon S3
+|Ecommerce Team
+|Data handoff point
+
+|ETL Pipeline
+|Ecommerce
+|AWS Glue
+|Ecommerce Team
+|Data ingestion & transformation
+
+|Pricing Database
+|Ecommerce
+|RDS PostgreSQL
+|Ecommerce Team
+|Queryable pricing store
+
+|Pricing API (xref:bounded-contexts:product_catalog.adoc[ProductCatalogService])
+|Ecommerce
+|API Gateway/ECS
+|Ecommerce Team
+|External integration endpoint
+
+|Amped Digital DMB
+|External
+|SaaS Platform
+|Amped Digital
+|Consumer of pricing data
+|===
+
+=== Data Architecture
+
+==== Conceptual Data Model
+
+[mermaid]
+----
+erDiagram
+    PRODUCT ||--o{ PRODUCT_PRICE : has
+    PRICE_GROUP ||--o{ PRODUCT_PRICE : defines
+    PRICE_GROUP ||--o{ STORE_ASSIGNMENT : assigns
+    STORE ||--o{ STORE_ASSIGNMENT : has
+
+    PRODUCT {
+        string product_id PK
+        string product_name
+        string product_category
+    }
+
+    PRICE_GROUP {
+        string price_group_id PK
+        string price_group_name
+        string region_code
+    }
+
+    PRODUCT_PRICE {
+        string product_id FK
+        string price_group_id FK
+        decimal price_amount
+        date effective_from
+        date effective_to
+    }
+
+    STORE {
+        int store_id PK
+        string store_name
+        string store_location
+    }
+
+    STORE_ASSIGNMENT {
+        int store_id FK
+        string price_group_id FK
+        date effective_from
+    }
+----
+
+==== Data Contract Specification
+
+*Location:* `s3://otr-pricing-exports/subway/YYYY/MM/DD/pricing_YYYYMMDDHHmmss.parquet`
+
+*Schema:*
+
+[source,json]
+----
+{
+  "products": [
+    {
+      "product_number": "string",      // D365 Item ID
+      "product_name": "string",         // Display name
+      "price": [
+        {
+          "account_relation": "string", // Price group ID (e.g., POS-AU-NAT)
+          "amount": "decimal(10,2)",    // Price in AUD
+          "stores": ["integer"]         // Array of store IDs
+        }
+      ]
+    }
+  ]
+}
+----
+
+*Quality Rules:*
+
+* Product ID must be unique
+* Price amount must be > 0
+* Store IDs must exist in store master
+* At least one price group per product
+
+*Update Frequency:* Hourly (00:15, 01:15, 02:15, etc.)
+
+*Retention:* 7 days in S3
+
+== Phase D: Technology Architecture
+
+=== Technology Stack by Domain
+
+==== Back-Office Domain (Azure)
+
+[mermaid]
+----
+graph LR
+    subgraph "Back-Office Technology Stack (Azure)"
+        A[D365 Commerce] --> B[Data Management Framework]
+        B --> C[Azure Data Lake Gen2]
+        C --> D[Azure Data Factory / Fabric]
+        D --> E[Cross-Cloud Connector]
+        E --> F[AWS S3]
+    end
+
+    style E fill:#f96,stroke:#333,stroke-width:2px
+----
+
+*Components:*
+
+* *D365 Commerce:* Source system (existing)
+* *Azure Data Lake Gen2:* Export staging (existing)
+* *Azure Data Factory / Microsoft Fabric:* ETL orchestration (existing)
+* *Cross-Cloud Transfer:* Mechanism to be determined by back-office team
+
+==== Ecommerce Domain (AWS)
+
+[mermaid]
+----
+graph TB
+    subgraph "Ecommerce Technology Stack (AWS)"
+        A[S3 Bucket<br/>Standard Storage Class] --> B[S3 Event Notification]
+        B --> C{ETL Strategy}
+        C -->|Option 1| D[AWS Glue Job<br/>Spark/Python]
+        C -->|Option 2| E[Lambda Function<br/>Python/Node.js]
+        D --> F[RDS PostgreSQL<br/>db.t3.medium]
+        E --> F
+        F --> G{API Strategy}
+        G -->|Option 1| H[API Gateway + Lambda<br/>Serverless]
+        G -->|Option 2| I[ECS Fargate<br/>Containerized]
+        H --> J[CloudWatch<br/>Monitoring]
+        I --> J
+        H --> K[WAF<br/>Security]
+        I --> K
+    end
+----
+
+=== Technology Decisions
+
+[cols="2,3,2,4"]
+|===
+|Decision Point |Options Evaluated |Recommendation |Rationale
+
+|*Cloud Platform*
+|Azure vs AWS
+|*AWS*
+|*Ecommerce team operates on AWS per commercial agreement; standard platform for customer-facing workloads*
+
+|Data Store
+|DynamoDB vs RDS PostgreSQL vs Aurora
+|*RDS PostgreSQL*
+|Relational model fits domain; team expertise; consistent with ecommerce standards
+
+|ETL Processing
+|Glue vs Lambda vs Step Functions
+|*AWS Glue* (complex) or *Lambda* (simple)
+|Glue for heavy lifting; Lambda for lightweight transforms; team familiar with both
+
+|API Hosting
+|API Gateway+Lambda vs ECS vs EKS
+|*ECS Fargate*
+|Consistent with team's existing APIs; easier operations than EKS
+
+|Caching
+|ElastiCache vs API Gateway cache
+|*API Gateway cache* initially
+|Simpler; upgrade to ElastiCache if needed
+|===
+
+=== Platform Decision: Why AWS?
+
+*Context:*
+
+* OTR operates in multi-cloud environment
+* Back-office systems on Azure (D365, ERP, data platforms)
+* Ecommerce systems on AWS (mobile app, websites, digital experiences)
+
+*Decision:* Host Subway DMB integration on AWS (ecommerce domain)
+
+*Rationale:*
+
+. *Existing Platform:* Ecommerce team's established platform is AWS
+. *Commercial Agreement:* OTR has commercial agreement with AWS for ecommerce workloads
+. *Team Expertise:* Ecommerce team's skills, tooling, and processes are AWS-native
+. *Operational Consistency:* All customer-facing APIs already on AWS (OTR App, SMGB Online, etc.)
+. *Domain Alignment:* Customer-facing integrations belong in ecommerce domain
+
+*Alternative Considered:* Azure (near D365 source)
+
+* *Rejected:* Ecommerce team doesn't operate Azure infrastructure; would require new team training, tooling, and operational processes; inconsistent with existing customer-facing architecture
+
+*Implication:* Cross-cloud data transfer required from Azure to AWS (acceptable overhead)
+
+=== Network Architecture
+
+[mermaid]
+----
+graph TB
+    subgraph "Azure Network (Back-Office)"
+        AZ[Azure VNet<br/>Back-Office]
+    end
+
+    subgraph "Cross-Cloud Connectivity"
+        CC{Connection Type}
+        CC -->|Current| PUB[Public Internet<br/>with TLS]
+        CC -.->|Future Option| DX[AWS Direct Connect +<br/>Azure ExpressRoute]
+    end
+
+    subgraph "AWS Network (Ecommerce)"
+        VPC[AWS VPC<br/>Customer-Facing]
+        PRI[Private Subnet<br/>RDS + ECS]
+        PUB2[Public Subnet<br/>NAT + ALB]
+
+        VPC --> PRI
+        VPC --> PUB2
+    end
+
+    AZ -.->|Hourly export| CC
+    CC -.->|S3 upload| VPC
+
+    subgraph "External Access"
+        INT[Internet]
+        AD[Amped Digital]
+        INT --> PUB2
+        AD --> INT
+    end
+
+    style VPC fill:#ff9,stroke:#333,stroke-width:3px
+----
+
+=== Security Architecture
+
+[mermaid]
+----
+graph TB
+    subgraph "Authentication & Authorization"
+        A[Amped Digital] -->|OAuth 2.0 Client Credentials| B[API Gateway Custom Authorizer]
+        B --> C[AWS Secrets Manager<br/>Client ID/Secret Storage]
+        B --> D{Token Valid?}
+        D -->|Yes| E[Allow Request]
+        D -->|No| F[Return 401]
+    end
+
+    subgraph "Data Security"
+        G[S3 Bucket] --> H[Server-Side Encryption<br/>SSE-S3]
+        I[RDS PostgreSQL] --> J[Encryption at Rest<br/>KMS]
+        K[API Traffic] --> L[TLS 1.3<br/>In Transit Encryption]
+    end
+
+    subgraph "Access Control"
+        M[IAM Roles] --> N[Principle of Least Privilege]
+        N --> O[ECS Task Role<br/>RDS + S3 Read]
+        N --> P[Glue Job Role<br/>S3 Read + RDS Write]
+        N --> Q[Lambda Execution Role<br/>API Gateway + RDS Read]
+        N --> R[Cross-Account Role<br/>Azure → AWS S3 Write]
+
+        style R fill:#f96,stroke:#333,stroke-width:2px
+    end
+----
+
+*Security Controls:*
+
+* *Authentication:* OAuth 2.0 Client Credentials flow
+* *Authorization:* API Gateway custom authorizer
+* *Encryption in Transit:* TLS 1.3 for all API traffic
+* *Encryption at Rest:* S3 (SSE-S3), RDS (KMS), Secrets Manager (KMS)
+* *Cross-Account Access:* IAM role for Azure service principal to write to S3
+* *Network Security:* VPC security groups, NACLs, WAF rules
+* *Secrets Management:* AWS Secrets Manager (no hardcoded credentials)
+* *Audit Logging:* CloudTrail for API calls, RDS audit logs, API Gateway access logs
+
+=== Architecture Decision Records
+
+==== ADR-001: Use AWS for Ecommerce Customer-Facing Workloads
+
+* *Context:* OTR operates multi-cloud environment; ecommerce team on AWS, back-office on Azure
+* *Decision:* All ecommerce/customer-facing solutions hosted on AWS
+* *Rationale:* Commercial agreement with AWS for ecommerce workloads; team expertise in AWS; consistent platform for digital experiences; operational efficiency
+* *Consequences:* Cross-cloud data transfers required; back-office must export to AWS
+* *Status:* Approved
+
+==== ADR-002: Use RDS PostgreSQL for Pricing Storage
+
+* *Context:* Need queryable data store for pricing API on AWS
+* *Decision:* RDS PostgreSQL over DynamoDB or Aurora
+* *Rationale:* Relational model fits domain; team expertise; simple operations; consistent with ecommerce standards
+* *Consequences:* Need to manage database schema migrations
+* *Status:* Approved
+
+==== ADR-003: Domain Boundary at S3 Interface
+
+* *Context:* Multi-cloud environment (Azure back-office, AWS ecommerce)
+* *Decision:* S3 bucket as domain boundary with data contract
+* *Rationale:* Clear separation of concerns; loose coupling; each domain uses native tools
+* *Consequences:* Requires cross-account S3 access setup; cross-cloud data transfer overhead
+* *Status:* Approved
+
+==== ADR-004: OAuth 2.0 Client Credentials for Authentication
+
+* *Context:* External vendor needs secure API access
+* *Decision:* OAuth 2.0 Client Credentials flow
+* *Rationale:* Industry standard; no user context needed; supports credential rotation
+* *Consequences:* Need to manage client secrets; implement custom authorizer in API Gateway
+* *Status:* Approved
+
+==== ADR-005: Hourly Batch ETL over Real-Time Streaming
+
+* *Context:* Pricing data needs to flow from Azure to AWS
+* *Decision:* Hourly batch export to S3, not real-time streaming
+* *Rationale:* Amped Digital polls hourly; batch simpler than CDC; prices change infrequently; lower operational complexity
+* *Consequences:* 1-hour data lag (acceptable per requirements); simpler architecture
+* *Status:* Approved
+
+== Key Diagrams Summary
+
+=== Context Diagram
+
+[mermaid]
+----
+graph LR
+    subgraph External
+        A[Amped Digital<br/>DMB Platform]
+    end
+
+    subgraph "OTR Ecommerce Domain (AWS)"
+        B[Pricing API]
+    end
+
+    subgraph "OTR Back-Office Domain (Azure)"
+        C[D365 Commerce]
+    end
+
+    C -->|Pricing Data| B
+    B -->|REST API| A
+
+    style B fill:#9f9,stroke:#333,stroke-width:3px
+----
+
+=== Cross-Domain Integration Pattern
+
+[mermaid]
+----
+graph TB
+    subgraph "Back-Office Domain (Azure)"
+        D365[D365 Commerce]
+        DL[Azure Data Lake]
+        EXP[Export Process]
+
+        D365 --> DL --> EXP
+    end
+
+    INTERFACE[Domain Interface<br/>S3 Bucket<br/>Data Contract]
+
+    subgraph "Ecommerce Domain (AWS)"
+        ETL[ETL Pipeline]
+        DB[(Database)]
+        API[API Service]
+
+        ETL --> DB --> API
+    end
+
+    EXP -->|Cross-cloud transfer| INTERFACE
+    INTERFACE --> ETL
+
+    API --> CONSUMER[External Consumers<br/>Amped Digital, etc.]
+
+    style INTERFACE fill:#ff9,stroke:#333,stroke-width:4px
+----
+
+== Document Control
+
+[cols="1,2,2,4"]
+|===
+|Version |Date |Author |Changes
+
+|0.1
+|2025-01-13
+|O.Young (Domain Architect, Ecommerce)
+|Initial draft - Phases A, B, C, D
+
+|1.0
+|2025-01-13
+|O.Young (Domain Architect, Ecommerce)
+|Added multi-cloud context and platform rationale
+|===
+
+*Approval Required From:*
+
+* [ ] Ecommerce Domain Lead (confirms AWS alignment)
+* [ ] Back-Office Data Lead (Grant - confirms data contract feasibility)
+* [ ] Security Architect (approves cross-cloud security model)
+* [ ] Product Owner (Subway DMB - confirms business requirements)
+
+*Key Message for Stakeholders:*
+
+This architecture follows OTR's established multi-cloud operating model: back-office systems on Azure, customer-facing systems on AWS. The Subway DMB integration is hosted on AWS (ecommerce domain) per the existing commercial agreement and platform standards for customer-facing APIs. Cross-domain integration is achieved through a clean data contract at the S3 boundary.

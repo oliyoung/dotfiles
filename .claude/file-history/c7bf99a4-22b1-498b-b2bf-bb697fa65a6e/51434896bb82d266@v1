@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://api.otr.com.au/events/CustomerProfileStatusChanged.schema.json",
+  "title": "CustomerProfileStatusChanged Event",
+  "description": "Event published when a customer profile status changes (ACTIVE, SUSPENDED, CLOSED). Used for GDPR compliance, fraud prevention, and account lifecycle management.",
+  "type": "object",
+  "properties": {
+    "specversion": {
+      "type": "string",
+      "const": "1.0",
+      "description": "CloudEvents specification version."
+    },
+    "type": {
+      "type": "string",
+      "const": "com.otr.profile.CustomerProfileStatusChanged",
+      "description": "Type of event."
+    },
+    "source": {
+      "type": "string",
+      "const": "/profile-service",
+      "description": "Context in which the event happened."
+    },
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique event identifier."
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of event creation."
+    },
+    "datacontenttype": {
+      "type": "string",
+      "const": "application/json"
+    },
+    "data": {
+      "type": "object",
+      "description": "The custom event data payload.",
+      "properties": {
+        "vivaConsumerId": {
+          "type": "string",
+          "pattern": "^vci_[a-zA-Z0-9]+$",
+          "description": "The customer's Viva Consumer ID."
+        },
+        "salesforceContactId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9]{15,18}$",
+          "description": "Salesforce Contact record ID."
+        },
+        "previousStatus": {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "SUSPENDED",
+            "CLOSED"
+          ],
+          "description": "Previous profile status before change."
+        },
+        "newStatus": {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "SUSPENDED",
+            "CLOSED"
+          ],
+          "description": "New profile status after change."
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "CUSTOMER_REQUEST",
+            "FRAUD_PREVENTION",
+            "GDPR_ERASURE",
+            "ADMIN_ACTION"
+          ],
+          "description": "Reason for status change."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the status was changed."
+        },
+        "isClosed": {
+          "type": "boolean",
+          "description": "Indicates if this is a permanent closure (triggers data retention policy)."
+        }
+      },
+      "required": ["vivaConsumerId", "salesforceContactId", "previousStatus", "newStatus", "reason", "updatedAt", "isClosed"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["specversion", "type", "source", "id", "time", "datacontenttype", "data"],
+  "additionalProperties": false
+}

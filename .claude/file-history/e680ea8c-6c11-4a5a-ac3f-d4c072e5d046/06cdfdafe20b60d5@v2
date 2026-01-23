@@ -1,0 +1,263 @@
+==== Strategic Architectural Philosophy
+
+This solution architecture aligns with OTR's target Domain-Driven Design (DDD) architecture. The design choices reflect three core principles:
+
+1. **Protect digital channels from external system coupling** - Use Anti-Corruption Layers (ACLs) to isolate OTR's domain model from external systems we don't control
+2. **Establish event-driven architecture as the integration standard** - Loose coupling between bounded contexts via domain events, enabling independent evolution
+3. **Prioritise simplicity and time-to-value** - Make pragmatic trade-offs that reduce complexity while establishing architectural patterns for future work
+
+==== Why Domain-Driven Design with Bounded Contexts?
+
+The decision to implement bounded contexts rather than direct integration to external systems reflects a strategic investment in architectural quality:
+
+*The Problem with Direct Integration*:
+
+* Digital channels (Mobile App, Web) tightly coupled to external system APIs (any external change breaks clients)
+* External systems controlled by vendors or other business units - we conform to their governance and configuration
+* Future integrations duplicate common logic (identity reconciliation, event translation, error handling)
+* No domain event publishing - other services can't react to business events
+* Business logic scattered across client applications instead of centralized in domain services
+
+*The DDD Solution*:
+
+* **Bounded contexts** isolate domain concerns with clear responsibility boundaries
+* **Anti-Corruption Layers (ACLs)** translate between OTR domain language and external system models
+* **Event Bus** publishes domain events - other bounded contexts can react without tight coupling
+* **Reusable components** - common logic (identity, authorization, event translation) centralized once, used by many
+* **Clear boundaries** - each context handles specific domain capabilities (different responsibilities, different change rates)
+
+*The Trade-Off*:
+
+We accept **increased initial complexity** (additional services, Event Bus infrastructure, team learning DDD patterns) in exchange for **architectural foundation** that protects digital channels from external system changes and enables reusable components for future work.
+
+This is a **strategic investment** - we're not just solving immediate integration needs, we're establishing the architectural pattern for all future bounded contexts.
+
+==== Why Async Processing Instead of Synchronous API Calls?
+
+When integrating with external systems, the decision between asynchronous and synchronous processing reflects a prioritization of user experience, resilience, and system characteristics:
+
+*The Problem with Synchronous Integration*:
+
+* User waits for external system API response (latency across multiple system hops)
+* If external system is down or slow, user-facing operations fail
+* No automatic retry - users must manually retry operations
+* API timeout must accommodate worst-case external system latency
+* Tight coupling between user experience and external system performance
+
+*The Async Solution*:
+
+* **Immediate acknowledgment** - User gets confirmation quickly (no external system wait)
+* **Resilience** - If external system is down, work queued and processed when system recovers
+* **Automatic retry** - Exponential backoff handles transient API failures
+* **Operational visibility** - Dead letter queue alerts ops team to persistent failures
+* **Scalability** - Queue buffering handles traffic spikes without overwhelming external systems
+
+*The Trade-Off*:
+
+We accept **eventual consistency** (notifications delivered after external processing completes) and **increased complexity** (Event Bus, background workers, retry logic, DLQ monitoring) in exchange for **better user experience** (no waiting) and **resilience** (external system downtime doesn't block user-facing operations).
+
+This trade-off is acceptable when operations are **not real-time transactions** (unlike payment processing). When business processes can tolerate short delays (seconds to minutes), async processing improves both user experience and system resilience.
+
+==== Why Conformist Pattern for Shared Platforms?
+
+When integrating with shared platforms controlled by other organisations or business units, the Conformist pattern reflects a pragmatic acceptance of organisational reality:
+
+*The Organisational Context*:
+
+* **Shared platform governance** - Another organisation or business unit owns and operates the platform
+* **Multi-tenant environment** - OTR is one user among many (competing priorities, shared governance)
+* **Limited control** - We don't control platform configuration, data models, or API evolution
+* **Strategic alignment** - Organisational decision to standardize on shared platforms (not build parallel systems)
+
+*The Conformist Approach*:
+
+* **Accept their data model** - Use platform-provided objects and fields with minimal customisation
+* **Conform to their API** - Use platform APIs as-is, avoid heavy customisation
+* **Work within their governance** - Data isolation via platform mechanisms (tenancy, record types, permissions)
+* **Anti-Corruption Layer protects us** - Bounded contexts translate between OTR domain language and platform models
+
+*Why Not Heavily Customise Shared Platforms?*:
+
+* **Governance constraints** - Platform owners must approve all customisations (slow, requires business case justification)
+* **Shared instance risk** - Custom code or triggers could impact other users (change control overhead)
+* **Upgrade risk** - Heavy customisation increases platform upgrade complexity and testing burden
+* **Limited control** - We don't control the platform, so we shouldn't over-invest in customisation we can't maintain
+* **Vendor lock-in** - Deep customisation makes platform migration more difficult if strategic direction changes
+
+*The Trade-Off*:
+
+We accept **less control over data model and platform evolution** in exchange for **faster time-to-value** (minimal custom development), **reduced operational overhead** (less custom code to maintain), and **organisational alignment** (consolidate onto shared platforms).
+
+The **Anti-Corruption Layer** is the protection mechanism - it translates between OTR's domain language and the platform, so platform changes are isolated to the ACL, not propagated to digital channels.
+
+==== When to Use Big Bang Cutover vs. Phased Rollout?
+
+The choice between big bang cutover and phased rollout with feature flags reflects a risk assessment based on criticality, complexity, and reversibility:
+
+*When Phased Rollout is Appropriate*:
+
+* **High complexity** - Multiple system integrations, complex state management, transaction adjudication
+* **Mission-critical** - Errors directly impact customer value, revenue, or contractual obligations
+* **Large user base** - Gradual enablement reduces blast radius for defects
+* **Reversibility challenge** - Operations involve external parties or are difficult/impossible to reverse
+* **Data synchronization complexity** - Dual-write or data coexistence patterns required
+* **Regulatory requirements** - Compliance testing needed before full deployment
+
+*When Big Bang Cutover is Appropriate*:
+
+* **Lower complexity** - Simple CRUD operations, minimal state management
+* **Not mission-critical** - Failures don't prevent core business operations
+* **Manageable user base** - Impact contained to specific user segment
+* **Easy rollback** - Can revert to legacy system without data loss or partner coordination
+* **Faster legacy retirement** - No extended transition period maintaining two systems
+* **Simple feature** - Read-only operations or create-only workflows
+
+*The Trade-Off*:
+
+Phased rollout accepts **increased complexity** (feature flag management, transition architecture states, dual-write patterns) in exchange for **reduced risk** (gradual enablement, controlled blast radius, early defect detection).
+
+Big bang accepts **higher cutover risk** (all users switch at once) in exchange for **simplicity** (no feature flag management), **faster legacy system retirement** (no parallel run period), and **reduced transition complexity** (no intermediate architecture states).
+
+*Risk Mitigation for Big Bang*:
+
+* **Comprehensive testing** - Load testing at expected peak volume, integration testing, UAT
+* **Rollback plan** - Clear criteria and procedure to revert if critical issues emerge
+* **Non-blocking deployment** - Cutover doesn't prevent core operations if new system fails
+* **Limited blast radius** - Failure impacts specific capability, not entire platform
+
+Choose the migration strategy that matches the risk profile and business criticality of the capability being migrated.
+
+==== When to Migrate Historical Data vs. Fresh Start?
+
+The decision to migrate historical data from legacy systems reflects a cost-benefit analysis that balances historical continuity with migration complexity:
+
+*The Case for Historical Data Migration*:
+
+* Users can access complete historical records in the new system
+* Continuity of business context for ongoing processes (customer history, audit trails)
+* Analytics and reporting across full historical timeline
+* Regulatory or compliance requirements for data retention
+* Business processes that reference historical data
+
+*The Case Against Historical Data Migration*:
+
+* **Limited operational value** - Historical data not critical for future operations (new data moving forward)
+* **Data quality concerns** - Legacy data may be inconsistent, incomplete, or poorly categorised
+* **Migration complexity** - Requires schema mapping, data transformation, validation, testing, reconciliation
+* **Delays cutover** - Data migration extends timeline significantly
+* **Cost-benefit imbalance** - Migration effort outweighs practical value of historical data
+* **Reference data only** - Historical data rarely updated, mainly used for lookups
+
+*Alternative Approaches*:
+
+* Legacy system remains accessible (read-only) temporarily for historical lookups
+* Data archived separately (data warehouse, static reports, export files)
+* Selective migration - only recent or high-value historical records
+* On-demand migration - migrate historical data only when needed for specific use cases
+
+*The Trade-Off*:
+
+Historical data migration accepts **increased migration complexity** (schema mapping, transformation, validation) and **extended timeline** in exchange for **complete data continuity** in the new system.
+
+Fresh start accepts **loss of historical data in new system** in exchange for **faster time-to-value**, **simpler migration** (no historical schema mapping), and **clean start** (no legacy data quality issues).
+
+Choose the approach that matches the business value of historical data against the cost and timeline impact of migration.
+
+==== Choosing Identity Matching Strategies
+
+The choice of identity matching key reflects a trade-off between ideal design (stable, globally unique identifiers) and pragmatic implementation (available now, minimal coordination):
+
+*Ideal Matching Strategy*:
+
+* **Stable, globally unique identifier** - Doesn't change when user attributes change (email, phone, address)
+* **Cross-system consistency** - Same identifier used across all systems (single source of truth)
+* **Already available in external system** - Configured as External ID for efficient upsert operations
+* **Semantic meaning** - Identifier represents business entity clearly
+
+*Pragmatic Matching Strategy*:
+
+* **Available immediately** - Uses fields already present and indexed in external system
+* **No coordination required** - Doesn't require external system configuration changes or approvals
+* **Unique enough** - Functionally unique for practical purposes (edge cases acceptable)
+* **Always available** - Present in authentication tokens or API requests
+* **Standard field** - Uses platform-provided fields (no custom configuration)
+
+*Common Edge Cases*:
+
+* **Attribute changes** - User changes email, phone, or other matching attributes (creates duplicates)
+* **Data quality** - Missing, malformed, or inconsistent values in matching fields
+* **Uniqueness violations** - Multiple records share the same matching value
+* **Temporal consistency** - Matching value differs across systems at same point in time
+
+*Migration Path*:
+
+Start with pragmatic matching strategy for immediate implementation, then enhance to ideal matching strategy when coordination with external system stakeholders is feasible:
+
+1. **Phase 1**: Use available field (email, phone, username) - minimal coordination, faster time-to-value
+2. **Phase 2**: Add ideal identifier (global customer ID) to external system - requires coordination with platform team
+3. **Phase 3**: Migrate to ideal identifier for matching - update integration logic, backfill existing records
+
+*The Trade-Off*:
+
+Ideal matching accepts **coordination overhead** (external system configuration, stakeholder approval) and **delayed implementation** in exchange for **stable matching** (no duplicates when attributes change).
+
+Pragmatic matching accepts **rare edge cases** (duplicates, manual cleanup) in exchange for **immediate implementation** (no external system changes) and **simplicity** (single available field).
+
+Choose the matching strategy that balances implementation speed against long-term data quality requirements.
+
+==== How Architectural Decisions Reinforce Each Other
+
+Effective solution architectures create **coherent strategies** where architectural decisions reinforce each other rather than existing as isolated choices:
+
+*Pattern: Bounded Contexts Enable Event-Driven Architecture*
+
+* **DDD bounded contexts** establish clear service boundaries with well-defined responsibilities
+* **Event Bus** enables bounded contexts to publish domain events to other contexts
+* **Loose coupling** - contexts integrate via events, not direct API calls or shared databases
+* **Independent evolution** - contexts can change internally without breaking consumers
+
+*Pattern: Async Processing Enables Resilience*
+
+* **Asynchronous integration** decouples user experience from external system performance
+* **Queue buffering** absorbs work when external systems are slow or unavailable
+* **Automatic retry** handles transient failures without user intervention
+* **Graceful degradation** - core operations continue even when external integrations fail
+
+*Pattern: Conformist with Anti-Corruption Layer*
+
+* **Conformist pattern** accepts external system data models to minimize customization
+* **ACL** translates between external models and internal domain language
+* **Protection** - external system changes isolated to ACL, not propagated to digital channels
+* **Organizational alignment** - use shared platforms while protecting domain model
+
+*Pattern: Migration Strategy Matches Risk Profile*
+
+* **Non-critical capabilities** can use simpler big bang cutover (faster legacy retirement)
+* **Mission-critical capabilities** require phased rollout (controlled blast radius)
+* **Fresh start** (no historical data migration) simplifies big bang cutover
+* **Comprehensive testing** mitigates big bang risk for non-critical workloads
+
+*Pattern: Pragmatic Shortcuts with Migration Path*
+
+* **Start with available identifiers** (email, username) for immediate implementation
+* **Plan enhancement path** to ideal identifiers (global customer ID) when feasible
+* **Accept edge cases** (rare duplicates) for faster time-to-value
+* **Non-breaking migration** - can add ideal identifier later without disrupting operations
+
+**Coherent architecture** emerges when each decision makes others more valuable or feasible, creating a reinforcing system of trade-offs aligned with business priorities.
+
+==== What This Establishes for Future Work
+
+Each solution architecture contributes to the **architectural foundation** for OTR's target state:
+
+* **Bounded context patterns** - Establishes DDD service boundaries with clear responsibilities for future domain services
+* **Event-driven integration** - Event Bus pattern becomes standard for bounded context integration (not direct API calls)
+* **Reusable components** - Common capabilities (identity reconciliation, authorization, event translation) centralized for reuse
+* **Anti-Corruption Layer pattern** - Demonstrates how to protect OTR domain model from external systems we don't control
+* **Conformist pattern for shared systems** - Establishes approach for platforms we don't own (shared enterprise platforms, SaaS vendors)
+* **Migration strategies** - Proves both phased rollout (feature flags, transition states) and big bang approaches for different risk profiles
+* **Pragmatic trade-offs** - Validates architectural decision framework balancing ideal design against time-to-value
+
+Every design decision is made with **future bounded contexts in mind** - each solution doesn't just solve immediate business needs, it establishes architectural patterns and standards for all future work.
+
+Solution architectures are **learning investments** - the first implementation of a pattern is more expensive (team learning, infrastructure setup, standards definition), but subsequent implementations reuse the foundation at lower cost.

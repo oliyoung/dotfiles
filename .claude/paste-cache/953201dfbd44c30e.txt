@@ -1,0 +1,423 @@
+[15:39:10.816] ERROR (@antora/content-aggregator): ENOENT: broken symbolic link, modules/ROOT/images/diagrams -> ../../../diagrams
+    file: /mnt/c/Users/o.young/work/architecture/modules/ROOT/images/diagrams
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:39:32.331] ERROR (asciidoctor): target of xref not found: solution-architectures:subway_dmb.adoc#_appendix_c_runbooks
+    file: /mnt/c/Users/o.young/work/architecture/modules/bounded-contexts/pages/product_catalog.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:39:32.334] ERROR (asciidoctor): target of xref not found: architecture-definitions:subway_dmb.adoc
+    file: /mnt/c/Users/o.young/work/architecture/modules/bounded-contexts/pages/product_catalog.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:39:32.335] ERROR (asciidoctor): target of xref not found: solution-architectures:subway_dmb.adoc
+    file: /mnt/c/Users/o.young/work/architecture/modules/bounded-contexts/pages/product_catalog.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:39:32.336] ERROR (asciidoctor): target of xref not found: ../domains/product_catalog.adoc
+    file: /mnt/c/Users/o.young/work/architecture/modules/bounded-contexts/pages/product_catalog.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:39:37.203] ERROR (asciidoctor): dropping cells from incomplete row detected end of table
+    file: /mnt/c/Users/o.young/work/architecture/modules/ROOT/pages/flybuys_integration.adoc:610
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.320] ERROR (asciidoctor): dropping cells from incomplete row detected end of table
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc:610
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.452] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Salesforce%2520Contact
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.453] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Viva%2520Consumer%2520ID
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.454] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Loyalty%2520Credential
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.455] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Wallet
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.456] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#loyalty_credential
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.460] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.461] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Loyalty%2520Credential
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.463] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.464] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Flybuys%2520Digital%2520Identity
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.465] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.465] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Reward%2520Preference
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.466] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Partner
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.466] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Flybuys%2520Earning%2520Rules
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.467] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Loyalty%2520Credential
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.468] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Loyalty%2520Credential
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.468] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.469] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Digital%2520Fuel%2520Dockets
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.469] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Loyalty%2520Credential
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.470] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.477] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.478] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Flybuys%2520Cardholder%2520Number
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.478] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.482] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Transaction%2520Adjudication
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.485] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.486] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Flybuys%2520Digital%2520Identity
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.487] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.487] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Partner%2520Link
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.488] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.492] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.493] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Loyalty%2520Credential
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.496] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Reward%2520Preference
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.497] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Partner
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.497] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Loyalty%2520Credential
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.498] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Viva%2520Consumer%2520ID%2520%28VCI
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.498] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Partner
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.498] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Digital%2520Fuel%2520Dockets
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.499] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Digital%2520Fuel%2520Dockets
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.499] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Transaction%2520Adjudication
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.500] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Anti-Corruption%2520Layer%2520%28ACL
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.500] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Anti-Corruption%2520Layer%2520%28ACL
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.501] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.503] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Anti-Corruption%2520Layer%2520%28ACL
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.503] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Bounded%2520Context
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.504] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Bounded%2520Context
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.504] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Bounded%2520Context
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.513] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Partner%2520Link
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.514] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Viva%2520Consumer%2520ID
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.515] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Reward%2520Transaction
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.515] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Partner%2520Link
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.516] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Viva%2520Consumer%2520ID
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.516] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Partner%2520Link
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.517] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Partner%2520Link
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.518] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Reward%2520Transaction
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.518] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Viva%2520Consumer%2520ID
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.519] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Loyalty%2520Credential
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.519] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Partner%2520Integration
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.520] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Viva%2520Consumer%2520ID
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.521] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Flybuys%2520Cardholder%2520Number
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.521] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#%28Paper%20Shopper%20Docket
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.525] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer%2520ID
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.526] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Viva%2520Consumer%2520ID
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.529] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.530] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.530] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Reward%2520Preference
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.531] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.534] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.536] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.538] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Viva%2520Consumer%2520ID
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.543] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Loyalty%2520Credential
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.545] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Flybuys%2520Cardholder%2520Number
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.546] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Flybuys%2520Digital%2520Identity
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.546] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Reward%2520Transaction
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.548] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Anti-Corruption%2520Layer%2520%28ACL
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.550] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Viva%2520Consumer%2520ID
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.551] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#PKCE
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.553] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Anti-Corruption%2520Layer%2520%28ACL
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.556] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Viva%2520Consumer%2520ID
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.560] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Viva%2520Consumer%2520ID
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.562] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Partner%2520Link
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.564] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Partner%2520Link
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.565] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Partner%2520Link
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.566] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Reward%2520Preference
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.567] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Partner%2520Link
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.568] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Partner%2520Link
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.568] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Partner%2520Link
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.569] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Partner%2520Link
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.570] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Reward%2520Preference
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.571] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Strangler%2520Fig
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.573] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Viva%2520Consumer%2520ID
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.574] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Partner%2520Link
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.575] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Viva%2520Consumer%2520ID
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.577] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Partner%2520Link
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.579] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Viva%2520Consumer%2520ID
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.580] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#RewardTransaction
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.580] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#RewardTransaction
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.581] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Anti-Corruption%2520Layer%2520%28ACL
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.583] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.584] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Viva%2520Consumer%2520ID
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.585] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Wallet
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.586] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.587] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Flybuys%2520Digital%2520Identity
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.588] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#PKCE
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.590] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.590] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Flybuys%2520Digital%2520Identity
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.591] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Customer
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.592] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Flybuys%2520Points
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.594] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Anti-Corruption%2520Layer%2520%28ACL
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.595] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Loyalty%2520Credential
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.596] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Flybuys
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.597] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Digital%2520Fuel%2520Dockets
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.598] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Loyalty%2520Credential
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.599] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Flybuys
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.600] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Flybuys%2520Points
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.602] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Digital%2520Fuel%2520Dockets
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.605] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Reward%2520Preference
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.606] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Transaction%2520Adjudication
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.607] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Loyalty%2520Credential
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.608] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Loyalty%2520Credential
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.614] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Transaction%2520Adjudication
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:07.615] ERROR (asciidoctor): target of xref not found: ubiquitous_language.adoc#Viva%2520Consumer%2520ID
+    file: /mnt/c/Users/o.young/work/architecture/modules/architecture-definitions/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:37.699] ERROR (asciidoctor): target of include not found: partials/_initiative_metadata.adoc
+    file: /mnt/c/Users/o.young/work/architecture/modules/initiatives/pages/digital_menu_board.adoc:20
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:41.565] ERROR (asciidoctor): target of include not found: partials/_initiative_metadata.adoc
+    file: /mnt/c/Users/o.young/work/architecture/modules/initiatives/pages/flybuys_integration.adoc:20
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:44.748] ERROR (asciidoctor): target of xref not found: patterns:anti-corruption-layer.adoc
+    file: /mnt/c/Users/o.young/work/architecture/modules/initiatives/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:44.755] ERROR (asciidoctor): target of xref not found: bounded-contexts:d365_commerce.adoc
+    file: /mnt/c/Users/o.young/work/architecture/modules/initiatives/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:44.756] ERROR (asciidoctor): target of xref not found: bounded-contexts:azure_key_vault.adoc
+    file: /mnt/c/Users/o.young/work/architecture/modules/initiatives/pages/flybuys_integration.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:44.845] ERROR (asciidoctor): target of include not found: partials/_initiative_metadata.adoc
+    file: /mnt/c/Users/o.young/work/architecture/modules/initiatives/pages/flybuys_strategic_data.adoc:21
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:48.803] ERROR (asciidoctor): target of xref not found: bounded-context:mobile.adoc
+    file: /mnt/c/Users/o.young/work/architecture/modules/initiatives/pages/flybuys_strategic_data.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:48.848] ERROR (asciidoctor): target of xref not found: bounded-contexts:loyalty_service.adoc
+    file: /mnt/c/Users/o.young/work/architecture/modules/initiatives/pages/flybuys_strategic_data.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:48.900] ERROR (asciidoctor): target of include not found: partials/_initiative_metadata.adoc
+    file: /mnt/c/Users/o.young/work/architecture/modules/initiatives/pages/salesforce_customer_support.adoc:20
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:52.029] ERROR (asciidoctor): target of xref not found: bounded-contexts:otr_app.adoc
+    file: /mnt/c/Users/o.young/work/architecture/modules/initiatives/pages/salesforce_customer_support.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:52.402] ERROR (asciidoctor): target of xref not found: ../bounded_context/product_catalog.adoc
+    file: /mnt/c/Users/o.young/work/architecture/modules/domains/pages/product_catalog.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:52.403] ERROR (asciidoctor): target of xref not found: solution-architectures:subway_dmb.adoc
+    file: /mnt/c/Users/o.young/work/architecture/modules/domains/pages/product_catalog.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)
+[15:40:52.403] ERROR (asciidoctor): target of xref not found: ../bounded_context/external/d365-commerce.adoc
+    file: /mnt/c/Users/o.young/work/architecture/modules/domains/pages/product_catalog.adoc
+    source: /mnt/c/Users/o.young/work/architecture (branch: main <worktree> | start path: .)

@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://api.otr.com.au/schemas/CustomerProfile.schema.json",
+  "title": "Customer Profile",
+  "description": "Customer profile response schema containing VCI from Salesforce, EagleEye wallet ID, and profile status.",
+  "type": "object",
+  "properties": {
+    "vivaConsumerId": {
+      "type": "string",
+      "pattern": "^vci_[a-zA-Z0-9]+$",
+      "description": "Viva Consumer ID from Salesforce Contact (customer identity).",
+      "example": "vci_xyz789abc"
+    },
+    "salesforceContactId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]{15,18}$",
+      "description": "Salesforce Contact record ID (15 or 18 character Salesforce ID).",
+      "example": "003Dn000001234ABC"
+    },
+    "walletId": {
+      "type": "string",
+      "description": "EagleEye wallet identifier (provisioned atomically with profile creation).",
+      "example": "wallet_123456"
+    },
+    "rewardPreference": {
+      "type": "string",
+      "enum": [
+        "OTR_FUEL_DISCOUNT",
+        "FLYBUYS_POINTS",
+        "SHELL_PRICE_SAVE"
+      ],
+      "description": "Customer's default reward preference.",
+      "example": "OTR_FUEL_DISCOUNT"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Profile creation timestamp (ISO 8601).",
+      "example": "2025-12-09T10:30:00Z"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Profile last update timestamp (ISO 8601).",
+      "example": "2025-12-10T14:30:00Z"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "SUSPENDED",
+        "CLOSED"
+      ],
+      "description": "Profile status (ACTIVE: normal operation, SUSPENDED: temporary deactivation, CLOSED: permanent closure).",
+      "example": "ACTIVE"
+    }
+  },
+  "required": [
+    "vivaConsumerId",
+    "salesforceContactId",
+    "walletId",
+    "rewardPreference",
+    "createdAt",
+    "status"
+  ],
+  "additionalProperties": false
+}

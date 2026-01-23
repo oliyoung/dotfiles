@@ -1,0 +1,11 @@
+.Domains
+* xref:loyalty.adoc[Loyalty]
+* xref:payment.adoc[Payment]
+* xref:engagement.adoc[Engagement]
+* xref:location.adoc[Location]
+* xref:recommendation.adoc[Recommendation]
+* xref:profile.adoc[Profile]
+* xref:fuel.adoc[Fuel]
+* xref:fulfilment.adoc[Fulfilment]
+* xref:handover.adoc[Handover]
+* xref:transaction.adoc[Transaction]

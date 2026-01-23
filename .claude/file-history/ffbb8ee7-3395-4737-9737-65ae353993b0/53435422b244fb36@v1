@@ -1,0 +1,485 @@
+= OAuth Service Interface
+O.Young@otr.com.au
+v0.1, 2025-12-19
+:project-name: OTRG Apps & Ecommerce Architecture
+:togaf-adm-phase: Phase C: Information Systems Architectures
+:document-type: Bounded Context
+:status: Draft
+:version: 0.1
+:domain: Infrastructure
+:bounded-context-type: SYSTEM
+:domain-architect: O.Young@otr.com.au
+:doctype: article
+:toc: left
+:toclevels: 4
+:sectanchors:
+:sectlinks:
+:sectnums:
+:icons: font
+:source-highlighter: highlightjs
+:experimental:
+:description: Generic OAuth 2.0 token lifecycle management infrastructure service
+:keywords: oauth, authentication, infrastructure, bounded context, togaf, ddd
+
+Generic OAuth 2.0 token management service providing secure token
+lifecycle management for any bounded context requiring third-party
+OAuth integrations. This is a reusable infrastructure service, not
+domain-specific, handling OAuth flows, token storage, refresh, and
+revocation.
+
+== Domain Vision Statement
+
+Generic OAuth 2.0 token life-cycle management service providing secure
+token storage, refresh, and revocation for all OTR bounded contexts
+requiring third-party OAuth integrations
+
+== System Type
+
+Infrastructure service (Shared Kernel)
+
+== Domain Pattern
+
+*Shared Kernel (Infrastructure)*: Multiple bounded contexts depend on
+OAuth Service for third-party OAuth integrations:
+
+* LoyaltyService: Partner linking (Flybuys, Shell, etc.)
+* EngagementService: Marketing platform integrations (future)
+* Any service requiring third-party OAuth integrations
+
+== Responsibilities
+
+* OAuth 2.0 authorisation flow orchestration (PKCE, Client Credentials)
+* Secure token storage in Azure Key Vault (encrypted at rest)
+* Automatic token refresh before expiration
+* Token revocation and cleanup
+* OAuth provider configuration management
+* OAuth life-cycle event publishing
+* Audit logging for compliance and security
+
+== Implementation Technology
+
+Azure Functions, Azure Key Vault, .NET Core, OAuth 2.0 + PKCE (RFC
+7636), Event Bus
+
+== What OAuth Service Owns
+
+=== Data Ownership
+
+* OAuth tokens (access_token, refresh_token) in Azure Key Vault
+* Token metadata (expiry, scopes, provider configuration)
+* OAuth provider configurations (client_id, endpoints, scopes)
+
+=== Operations
+
+* Initiate OAuth authorisation flows (PKCE, standard)
+* Exchange authorisation codes for tokens
+* Refresh expired access tokens automatically
+* Revoke tokens on user request or security events
+* Publish OAuth life-cycle events for domain services
+
+== What OAuth Service Does NOT Own
+
+* Business context (partner linking status → LoyaltyService owns)
+* Business decisions (which partner to link → domain logic)
+* Customer data (VivaConsumerId linking → bounded contexts own)
+* Partner-specific API calls (points balance, etc. → bounded contexts
+handle)
+
+== Integration Points
+
+* *Upstream*: Any bounded context requiring OAuth (LoyaltyService, etc.)
+* *Downstream*: Third-party OAuth providers (Flybuys via Auth0, future
+partners)
+* *Storage*: Azure Key Vault (encrypted token storage)
+* *Events*: Event Bus (OAuthLinkEstablished, OAuthLinkRevoked, etc.)
+
+== Supported OAuth Flows
+
+=== 1. authorisation Code + PKCE
+
+* *Use Case*: Mobile apps, public clients
+* *Example*: Flybuys account linking via Auth0, future partner
+integrations requiring user consent
+* *Security*: PKCE prevents authorisation code interception
+
+=== 2. Client Credentials (Future)
+
+* *Use Case*: Server-to-server integrations
+* *Example*: Backend service integrations with no user context
+* *Security*: Client secret stored in Azure Key Vault
+
+=== 3. Refresh Token Flow
+
+* *Use Case*: Automatic token renewal
+* *Example*: Refresh expired access tokens transparently
+* *Benefit*: Prevents user re-authentication
+
+== Core Aggregates
+
+=== 1. OAuthToken Aggregate
+
+Manages OAuth token life-cycle and metadata. Actual token values
+(access_token, refresh_token) stored in Azure Key Vault. This aggregate
+stores references and metadata only.
+
+*Invariants:*
+
+* Must have valid provider configuration
+* Access token must have expiry timestamp
+* Refresh token optional (some flows don’t provide it)
+* Cannot refresh token after revocation
+
+*Key Entities:*
+
+==== OAuthTokenRecord (Aggregate Root)
+
+* OAuthTokenId id (unique identifier)
+* String requestorId (bounded context requesting OAuth, e.g.,
+``LoyaltyService'')
+* String resourceOwnerId (customer identifier, e.g., VivaConsumerId)
+* OAuthProviderType providerType (FLYBUYS, SHELL, CUSTOM)
+* String providerName (human-readable, e.g., ``Flybuys via Auth0'')
+* TokenStatus status
+* DateTime createdAt
+* DateTime accessTokenExpiresAt
+* DateTime? refreshTokenExpiresAt (null if no refresh token)
+* List of scopes (OAuth scopes granted)
+* String keyVaultSecretName (reference to Azure Key Vault secret)
+
+*Value Objects:*
+
+==== TokenStatus
+
+* TokenState state (ACTIVE, EXPIRED, REVOKED)
+* String revokedReason (USER_REQUEST, SECURITY_EVENT, PARTNER_UNLINKED)
+* DateTime? revokedAt
+
+*Enumerations:*
+
+==== TokenState
+
+* *ACTIVE*: Token valid and usable
+* *EXPIRED*: Access token expired (refresh available)
+* *REVOKED*: Token revoked, cannot be refreshed
+
+=== 2. OAuthProviderConfig Aggregate
+
+Configuration for OAuth providers (endpoints, client credentials,
+scopes). Supports multiple providers (Flybuys, Shell, future partners).
+
+*Invariants:*
+
+* Must have authorisation and token endpoints
+* Client ID required for all flows
+* PKCE flows must specify code_challenge_method
+
+*Key Entities:*
+
+==== OAuthProvider (Aggregate Root)
+
+* OAuthProviderId id
+* OAuthProviderType providerType
+* String providerName (e.g., ``Flybuys via Auth0'')
+* String authorisationEndpoint (OAuth /authorize URL)
+* String tokenEndpoint (OAuth /token URL)
+* String revocationEndpoint (OAuth /revoke URL, optional)
+* String clientId
+* String clientSecretKeyVaultRef (reference to Key Vault, not stored in
+aggregate)
+* List of defaultScopes
+* OAuthFlowType flowType (authorisation_CODE_PKCE, CLIENT_CREDENTIALS)
+* PKCEConfig pkceConfig (PKCE settings if applicable)
+* boolean isActive
+
+*Value Objects:*
+
+==== PKCEConfig
+
+* String codeChallengeMethod (S256 for SHA-256, PLAIN)
+* int codeVerifierLength (43-128 characters per RFC 7636)
+
+*Enumerations:*
+
+==== OAuthFlowType
+
+* *authorisation_CODE_PKCE*: User consent + PKCE (mobile apps)
+* *CLIENT_CREDENTIALS*: Server-to-server (no user)
+* *REFRESH_TOKEN*: Token refresh flow
+
+==== OAuthProviderType
+
+* *FLYBUYS*: Flybuys via Auth0
+* *SHELL*: Shell fuel card (future)
+* *CUSTOM*: Generic OAuth provider
+
+== Domain Events
+
+=== OAuthLinkEstablished
+
+Published when OAuth flow completes successfully. Consumed by
+LoyaltyService (create PartnerLink) and other contexts.
+
+*Event Data:*
+
+* OAuthTokenId oauthTokenId (provider reference)
+* String requestorId (which bounded context requested, e.g.,
+``LoyaltyService'')
+* String resourceOwnerId (customer identifier, VivaConsumerId)
+* OAuthProviderType providerType
+* String externalMemberId (partner member ID from OAuth userinfo)
+* List of scopes
+* DateTime linkedAt
+
+=== OAuthLinkRevoked
+
+Published when token is revoked (user request or security event).
+Consumed by LoyaltyService (update PartnerLink status) and other
+contexts.
+
+*Event Data:*
+
+* OAuthTokenId oauthTokenId
+* String requestorId
+* String resourceOwnerId
+* OAuthProviderType providerType
+* String revokedReason (USER_REQUEST, SECURITY_EVENT, TOKEN_EXPIRED)
+* DateTime revokedAt
+
+=== OAuthTokenRefreshed
+
+Published when access token refreshed (for monitoring/audit). Consumed
+by monitoring and analytics systems.
+
+*Event Data:*
+
+* OAuthTokenId oauthTokenId
+* String requestorId
+* String resourceOwnerId
+* DateTime refreshedAt
+* DateTime newAccessTokenExpiresAt
+
+=== OAuthTokenExpiringSoon
+
+Published when token expiring within threshold (proactive refresh).
+Consumed by internal background refresh job.
+
+*Event Data:*
+
+* OAuthTokenId oauthTokenId
+* String requestorId
+* DateTime expiresAt
+* int hoursUntilExpiry
+
+== Key Services
+
+=== OAuthFlowOrchestrator
+
+Orchestrates OAuth authorisation flows (PKCE, client credentials).
+
+*Operations:*
+
+* `initiateauthorisation(requestorId, resourceOwnerId, providerType)`:
+Returns authorisation URL for user redirect
+* `completeauthorisation(authorisationCode, codeVerifier, providerType)`:
+Exchanges authorisation code for tokens (called after OAuth callback),
+returns OAuthTokenId
+* `refreshAccessToken(tokenId)`: Refreshes expired access token using
+refresh token, returns success boolean
+* `revokeToken(tokenId, reason)`: Revokes OAuth tokens and deletes from
+Key Vault, returns success boolean
+
+=== TokenStorageService
+
+Manages secure token storage in Azure Key Vault.
+
+*Operations:*
+
+* `storeTokens(tokenId, accessToken, refreshToken)`: Stores tokens in
+Key Vault (encrypted at rest), returns Key Vault secret name
+* `getAccessToken(tokenId)`: Retrieves access token from Key Vault
+* `getRefreshToken(tokenId)`: Retrieves refresh token from Key Vault
+* `deleteTokens(tokenId)`: Deletes tokens from Key Vault, returns
+success boolean
+* `rotateTokens(tokenId, newAccessToken, newRefreshToken)`: Deletes old
+tokens and stores new ones, returns success boolean
+
+=== PKCEService
+
+PKCE helper service for mobile app OAuth flows.
+
+*Operations:*
+
+* `generateCodeVerifier()`: Generates code verifier (43-128 character
+random string)
+* `generateCodeChallenge(codeVerifier)`: Generates code challenge from
+verifier (SHA-256 hash)
+* `validateCodeVerifier(codeVerifier)`: Validates code verifier length
+(RFC 7636 compliance)
+
+== Security
+
+=== Token Storage
+
+* All tokens stored encrypted in Azure Key Vault
+* No tokens in application databases or logs
+* Token rotation on refresh (invalidate old tokens)
+
+=== PKCE Protection
+
+* Prevents authorisation code interception (mobile apps)
+* Code challenge method: S256 (SHA-256)
+* Code verifier length: 43-128 characters (RFC 7636)
+
+=== Audit and Compliance
+
+* Automatic token revocation on security events
+* Audit logging for compliance (token access, refresh, revocation)
+* Token access history for security investigations
+
+=== Data Protection
+
+* Tokens encrypted at rest in Azure Key Vault
+* Tokens encrypted in transit (TLS 1.3)
+* No tokens in error messages or logs
+* Client secrets stored in Key Vault only
+
+== OAuth 2.0 PKCE Flow (authorisation Code + PKCE)
+
+=== Step 1: Initiate authorisation
+
+Client calls `OAuthService.initiateauthorisation()`:
+
+[arabic]
+. OAuthService generates code_verifier (random 128-character string)
+. OAuthService generates code_challenge = SHA256(code_verifier)
+. Returns authorisation URL with code_challenge
+
+=== Step 2: User authorisation
+
+[arabic]
+. User redirected to OAuth provider (Flybuys/Auth0)
+. User authenticates with provider credentials
+. User approves consent for data sharing
+. Provider redirects back with authorisation_code
+
+=== Step 3: Complete authorisation
+
+Client calls `OAuthService.completeauthorisation(code, code_verifier)`:
+
+[arabic]
+. OAuthService calls provider /token endpoint
+. Sends: authorisation_code, code_verifier, client_id
+. Provider validates: SHA256(code_verifier) == stored code_challenge
+. Provider returns: access_token, refresh_token, expires_in
+
+=== Step 4: Store Tokens
+
+[arabic]
+. OAuthService stores tokens in Key Vault
+. Creates OAuthTokenRecord aggregate
+. Stores tokens encrypted in Azure Key Vault
+. Publishes OAuthLinkEstablished event
+
+=== Step 5: Bounded Context Consumption
+
+Bounded context (e.g., LoyaltyService) consumes event:
+
+[arabic]
+. Creates PartnerLink aggregate
+. References oauthProviderId for future token retrieval
+
+== Token Refresh Flow
+
+=== Background Refresh Process
+
+[arabic]
+. Background job monitors token expiry (runs hourly)
+. Identifies tokens expiring within 7 days
+. Calls `OAuthService.refreshAccessToken(tokenId)`
+. OAuthService retrieves refresh_token from Key Vault
+. OAuthService calls provider /token endpoint (grant_type=refresh_token)
+. Provider returns new access_token (and possibly new refresh_token)
+. OAuthService rotates tokens in Key Vault (delete old, store new)
+. OAuthService publishes OAuthTokenRefreshed event
+
+=== Automatic Refresh
+
+* Proactive token refresh (7 days before expiry)
+* Prevents token expiry during user sessions
+* Circuit breaker protection against provider outages
+* Rate limiting to prevent refresh abuse
+
+== Token Revocation Flow
+
+=== User-Initiated Revocation
+
+[arabic]
+. User taps ``Unlink Account'' in mobile app
+. Bounded context (e.g., LoyaltyService) calls
+`OAuthService.revokeToken()`
+. OAuthService calls provider /revoke endpoint (if supported)
+. OAuthService deletes tokens from Key Vault
+. OAuthService marks OAuthTokenRecord as REVOKED
+. OAuthService publishes OAuthLinkRevoked event
+. Bounded contexts consume event and update linking status
+
+=== Security Event Revocation
+
+* Automatic revocation on detected security events
+* Token cleanup on customer account deletion
+* Bulk revocation for security incidents
+
+== Architecture Pattern
+
+=== Strangler + Shared Kernel
+
+* Replaces ad-hoc OAuth implementations across services
+* Provides consistent OAuth patterns and security practices
+* Enables centralised token management and monitoring
+* Simplifies partner integration for bounded contexts
+
+== Reusability Examples
+
+=== Current Use Cases
+
+* *LoyaltyService*: Flybuys account linking, Shell card linking
+* *OAuth Infrastructure*: Generic OAuth provider support
+
+=== Future Use Cases
+
+* *EngagementService*: Marketing platform integrations (if OAuth
+required)
+* *PaymentService*: Payment gateway OAuth integrations
+* *Any Service*: Third-party OAuth integrations with consistent patterns
+
+== Implementation Notes
+
+=== Technology Stack
+
+* *Azure Functions*: Serverless compute for OAuth orchestration
+* *Azure Key Vault*: Encrypted token storage
+* *.NET Core*: Service implementation
+* *Event Bus*: Domain event publishing
+
+=== Resilience Patterns
+
+* Circuit breaker: Protect against OAuth provider outages
+* Retry logic: Handle transient failures
+* Rate limiting: Prevent token refresh abuse
+* Timeout configuration: Prevent hanging requests
+
+=== Monitoring and Observability
+
+* Token access metrics
+* Refresh success/failure rates
+* Revocation event tracking
+* Provider API latency monitoring
+* Key Vault access patterns
+
+== What OTR Does NOT Control
+
+* OAuth provider uptime and availability
+* OAuth provider API changes and deprecations
+* Third-party OAuth flow requirements
+* Token expiry policies (set by providers)
+* PKCE and OAuth 2.0 standards (RFC compliance required)

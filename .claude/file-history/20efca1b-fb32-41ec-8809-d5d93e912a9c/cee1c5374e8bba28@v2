@@ -1,0 +1,253 @@
+openapi: 3.0.3
+info:
+  title: EngagementService API
+  description: |
+    EngagementService manages customer engagement operations including feedback submission and support case management.
+
+    **Key Responsibilities**:
+    - Customer feedback submission from Mobile App
+    - Async Case creation in Salesforce Service Cloud via Anti-Corruption Layer
+    - Braze integration for all outbound customer communications (push, email, SMS)
+    - Webhook receiver for Salesforce Case status updates
+    - Domain event publishing for support case lifecycle
+
+    **Integration Patterns**:
+    - Anti-Corruption Layer (ACL) for Salesforce Service Cloud
+    - Conformist pattern with Braze for customer notifications
+    - Event-Driven Architecture for case lifecycle events
+
+    **Important Notes**:
+    - Feedback submission is asynchronous (202 Accepted) - Case created in background
+    - All customer communications (push, email, SMS) are handled by Braze, not Salesforce
+    - Salesforce webhooks trigger domain events (SupportCaseUpdated, SupportCaseResolved)
+  version: 1.0.0
+  contact:
+    name: OTR Domain Architecture Team
+    email: O.Young@otr.com.au
+
+security:
+  - MicrosoftEntraExternalID: []
+
+servers:
+  - url: https://api.otr.com.au/engagement/v1
+    description: Production
+  - url: https://api-staging.otr.com.au/engagement/v1
+    description: Staging
+  - url: https://api-dev.otr.com.au/engagement/v1
+    description: Development
+
+tags:
+  - name: Customer Feedback
+    description: Customer feedback submission and support case management
+
+paths:
+  /feedback:
+    post:
+      tags:
+        - Customer Feedback
+      summary: Submit customer feedback
+      description: |
+        Submit customer feedback for async Case creation in Salesforce Service Cloud.
+
+        **Business Flow**:
+        1. Mobile App calls ProfileService GET /contact-id to retrieve Salesforce Contact ID
+        2. Mobile App calls this endpoint with contactId + feedback details
+        3. EngagementService publishes `CustomerFeedbackSubmitted` event immediately (analytics, sentiment analysis)
+        4. EngagementService queues feedback for async Case creation in Salesforce
+        5. Background worker creates Salesforce Case via ACL (resilient to Salesforce downtime)
+        6. On success, publishes `SupportCaseCreated` event
+        7. Salesforce webhook triggers `SupportCaseUpdated` / `SupportCaseResolved` events
+        8. EngagementService calls Braze API to send push notification to customer
+
+        **Anti-Corruption Layer**:
+        - Translates OTR feedback categories to Salesforce Case fields
+        - Maps category enum to Salesforce Case Type and Reason picklists
+        - Protects Mobile App from Salesforce API changes
+
+        **Resilience**:
+        - Async processing with exponential backoff retry (5 attempts)
+        - Dead Letter Queue for failed Case creation after retries
+        - Non-blocking user experience (202 Accepted immediately)
+
+        **Performance SLA**: p95 < 200ms (feedback accepted, not Case creation)
+      operationId: submitFeedback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitFeedbackRequest"
+            example:
+              contactId: "0034X00000ABCDEFG"
+              category: "App"
+              storeName: "OTR Adelaide"
+              timeOfVisit: "2026-01-07T12:00:00Z"
+              contactPhoneNumber: "+61412345678"
+              message: "App crashed when submitting feedback. Steps to reproduce: 1. Open feedback form, 2. Fill in details, 3. Click Submit."
+      responses:
+        "202":
+          description: Feedback submitted successfully for async processing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedbackSubmittedResponse"
+              example:
+                feedbackId: "fb-2026-01-07-12345"
+                status: "submitted"
+                message: "Your feedback has been submitted. We'll get back to you soon!"
+                estimatedCaseCreationTime: "2026-01-07T14:35:00Z"
+        "400":
+          description: Bad request - validation failure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalidContactId:
+                  value:
+                    error: "INVALID_CONTACT_ID"
+                    message: "Contact ID must be an 18-character Salesforce ID"
+                    field: "contactId"
+                    providedValue: "invalid"
+                invalidCategory:
+                  value:
+                    error: "INVALID_CATEGORY"
+                    message: "Category must be one of: App, Service, Order, Rewards, Refund, Delete Account"
+                    field: "category"
+                    providedValue: "InvalidCategory"
+                messageTooLong:
+                  value:
+                    error: "MESSAGE_TOO_LONG"
+                    message: "Message must be between 1 and 2000 characters"
+                    field: "message"
+                    maxLength: 2000
+                    providedLength: 2500
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          description: Too many requests - rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "RATE_LIMIT_EXCEEDED"
+                message: "Too many feedback submissions. Please try again in 60 seconds."
+                retryAfter: 60
+
+components:
+  securitySchemes:
+    MicrosoftEntraExternalID:
+      type: oauth2
+      description: Microsoft Entra External ID (formerly Azure AD B2C) OAuth 2.0 JWT
+      flows:
+        authorizationCode:
+          authorizationUrl: https://otrviva.b2clogin.com/otrviva.onmicrosoft.com/oauth2/v2.0/authorize?p=B2C_1A_SIGNUP_SIGNIN
+          tokenUrl: https://otrviva.b2clogin.com/otrviva.onmicrosoft.com/oauth2/v2.0/token?p=B2C_1A_SIGNUP_SIGNIN
+          scopes:
+            https://otrviva.onmicrosoft.com/engagement-api/feedback.write: Submit customer feedback
+
+  schemas:
+    SubmitFeedbackRequest:
+      type: object
+      required:
+        - contactId
+        - category
+        - message
+      properties:
+        contactId:
+          type: string
+          pattern: "^[a-zA-Z0-9]{18}$"
+          description: Salesforce Contact ID (18-character) from ProfileService GET /contact-id
+          example: "0034X00000ABCDEFG"
+        category:
+          type: string
+          enum:
+            - App
+            - Service
+            - Order
+            - Rewards
+            - Refund
+            - Delete Account
+          description: Feedback category selected by customer
+          example: "App"
+        storeName:
+          type: string
+          maxLength: 255
+          description: Name of the OTR store the feedback relates to (optional)
+          example: "OTR Adelaide"
+        timeOfVisit:
+          type: string
+          format: date-time
+          description: When the customer visited the store (ISO 8601, optional)
+          example: "2026-01-07T12:00:00Z"
+        contactPhoneNumber:
+          type: string
+          pattern: "^\\+?[1-9]\\d{1,14}$"
+          description: Customer's preferred contact phone number (E.164 format, optional)
+          example: "+61412345678"
+        message:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          description: Free-text feedback message from customer (1-2000 characters)
+          example: "App crashed when submitting feedback. Steps to reproduce: 1. Open feedback form, 2. Fill in details, 3. Click Submit."
+
+    FeedbackSubmittedResponse:
+      type: object
+      properties:
+        feedbackId:
+          type: string
+          description: Unique identifier for the feedback submission
+          example: "fb-2026-01-07-12345"
+        status:
+          type: string
+          enum:
+            - submitted
+            - queued
+          description: Status of the feedback submission
+          example: "submitted"
+        message:
+          type: string
+          description: User-friendly confirmation message
+          example: "Your feedback has been submitted. We'll get back to you soon!"
+        estimatedCaseCreationTime:
+          type: string
+          format: date-time
+          description: Estimated time when the Salesforce Case will be created (ISO 8601)
+          example: "2026-01-07T14:35:00Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Machine-readable error code
+          example: "INVALID_CONTACT_ID"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Contact ID must be an 18-character Salesforce ID"
+        field:
+          type: string
+          description: Field name that caused the validation error (for 400 errors)
+          example: "contactId"
+        details:
+          type: object
+          additionalProperties: true
+          description: Additional error context
+        retryAfter:
+          type: integer
+          description: Seconds to wait before retrying (for 429 errors)
+          example: 60
+
+  responses:
+    Unauthorized:
+      description: Unauthorized - invalid or missing OAuth token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: "UNAUTHORIZED"
+            message: "Invalid or expired Microsoft Entra External ID JWT token"

@@ -1,0 +1,16 @@
+The file /mnt/c/Users/o.young/work/architecture/solution_architectures/salesforce_customer_support.adoc has been updated. Here's the result of running `cat -n` on a snippet of the edited file:
+   771→==== Migration Phases
+   772→
+   773→*Phase 1: Build & Test (Weeks 1-8)*
+   774→
+   775→* Build ProfileService microservice (JIT Contact reconciliation API)
+   776→* Build EngagementService microservice (feedback submission API, ACL for Salesforce Case creation, Braze integration, webhook receiver)
+   777→* Implement Event Bus infrastructure (SNS+SQS/EventBridge/Kinesis)
+   778→* Develop Contact migration tool (app database → Salesforce upsert by email/phone/VCI)
+   779→* Update Mobile App API integration (ProfileService + EngagementService endpoints - feedback form UI already complete)
+   780→* Integration testing (ProfileService ↔ Salesforce, EngagementService ↔ Salesforce, EngagementService ↔ Braze)
+   781→* UAT with test Salesforce sandbox environment
+   782→
+   783→*Phase 2: Contact Migration (Week 9)*
+   784→
+   785→* Execute Contact migration (app database → Salesforce production)

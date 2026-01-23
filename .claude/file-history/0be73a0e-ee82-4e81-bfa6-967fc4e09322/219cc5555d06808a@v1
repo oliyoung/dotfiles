@@ -1,0 +1,37 @@
+site:
+  title: OTR Digital Architecture
+  url: https://otr.github.io/architecture
+  start_page: architecture::index.adoc
+
+content:
+  sources:
+    - url: .
+      branches: HEAD
+      start_path: .
+
+ui:
+  bundle:
+    url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable
+    snapshot: true
+  supplemental_files:
+    - path: ui.yml
+      contents: |
+        static_files:
+          - .nojekyll
+
+asciidoc:
+  attributes:
+    page-pagination: true
+    sectanchors: ''
+    sectlinks: ''
+    experimental: ''
+    idprefix: ''
+    idseparator: '-'
+    kroki-fetch-diagram: true
+    kroki-default-format: svg
+  extensions:
+    - '@asciidoctor/tabs'
+    - asciidoctor-kroki
+
+output:
+  dir: ./build/site

@@ -1,0 +1,755 @@
+     1→/*
+     2→ * ProfileService - Bounded Context Definition
+     3→ * ============================================
+     4→ *
+     5→ * Unified customer profile service providing enriched customer data for OTR ecosystem.
+     6→ *
+     7→ * RELATED INITIATIVES:
+     8→ * - OTR-001 Salesforce Customer Support: Just-In-Time Contact reconciliation with Salesforce
+     9→ * - OTR-002 Flybuys Integration: Partner account linking and reward preference management
+    10→ *
+    11→ * NOTE: ProfileService is a foundational bounded context supporting multiple strategic initiatives.
+    12→ * Depending on sequencing, capabilities may be delivered incrementally across either initiative.
+    13→ *
+    14→ * See profile.adoc for comprehensive architecture documentation, decision log, and patterns.
+    15→ */
+    16→
+    17→import "../domains/profile.cml"
+    18→
+    19→BoundedContext ProfileService implements ProfileDomain {
+    20→
+    21→    type = APPLICATION
+    22→
+    23→    // Strategic DDD Classification: CORE_DOMAIN | SUPPORTING_DOMAIN | GENERIC_DOMAIN
+    24→    // CORE_DOMAIN: Competitive differentiator - customer intelligence, risk assessment, and behavioral
+    25→    // insights drive personalization and business outcomes
+    26→    strategicClassification = "CORE_DOMAIN"
+    27→
+    28→    domainVisionStatement = "Provide unified, enriched customer profiles bridging Salesforce canonical data with OTR-specific attributes, behavioral insights, and risk assessments"
+    29→
+    30→    responsibilities = "OTRG-specific customer profile management",
+    31→                      "Customer lifecycle stage and onboarding tracking",
+    32→                      "Partner linking status tracking",
+    33→                      "Customer risk assessment (fraud, refund, churn)",
+    34→                      "Refund history tracking",
+    35→                      "Engagement metrics caching for profile enrichment"
+    36→
+    37→    implementationTechnology = "Azure Functions, .NET Core, Azure SQL, Salesforce API, Event Bus"
+    38→
+    39→    // ========================================================================
+    40→    // SECTION 1: CORE AGGREGATES
+    41→    // ========================================================================
+    42→    // Aggregates represent transactional consistency boundaries.
+    43→    // Each aggregate root controls access to entities within its boundary.
+    44→    // ========================================================================
+    45→
+    46→    // 1.1 CustomerProfile Aggregate
+    47→    // ------------------------------
+    48→    // OTR-specific customer profile attributes enriching Salesforce canonical data.
+    49→    // Stores behavioral data, preferences, and app-specific attributes.
+    50→    //
+    51→    // Invariants:
+    52→    // - Must have valid VCI reference to Salesforce
+    53→    // - Email verification status must be tracked
+    54→    // - Account status must be valid enum value
+    55→    // - Profile completeness score must be 0-100
+    56→    // - Onboarding completion percentage must be 0-100
+    57→    // - lifecycle stage must be valid enum value
+    58→    //
+    59→    // Bounded Context Note:
+    60→    // - Canonical customer data (name, email, phone) owned by Salesforce
+    61→    // - ProfileService stores OTR-specific enrichment only
+    62→    // - Queries Salesforce for canonical data, does not cache it
+    63→    Aggregate CustomerProfile {
+    64→        Entity CustomerProfileRecord {
+    65→            aggregateRoot
+    66→
+    67→            - ProfileId id
+    68→            - String VivaConsumerId           // Salesforce customer identifier (VCI)
+    69→            - AccountStatus status
+    70→            - DateTime createdAt
+    71→            - DateTime lastUpdatedAt
+    72→            - DateTime lastLoginAt
+    73→
+    74→            // Identity Verification
+    75→            - IdentityVerification verification
+    76→
+    77→            // App Preferences
+    78→            - AppPreferences appPreferences
+    79→
+    80→            // Profile Completeness
+    81→            - int completenessScore          // 0-100 calculated score
+    82→
+    83→            // Customer lifecycle
+    84→            - LifeCycleStage lifeCycleStage  // PROSPECT | NEW | ACTIVE | DORMANT | AT_RISK | CHURNED
+    85→            - DateTime lifeCycleChangedAt
+    86→
+    87→            // Onboarding Progress
+    88→            - OnboardingStatus onboardingStatus
+    89→            - int onboardingCompletionPercentage  // 0-100
+    90→            - DateTime onboardingCompletedAt
+    91→
+    92→            // Customer Value
+    93→            - CustomerValue valueMetrics
+    94→
+    95→            // Special Handling
+    96→            - boolean isStaffMember          // Employee customer flag
+    97→
+    98→            // Operations
+    99→            def updateLastLogin(): void
+   100→            def calculateCompletenessScore(): int
+   101→            def updateLifeCycleStage(newStage: LifeCycleStage): void
+   102→            def updateOnboardingProgress(percentage: int): void
+   103→        }
+   104→
+   105→        ValueObject IdentityVerification {
+   106→            - boolean emailVerified
+   107→            - boolean phoneVerified
+   108→            - VerificationLevel level        // UNVERIFIED | BASIC | FULL
+   109→            - DateTime lastVerifiedAt
+   110→        }
+   111→
+   112→        ValueObject AppPreferences {
+   113→            - String preferredStore
+   114→            - String languagePreference      // ISO 639-1 code (en, zh, vi, etc.)
+   115→            - boolean pushNotificationsEnabled
+   116→            - boolean locationServicesEnabled
+   117→            - String preferredPaymentMethod
+   118→            - Map<String, String> customPreferences
+   119→        }
+   120→
+   121→        ValueObject CustomerValue {
+   122→            - Money lifetimeValue
+   123→            - Money totalSpend
+   124→            - int transactionCount
+   125→            - Money averageBasketValue
+   126→            - DateTime firstPurchaseDate
+   127→            - ProfitabilityScore profitability
+   128→        }
+   129→
+   130→        enum VerificationLevel {
+   131→            UNVERIFIED,                      // No verification
+   132→            BASIC,                           // Email or phone verified
+   133→            FULL                             // Multiple factors verified
+   134→        }
+   135→
+   136→        enum ProfitabilityScore {
+   137→            LOW, MEDIUM, HIGH, VIP
+   138→        }
+   139→
+   140→        enum LifeCycleStage {
+   141→            PROSPECT,                        // Registered but no purchase
+   142→            NEW,                             // First purchase within 90 days
+   143→            ACTIVE,                          // Regular transactions
+   144→            DORMANT,                         // No transactions 90+ days
+   145→            AT_RISK,                         // Declining engagement/transactions
+   146→            CHURNED                          // No transactions 180+ days
+   147→        }
+   148→
+   149→        enum OnboardingStatus {
+   150→            NOT_STARTED,                     // Account created, onboarding not begun
+   151→            IN_PROGRESS,                     // Onboarding steps partially complete
+   152→            COMPLETED,                       // All onboarding steps finished
+   153→            SKIPPED                          // User skipped onboarding flow
+   154→        }
+   155→    }
+   156→
+   157→    // 1.2 PartnerLink Aggregate
+   158→    // ------------------------------------------------------
+   159→    // Records customer linkages to external loyalty partners (Flybuys, Shell).
+   160→    // Tracks linking status and synchronization state for partner integrations.
+   161→    //
+   162→    // INITIATIVE: OTR-002 Flybuys Integration
+   163→    // - Manages customer partner account linking via OAuth
+   164→    // - Tracks reward preference selection (Flybuys Points vs Fuel Discount vs OTR Rewards)
+   165→    // - Enables Flybuys earning at POS
+   166→    //
+   167→    // Invariants:
+   168→    // - Customer can only have one active link per partner type
+   169→    // - External member ID must be unique within partner
+   170→    // - Reward preference must be one of: FLYBUYS_POINTS, FUEL_DISCOUNT_SHELL, OTR_REWARDS
+   171→    // - If preference is FLYBUYS_POINTS, PartnerLink must exist with status=LINKED
+   172→    // - Default preference when no partner linked: OTR_REWARDS (fallback)
+   173→    //
+   174→    // Bounded Context Note:
+   175→    // - OAuth tokens are managed by infrastructure OAuth Service
+   176→    // - This aggregate tracks: "customer linked partner account"
+   177→    // - Created in response to OAuthLinkEstablished event from OAuth Service
+   178→    Aggregate PartnerLink {
+   179→        Entity CustomerPartnerLink {
+   180→            aggregateRoot
+   181→
+   182→            - PartnerLinkId id
+   183→            - String VivaConsumerId           // Salesforce customer identifier
+   184→            - PartnerType partner             // FLYBUYS, SHELL_CARD
+   185→            - String externalMemberId         // Partner's member/account number
+   186→            - LinkingStatus status
+   187→            - RewardPreference rewardPreference   // Customer's chosen reward type
+   188→            - DateTime linkedAt
+   189→            - DateTime lastSyncedAt           // Last successful sync
+   190→            - String oauthProviderId          // Reference to OAuth Service token
+   191→
+   192→            // Operations
+   193→            def updateRewardPreference(newPreference: RewardPreference): void {
+   194→                // Invariant: Cannot select FLYBUYS_POINTS unless Flybuys account linked
+   195→                // Invariant: Unlinking Flybuys resets preference to OTR_REWARDS (fallback)
+   196→            }
+   197→
+   198→            def recordSync(syncStatus: SyncStatus): void
+   199→        }
+   200→
+   201→        ValueObject LinkingStatus {
+   202→            - LinkState state                 // LINKED, UNLINKED, SYNC_FAILED
+   203→            - String errorMessage
+   204→            - int failedSyncAttempts
+   205→        }
+   206→
+   207→        ValueObject RewardPreference {
+   208→            - RewardPreferenceType type       // FLYBUYS_POINTS, FUEL_DISCOUNT_SHELL, OTR_REWARDS
+   209→        }
+   210→
+   211→        enum LinkState {
+   212→            LINKED,                           // Active partner link
+   213→            UNLINKED,                         // No partner link
+   214→            SYNC_FAILED                       // Link exists but sync failing
+   215→        }
+   216→
+   217→        enum RewardPreferenceType {
+   218→            FLYBUYS_POINTS,                   // Earn Flybuys points (requires linking)
+   219→            FUEL_DISCOUNT_SHELL,              // Shell Price Save fuel discount (4c/L)
+   220→            OTR_REWARDS                       // OTR native loyalty points (default fallback)
+   221→        }
+   222→
+   223→        enum PartnerType {
+   224→            FLYBUYS, SHELL_CARD
+   225→        }
+   226→    }
+   227→
+   228→    // 1.3 RiskAssessment Aggregate
+   229→    // -----------------------------
+   230→    // Customer risk, fraud, and value scores for instant refund decisions.
+   231→    // Provides both computed scores and raw factors for transparency.
+   232→    //
+   233→    // Invariants:
+   234→    // - Risk scores must be 0-100
+   235→    // - Assessment must have calculated timestamp
+   236→    // - Factors must be populated when score is calculated
+   237→    //
+   238→    // Use Case: Instant Refunds
+   239→    // - Provides scored assessment to other business units
+   240→    // - Exposes raw factors for custom scoring logic
+   241→    // - Enables risk-based refund approval workflows
+   242→    Aggregate RiskAssessment {
+   243→        Entity CustomerRiskAssessment {
+   244→            aggregateRoot
+   245→
+   246→            - RiskAssessmentId id
+   247→            - String VivaConsumerId
+   248→            - DateTime assessedAt
+   249→            - DateTime lastUpdatedAt
+   250→
+   251→            // Computed Scores (0-100)
+   252→            - int overallRiskScore           // Combined risk score
+   253→            - int fraudRiskScore             // Fraud-specific risk
+   254→            - int refundRiskScore            // Refund abuse risk
+   255→            - int churnRiskScore             // Customer churn/attrition risk
+   256→            - int customerValueScore         // Customer lifetime value score
+   257→
+   258→            // Risk Factors (raw data for transparency)
+   259→            - RiskFactors factors
+   260→
+   261→            // Operations
+   262→            def calculateRiskScore(): int
+   263→            def updateFactors(newFactors: RiskFactors): void
+   264→        }
+   265→
+   266→        ValueObject RiskFactors {
+   267→            // Refund History
+   268→            - int totalRefundCount
+   269→            - int refundsLast30Days
+   270→            - int refundsLast60Days
+   271→            - int refundsLast90Days
+   272→            - Money totalRefundAmount
+   273→            - Decimal refundToPurchaseRatio
+   274→            - List<String> refundReasonDistribution
+   275→
+   276→            // Transaction Behavior
+   277→            - int transactionFrequency       // Transactions per month
+   278→            - DateTime lastTransactionDate
+   279→            - Money averageBasketValue
+   280→            - Decimal basketValueVariance
+   281→            - int locationDiversity          // Number of unique stores visited
+   282→            - boolean hasUnusualPatterns
+   283→
+   284→            // Fraud Indicators
+   285→            - int disputedTransactionCount
+   286→            - int chargebackCount
+   287→            - Decimal failedPaymentRate
+   288→            - boolean multipleAccountDetected
+   289→            - boolean loginAnomaliesDetected
+   290→            - int fraudFlagCount
+   291→
+   292→            // Account Health
+   293→            - int accountTenureDays
+   294→            - VerificationLevel verificationLevel
+   295→            - AccountStatus accountStatus
+   296→
+   297→            // Engagement Metrics (cached from EngagementService)
+   298→            - int appUsageFrequency          // Logins per week
+   299→            - DateTime lastLoginDate
+   300→            - int supportInteractionCount
+   301→            - Decimal campaignEngagementRate
+   302→
+   303→            // Churn Indicators
+   304→            - int daysSinceLastPurchase
+   305→            - int daysSinceLastLogin
+   306→            - Decimal transactionFrequencyTrend  // +/- percentage change
+   307→            - Decimal basketValueTrend           // +/- percentage change
+   308→            - boolean engagementDeclining        // Trend analysis flag
+   309→            - LifeCycleStage currentLifeCycleStage
+   310→
+   311→            // Customer Value
+   312→            - Money lifetimeValue
+   313→            - Money totalSpend
+   314→            - ProfitabilityScore profitability
+   315→        }
+   316→
+   317→        enum AccountStatus {
+   318→            ACTIVE, SUSPENDED, FLAGGED, CLOSED
+   319→        }
+   320→    }
+   321→
+   322→    // 1.4 RefundHistory Aggregate
+   323→    // ----------------------------
+   324→    // Customer refund transaction history for risk assessment.
+   325→    //
+   326→    // Invariants:
+   327→    // - Refund amount must be positive
+   328→    // - Refund must reference original transaction
+   329→    // - Refund reason must be provided
+   330→    Aggregate RefundHistory {
+   331→        Entity RefundRecord {
+   332→            aggregateRoot
+   333→
+   334→            - RefundId id
+   335→            - String VivaConsumerId
+   336→            - TransactionId originalTransactionId
+   337→            - Money refundAmount
+   338→            - RefundReason reason
+   339→            - RefundStatus status
+   340→            - DateTime requestedAt
+   341→            - DateTime processedAt
+   342→            - String processedBy              // System or agent identifier
+   343→            - int processingTimeDays          // Turnaround time tracking
+   344→        }
+   345→
+   346→        enum RefundReason {
+   347→            PRICING_ERROR,
+   348→            PRODUCT_QUALITY,
+   349→            TRANSACTION_ERROR,
+   350→            CUSTOMER_DISPUTE,
+   351→            PROMOTIONAL_ISSUE,
+   352→            OTHER
+   353→        }
+   354→
+   355→        enum RefundStatus {
+   356→            PENDING,
+   357→            APPROVED,
+   358→            REJECTED,
+   359→            PROCESSED,
+   360→            CANCELLED
+   361→        }
+   362→    }
+   363→
+   364→
+   365→    // ========================================================================
+   366→    // SECTION 2: DOMAIN EVENTS
+   367→    // ========================================================================
+   368→    // Events published to Event Bus for downstream consumption.
+   369→    //
+   370→    // Event Categories:
+   371→    // 1. Profile lifecycle events (creation, updates, verification, completeness, lifecycle stage, onboarding)
+   372→    // 2. Partner linking events
+   373→    // 3. Risk assessment events
+   374→    // 4. Refund history events
+   375→    // ========================================================================
+   376→
+   377→    // --- Profile lifecycle Events ---
+   378→
+   379→    DomainEvent ProfileCreated {
+   380→        - String VivaConsumerId
+   381→        - ProfileId profileId
+   382→        - DateTime createdAt
+   383→        - VerificationLevel initialVerificationLevel
+   384→    }
+   385→
+   386→    DomainEvent ProfileUpdated {
+   387→        - String VivaConsumerId
+   388→        - ProfileId profileId
+   389→        - DateTime updatedAt
+   390→        - List<String> changedFields
+   391→    }
+   392→
+   393→    DomainEvent ProfileVerificationChanged {
+   394→        - String VivaConsumerId
+   395→        - VerificationLevel previousLevel
+   396→        - VerificationLevel newLevel
+   397→        - DateTime changedAt
+   398→    }
+   399→
+   400→    DomainEvent ProfileCompletenessChanged {
+   401→        - String VivaConsumerId
+   402→        - int previousScore
+   403→        - int newScore
+   404→        - DateTime changedAt
+   405→    }
+   406→
+   407→    DomainEvent LifeCycleStageChanged {
+   408→        - String VivaConsumerId
+   409→        - LifeCycleStage previousStage
+   410→        - LifeCycleStage newStage
+   411→        - DateTime changedAt
+   412→        - String trigger                   // TRANSACTION_INACTIVITY | ENGAGEMENT_CHANGE | MANUAL_UPDATE
+   413→    }
+   414→
+   415→    DomainEvent OnboardingCompleted {
+   416→        - String VivaConsumerId
+   417→        - DateTime completedAt
+   418→        - int completionPercentage
+   419→        - List<String> completedSteps
+   420→    }
+   421→
+   422→    DomainEvent OnboardingProgressUpdated {
+   423→        - String VivaConsumerId
+   424→        - int previousPercentage
+   425→        - int newPercentage
+   426→        - String completedStep
+   427→        - DateTime updatedAt
+   428→    }
+   429→
+   430→    // --- Partner Linking Events (MOVED from LoyaltyService) ---
+   431→
+   432→    DomainEvent PartnerLinked {
+   433→        - String VivaConsumerId
+   434→        - PartnerType partner
+   435→        - String externalMemberId
+   436→        - DateTime linkedAt
+   437→    }
+   438→
+   439→    DomainEvent PartnerUnlinked {
+   440→        - String VivaConsumerId
+   441→        - PartnerType partner
+   442→        - DateTime unlinkedAt
+   443→        - String reason
+   444→    }
+   445→
+   446→    DomainEvent PartnerLinkChanged {
+   447→        - String VivaConsumerId
+   448→        - PartnerType partner
+   449→        - LinkState previousState
+   450→        - LinkState newState
+   451→        - DateTime changedAt
+   452→    }
+   453→
+   454→    DomainEvent RewardPreferenceChanged {
+   455→        - String VivaConsumerId
+   456→        - RewardPreferenceType previousPreference
+   457→        - RewardPreferenceType newPreference
+   458→        - DateTime changedAt
+   459→        - String changeReason              // USER_SELECTED, PARTNER_UNLINKED, FALLBACK_APPLIED
+   460→        - PartnerType affectedPartner      // Which partner this change affects (if applicable)
+   461→    }
+   462→
+   463→    // --- Risk Assessment Events ---
+   464→
+   465→    DomainEvent RiskStatusChanged {
+   466→        - String VivaConsumerId
+   467→        - RiskLevel previousLevel
+   468→        - RiskLevel newLevel
+   469→        - DateTime changedAt
+   470→        - String trigger                   // REFUND_THRESHOLD | FRAUD_DETECTED | MANUAL_REVIEW
+   471→    }
+   472→
+   473→    DomainEvent FraudIndicatorDetected {
+   474→        - String VivaConsumerId
+   475→        - FraudIndicatorType indicatorType
+   476→        - String description
+   477→        - Severity severity
+   478→        - DateTime detectedAt
+   479→        - boolean requiresInvestigation
+   480→    }
+   481→
+   482→    enum RiskLevel {
+   483→        LOW, MEDIUM, HIGH, CRITICAL
+   484→    }
+   485→
+   486→    enum FraudIndicatorType {
+   487→        MULTIPLE_ACCOUNTS,
+   488→        CHARGEBACK_PATTERN,
+   489→        LOGIN_ANOMALY,
+   490→        TRANSACTION_ANOMALY,
+   491→        REFUND_ABUSE,
+   492→        DISPUTE_PATTERN
+   493→    }
+   494→
+   495→    enum Severity {
+   496→        LOW, MEDIUM, HIGH, CRITICAL
+   497→    }
+   498→
+   499→    // --- Refund History Events ---
+   500→
+   501→    DomainEvent RefundRequested {
+   502→        - RefundId refundId
+   503→        - String VivaConsumerId
+   504→        - TransactionId originalTransactionId
+   505→        - Money refundAmount
+   506→        - RefundReason reason
+   507→        - DateTime requestedAt
+   508→    }
+   509→
+   510→    DomainEvent RefundProcessed {
+   511→        - RefundId refundId
+   512→        - String VivaConsumerId
+   513→        - Money refundAmount
+   514→        - RefundStatus status
+   515→        - DateTime processedAt
+   516→        - int processingTimeDays
+   517→    }
+   518→
+   519→    // ========================================================================
+   520→    // SECTION 3: ORCHESTRATION & QUERY SERVICES
+   521→    // ========================================================================
+   522→    // Services orchestrate calls to external systems and provide query APIs.
+   523→    // ========================================================================
+   524→
+   525→    Service ProfileQueryService {
+   526→        // Query customer profile (Salesforce canonical + OTR enrichment)
+   527→        getProfile(@String VivaConsumerId) : CustomerProfileResponse
+   528→
+   529→        // Query profile completeness
+   530→        getProfileCompleteness(@String VivaConsumerId) : int
+   531→
+   532→        // Query partner links
+   533→        getPartnerLinks(@String VivaConsumerId) : List<CustomerPartnerLink>
+   534→
+   535→        // Query specific partner link status
+   536→        getPartnerLinkStatus(@String VivaConsumerId, @PartnerType partner) : LinkingStatus
+   537→    }
+   538→
+   539→    Service RiskAssessmentService {
+   540→        // Get comprehensive risk assessment (scores + raw factors)
+   541→        getRiskAssessment(@String VivaConsumerId) : RiskAssessmentResponse
+   542→
+   543→        // Calculate risk score from factors
+   544→        calculateRiskScore(@RiskFactors factors) : int
+   545→
+   546→        // Update risk factors
+   547→        updateRiskFactors(@String VivaConsumerId, @RiskFactors factors): void
+   548→
+   549→        // Specific risk queries
+   550→        getFraudRisk(@String VivaConsumerId) : int
+   551→        getRefundRisk(@String VivaConsumerId) : int
+   552→        getChurnRisk(@String VivaConsumerId) : int
+   553→        getCustomerValueScore(@String VivaConsumerId) : int
+   554→    }
+   555→
+   556→    Service RefundHistoryService {
+   557→        // Query refund history
+   558→        getRefundHistory(@String VivaConsumerId) : List<RefundRecord>
+   559→
+   560→        // Record new refund request
+   561→        recordRefund(@RefundRecord refund) : void
+   562→
+   563→        // Calculate refund statistics
+   564→        getRefundStatistics(@String VivaConsumerId) : RefundStatistics
+   565→    }
+   566→
+   567→    Service PartnerLinkService {
+   568→        // Create partner link
+   569→        createPartnerLink(@String VivaConsumerId, @PartnerType partner, @String externalMemberId) : PartnerLinkId
+   570→
+   571→        // Update reward preference
+   572→        updateRewardPreference(@String VivaConsumerId, @RewardPreferenceType preference) : void
+   573→
+   574→        // Sync with partner (calls partner APIs)
+   575→        syncWithPartner(@PartnerLinkId linkId) : boolean
+   576→
+   577→        // Revoke partner link
+   578→        revokePartnerLink(@PartnerLinkId linkId) : void
+   579→    }
+   580→
+   581→    Service EngagementSyncService {
+   582→        // Update cached engagement summary (from EngagementService)
+   583→        updateEngagementSummary(@String VivaConsumerId, @EngagementMetrics metrics) : void
+   584→
+   585→        // Get cached engagement summary
+   586→        getEngagementSummary(@String VivaConsumerId) : CustomerEngagementSummary
+   587→    }
+   588→
+   589→    Service SalesforceProfileAdapter {
+   590→        // ACL for Salesforce integration
+   591→        // Translates between Salesforce Contact/Person Account and OTR profile model
+   592→        //
+   593→        // INITIATIVES:
+   594→        // - OTR-001 Salesforce Customer Support: Just-In-Time Contact reconciliation (upsert by email)
+   595→        // - OTR-002 Flybuys Integration: VCI-based customer identification
+   596→
+   597→        // Query canonical customer data from Salesforce
+   598→        getCustomer(@String VivaConsumerId) : SalesforceCustomer
+   599→
+   600→        // Resolve email to VCI (for legacy email-keyed lookups)
+   601→        // Used by OTR-001 for Just-In-Time Contact reconciliation
+   602→        resolveEmailToVCI(@String email) : String
+   603→
+   604→        // Validate VCI exists in Salesforce
+   605→        validateVCI(@String VivaConsumerId) : boolean
+   606→    }
+   607→
+   608→    // ========================================================================
+   609→    // SECTION 4: SHARED VALUE OBJECTS
+   610→    // ========================================================================
+   611→    // Reusable value objects used across multiple aggregates.
+   612→    // ========================================================================
+   613→
+   614→    ValueObject Money {
+   615→        - Decimal amount
+   616→        - String currency                 // AUD, USD
+   617→    }
+   618→
+   619→    ValueObject ProfileId {
+   620→        - String id
+   621→    }
+   622→
+   623→    ValueObject PartnerLinkId {
+   624→        - String id
+   625→    }
+   626→
+   627→    ValueObject RiskAssessmentId {
+   628→        - String id
+   629→    }
+   630→
+   631→    ValueObject RefundId {
+   632→        - String id
+   633→    }
+   634→
+   635→    ValueObject EngagementSummaryId {
+   636→        - String id
+   637→    }
+   638→
+   639→    ValueObject TransactionId {
+   640→        - String id
+   641→    }
+   642→
+   643→    ValueObject CustomerProfileResponse {
+   644→        // Combined response from Salesforce + ProfileService
+   645→        - String VivaConsumerId
+   646→        - SalesforceCustomer salesforceData   // Canonical data from Salesforce
+   647→        - CustomerProfileRecord otrData       // OTR-specific enrichment
+   648→        - List<CustomerPartnerLink> partnerLinks
+   649→        - int completenessScore
+   650→    }
+   651→
+   652→    ValueObject SalesforceCustomer {
+   653→        // Canonical customer data from Salesforce
+   654→        - String VivaConsumerId
+   655→        - String firstName
+   656→        - String lastName
+   657→        - String email
+   658→        - String phone
+   659→        - Address mailingAddress
+   660→        - DateTime createdDate
+   661→        - DateTime lastModifiedDate
+   662→    }
+   663→
+   664→    ValueObject Address {
+   665→        - String street
+   666→        - String city
+   667→        - String state
+   668→        - String postalCode
+   669→        - String country
+   670→    }
+   671→
+   672→    ValueObject RiskAssessmentResponse {
+   673→        // Comprehensive risk assessment with scores and raw factors
+   674→        - String VivaConsumerId
+   675→        - DateTime assessedAt
+   676→
+   677→        // Computed Scores
+   678→        - int overallRiskScore
+   679→        - int fraudRiskScore
+   680→        - int refundRiskScore
+   681→        - int churnRiskScore
+   682→        - int customerValueScore
+   683→
+   684→        // Raw Factors (for transparency and custom scoring)
+   685→        - RiskFactors factors
+   686→
+   687→        // Aggregated from Other Services
+   688→        - String loyaltyTier              // From LoyaltyService
+   689→        - int loyaltyPointsBalance        // From LoyaltyService
+   690→    }
+   691→
+   692→    ValueObject RefundStatistics {
+   693→        - int totalRefundCount
+   694→        - Money totalRefundAmount
+   695→        - Decimal refundToPurchaseRatio
+   696→        - Money averageRefundAmount
+   697→        - int refundsLast30Days
+   698→        - int refundsLast90Days
+   699→        - List<String> topRefundReasons
+   700→    }
+   701→
+   702→    ValueObject EngagementMetrics {
+   703→        // Metrics from EngagementService for caching
+   704→        - int emailOpenRate
+   705→        - int emailClickRate
+   706→        - int pushNotificationEngagement
+   707→        - int campaignResponseCount
+   708→        - DateTime lastCampaignInteraction
+   709→        - EngagementTier engagementTier
+   710→    }
+   711→
+   712→    // ========================================================================
+   713→    // SECTION 5: REPOSITORIES (Persistence Abstractions)
+   714→    // ========================================================================
+   715→    // Repository interfaces define persistence operations for owned aggregates.
+   716→    // ========================================================================
+   717→
+   718→    // Repository CustomerProfileRepository
+   719→    // Repository PartnerLinkRepository
+   720→    // Repository RiskAssessmentRepository
+   721→    // Repository RefundHistoryRepository
+   722→    // Repository EngagementSummaryRepository
+   723→}
+   724→
+   725→// ============================================================================
+   726→// END OF BOUNDED CONTEXT
+   727→// ============================================================================
+   728→//
+   729→// Implementation Notes:
+   730→// - Database: Azure SQL (optimized for high-frequency updates)
+   731→// - Events published to Event Bus topic: "profile-events"
+   732→// - Salesforce integration via REST API with OAuth 2.0
+   733→// - EngagementService integration via Event Bus + batch sync
+   734→// - LoyaltyService queries ProfileService synchronously
+   735→// - Admin portal enhanced to use ProfileService APIs
+   736→//
+   737→// Initiative Delivery:
+   738→// - OTR-001 (Salesforce Customer Support): SalesforceProfileAdapter, CustomerProfile aggregate
+   739→//   * Just-In-Time Contact reconciliation (upsert by email)
+   740→//   * Contact ID resolution for feedback submission
+   741→// - OTR-002 (Flybuys Integration): PartnerLink aggregate, partner linking services
+   742→//   * OAuth partner account linking (Flybuys, Shell)
+   743→//   * Reward preference management
+   744→//   * VCI as universal customer identifier established
+   745→//
+   746→// Sequencing Flexibility:
+   747→// - Either initiative can deliver ProfileService first
+   748→// - Other initiative reuses foundation and adds its specific aggregates
+   749→// - Both initiatives benefit from shared Salesforce integration patterns
+   750→// ============================================================================
+   751→
+
+<system-reminder>
+Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+</system-reminder>

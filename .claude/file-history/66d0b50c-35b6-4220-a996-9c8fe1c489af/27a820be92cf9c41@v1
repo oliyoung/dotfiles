@@ -1,0 +1,592 @@
+= Flybuys Coalition Loyalty Integration
+:project: OTR-002
+:domain: Loyalty
+:programme-lead: Frankie.Mullaly@vivaenergy.com.au
+:domain-architect: O.Young@otr.com.au
+:business-owner: D.Peisley@otr.com.au
+:business-analyst: Fiona.Cheung@vivaenergy.com.au
+:status: Discovery
+:version: 0.2
+:architecture-definition: xref:architecture-definitions:flybuys_integration.adoc[Architecture Definition]
+:solution-architecture: xref:solution-architectures:flybuys_integration.adoc[Solution Architecture]
+:doctype: article
+:toc: left
+:toclevels: 3
+:sectanchors:
+:sectlinks:
+:sectnums:
+:icons: font
+:experimental:
+:description: Initiative document for Flybuys coalition loyalty partner integration
+:keywords: flybuys, loyalty, initiative, customer-journey, phased-delivery
+
+== What We're Building
+
+=== Business Vision
+
+> Enable Customers to seamlessly link coalition loyalty partners to their OTR Profile via our mobile app, select their reward preference, and earn partner points while maintaining architectural flexibility to evolve OTRG's native loyalty capability independently.
+
+=== Features Delivered
+
+[width="100%",cols="30%,35%,35%",options="header",]
+|===
+|Feature | Capability | Business Value
+
+|Flybuys Account Linking
+|Self-service OAuth 2.0 partner linking in mobile app
+|Access to 8M+ Flybuys member base, increased customer acquisition
+
+|Reward Preference Selection
+|Customer choice: Flybuys Points, Fuel Discount (Shell), or OTR Rewards
+|Customer flexibility, competitive positioning, strategic independence
+
+|Real-Time Points Earning
+|Flybuys points earned at all OTR and REXP stores (POS integration)
+|Unified customer experience across 1,000 stores, increased visit frequency
+
+|Mobile Balance Visibility
+|Real-time Flybuys balance display in OTR mobile app
+|Customer transparency, reduced support calls, increased engagement
+
+|Automated Batch Posting
+|Daily transaction posting to Flybuys (replacing manual CSV uploads)
+|Operational efficiency, 24-hour point crediting (vs 48+ hours manual)
+|===
+
+== Why This Matters
+
+=== Business Case
+
+==== Customer Pain Points (Current State)
+
+*REXP stores (OTR+ POS):*
+
+* Manual Flybuys batch processing (Data Team exports CSV, uploads via SFTP)
+* 24+ hour delay before points appear in Flybuys account
+* High support burden: customers call when points missing
+* No integration with OTR mobile app (REXP customers can't see Flybuys balance)
+* No linking process (customers must remember Flybuys card number)
+
+*OTR stores:*
+
+* No Flybuys integration at all (OTR native rewards only)
+* Lost opportunity with Flybuys-loyal customers
+* Competitive disadvantage vs other fuel retailers
+
+==== Strategic Objectives
+
+[width="100%",cols="40%,60%",options="header",]
+|===
+|Objective | How Flybuys Integration Delivers
+
+|**Customer Lifetime Value**
+|Flybuys members show 40% higher visit frequency (Coles partnership data)
+
+|**Competitive Positioning**
+|Match competitors (Shell Coles Express, 7-Eleven) offering Flybuys at fuel/convenience
+
+|**Strategic Flexibility**
+|Partner integration pattern enables future partners (Shell, airline programs) without architectural change
+
+|**Operational Efficiency**
+|Automated batch posting eliminates manual Data Team intervention (15 hours/month saved)
+
+|**Revenue Protection**
+|Dual-scheme tracking (Flybuys + Internal OTR shadow balance) enables future pivot to OTR-native rewards without losing transaction history
+|===
+
+=== Customer Impact
+
+==== Quantified Benefits
+
+* **Customer Acquisition:** Access to 8M+ Flybuys members (potential 15% acquisition uplift)
+* **Visit Frequency:** Flybuys members visit 40% more often (Coles partnership benchmark)
+* **Basket Size:** Coalition loyalty members spend 25% more per transaction (industry average)
+* **Support Reduction:** 20% reduction in "missing points" support calls (real-time adjudication eliminates delay)
+
+== Customer Journey
+
+=== Current State: Customer Redeems Flybuys Fuel Discount (AS-IS)
+
+==== Pain Points in Current Flow
+
+[source,mermaid]
+----
+sequenceDiagram
+    actor Customer
+    participant Scanner as Coupon Scanner
+    participant POS as OTR+ POS
+    participant DataTeam as Data Team
+    participant SFTP as SFTP Server
+    participant Flybuys as Flybuys
+
+    Customer->>Scanner: Present Flybuys card
+    Scanner-->>Customer: Scan fuel docket barcode
+
+    Customer->>POS: Make purchase ($75.50)
+    POS->>POS: Process transaction
+    POS-->>Customer: Receipt (no points confirmation)
+
+    Note over Customer,Flybuys: Manual Batch Process (Next Day)
+
+    DataTeam->>DataTeam: Generate CSV file manually
+    DataTeam->>SFTP: Manual SFTP upload
+
+    Note over SFTP,Flybuys: 24+ Hour Delay
+
+    Flybuys->>SFTP: Retrieve batch file
+    Flybuys->>Flybuys: Process transactions
+    Flybuys-->>Flybuys: Credit points to member account
+
+    alt Customer checks points before batch processing
+        Customer->>Customer: Check Flybuys app
+        Customer->>Customer: "Where are my points?"
+        Customer->>Customer: Call OTR support (10-15 min wait)
+    end
+
+    Note over Customer: Pain Points:<br/>- No real-time adjudication<br/>- Manual CSV export/upload<br/>- 24+ hour delay<br/>- No retry logic<br/>- High support burden
+----
+
+[width="100%",cols="20%,30%,15%,15%,20%",options="header",]
+|===
+|Actor | Activity | System | Duration | Pain Point
+
+|Customer | Present Flybuys card | Coupon Scanner | <1 sec | Significant delay, manual reconciliation
+|Customer | Make purchase | OTR+ POS | <1 sec | No real-time points confirmation at POS
+|Data Team | Export Flybuys transactions | SQL query → CSV | 30 min | Manual process, error-prone
+|Data Team | Upload to Flybuys SFTP | Manual SFTP | 15 min | No retry logic, manual intervention required
+|Flybuys | Process batch file | Flybuys | >24 hours | Processing time outside OTR control
+|Customer | Call support if issue | Call centre | 10-15 min | High support burden, manual investigation
+|===
+
+=== Target State: Customer Links Flybuys and Earns Points (TO-BE)
+
+==== Improved Customer Experience
+
+[source,mermaid]
+----
+sequenceDiagram
+    autonumber
+    actor Customer
+    participant Mobile as Mobile App
+    participant Profile as ProfileService
+    participant Loyalty as LoyaltyService
+    participant POS as POS Terminal
+    participant Flybuys as Flybuys
+
+    Note over Customer,Flybuys: One-Time Linking (2-3 minutes)
+
+    Customer->>Mobile: Tap "Link Flybuys Account"
+    Mobile->>Profile: Initiate OAuth flow
+    Profile->>Flybuys: Redirect to Flybuys login
+    Flybuys-->>Customer: Show login page
+    Customer->>Flybuys: Enter credentials & approve
+    Flybuys-->>Profile: Authorization code
+    Profile->>Flybuys: Exchange for access token
+    Flybuys-->>Profile: Access token + member ID
+    Profile->>Profile: Create PartnerLink aggregate
+    Profile-->>Mobile: "Flybuys linked successfully!"
+
+    Note over Customer,Flybuys: Every Transaction (Real-Time Earning)
+
+    Customer->>POS: Scan loyalty barcode
+    POS->>Loyalty: Resolve credential
+    Loyalty->>Profile: Query partner link status
+    Profile-->>Loyalty: {rewardPreference: FLYBUYS_POINTS}
+    Loyalty-->>POS: {vivaConsumerId, preference}
+
+    Customer->>POS: Complete purchase ($75.50)
+    POS->>Loyalty: Adjudicate transaction
+    Loyalty->>Loyalty: Calculate rewards (150 points)
+    Loyalty-->>POS: {status: SUCCESS, points: 150}
+    POS-->>Customer: Receipt: "150 Flybuys points pending"
+
+    Note over Customer: Total response: <500ms p95
+
+    Note over Loyalty,Flybuys: Batch Posting (Within 24 Hours)
+
+    Loyalty->>Loyalty: Daily batch job (01:00 UTC)
+    Loyalty->>Loyalty: Generate CSV, PGP encrypt
+    Loyalty->>Flybuys: SFTP transmission
+    Flybuys-->>Loyalty: Acknowledgement file
+    Flybuys->>Flybuys: Credit points to member
+
+    Customer->>Mobile: Check Flybuys balance
+    Mobile->>Loyalty: Query balance via ACL
+    Loyalty->>Flybuys: GET /members/{id}/balance
+    Flybuys-->>Loyalty: {balance: 1,150}
+    Loyalty-->>Mobile: Display balance (cached 5 min)
+    Mobile-->>Customer: "1,150 Flybuys points"
+----
+
+==== Value Stream Comparison
+
+[width="100%",cols="20%,25%,15%,40%",options="header",]
+|===
+|Activity | AS-IS Duration | TO-BE Duration | Improvement
+
+|Account Linking | N/A (manual card) | 2-3 minutes | Self-service, mobile-first
+|Transaction Adjudication | N/A (batch only) | <500ms real-time | Immediate customer feedback
+|Points Visible in Flybuys | 24+ hours | 24 hours (batch) | Consistent timing, automated
+|Balance Visible in OTR App | N/A | <2 sec (real-time query) | New capability, customer transparency
+|Support Call Volume | High (missing points) | Low (real-time confirmation) | 20% reduction in support calls
+|===
+
+== Architecture Approach
+
+=== Design Principles
+
+[width="100%",cols="35%,65%",options="header",]
+|===
+|Principle | Application to Flybuys Integration
+
+|**Vendor Independence**
+|Anti-Corruption Layer pattern isolates domain from EagleEye and Flybuys API changes. Either platform swappable without mobile app changes.
+
+|**Event-Driven Loose Coupling**
+|ProfileService publishes `PartnerLinked` event; LoyaltyService and EngagementService consume independently. No direct service-to-service calls for notifications.
+
+|**Single Source of Truth**
+|ProfileService owns partner link status. LoyaltyService owns transaction adjudication audit trail. No data duplication.
+
+|**Strategic Flexibility**
+|Dual-scheme tracking (Flybuys + Internal OTR shadow balance) enables future pivot to OTR-native rewards without losing customer transaction history.
+
+|**Customer-First APIs**
+|Mobile app APIs designed for customer needs, not dictated by backend platform constraints. BFF pattern shields mobile from EagleEye complexity.
+|===
+
+=== Bounded Contexts Introduced
+
+See xref:architecture-definitions:flybuys_integration.adoc[Architecture Definition] for complete bounded context documentation.
+
+[width="100%",cols="25%,75%",options="header",]
+|===
+|Bounded Context | Role in Flybuys Integration
+
+|xref:bounded-contexts:profile.adoc[**ProfileService**]
+|OAuth partner linking, reward preference management, partner link status tracking. Acts as bridge between Salesforce canonical data and OTR-specific attributes.
+
+|xref:bounded-contexts:loyalty.adoc[**LoyaltyService**]
+|Transaction adjudication orchestration, Flybuys batch posting, loyalty credential resolution. Backend-for-Frontend (BFF) abstracting EagleEye and Flybuys complexity from mobile app.
+
+|xref:bounded-contexts:engagement.adoc[**EngagementService**]
+|Campaign trigger routing (partner linked → "Flybuys linked successfully" email). Event-to-Braze translation for customer engagement.
+|===
+
+=== Key Capabilities Delivered
+
+[width="100%",cols="30%,35%,35%",options="header",]
+|===
+|Capability | How It Works | Customer Value
+
+|**Partner Account Linking**
+|Mobile app OAuth 2.0 flow with Flybuys. ProfileService creates `PartnerLink` aggregate, publishes `PartnerLinked` event.
+|Self-service, secure linking. No manual Flybuys card entry, no shared passwords.
+
+|**Reward Preference Management**
+|Customer selects: Flybuys Points, Fuel Discount (Shell), or OTR Rewards. ProfileService enforces "Flybuys Points requires linked account" invariant.
+|Customer choice, flexibility. Can switch preference anytime without re-linking.
+
+|**Real-Time Transaction Adjudication**
+|POS calls LoyaltyService, which queries ProfileService for preference, EagleEye for campaigns. Response <500ms p95.
+|Immediate feedback at POS. Receipt shows provisional points earned.
+
+|**Automated Batch Posting**
+|Daily batch job (01:00 UTC) generates CSV, PGP encrypts, transmits via SFTP to Flybuys. Retry logic on transmission failure.
+|Points credited within 24 hours. Eliminates manual Data Team intervention.
+
+|**Mobile Balance Visibility**
+|Mobile app queries LoyaltyService, which queries Flybuys API via ACL. Response cached 5 minutes.
+|Customer transparency. Check Flybuys balance without leaving OTR app.
+|===
+
+== Implementation Phases
+
+=== TS-0: Foundation (Pre-requisites)
+
+==== Objective
+Establish foundational infrastructure and customer identifier (VCI) required by all bounded contexts.
+
+==== Deliverables
+
+* **VCI as Customer Identifier:** Salesforce Contact ID becomes universal customer identifier across OTR ecosystem
+* **Event Bus Infrastructure:** Azure Event Hub deployed, CloudEvents 1.0 schema registry
+* **OAuth Service:** Generic infrastructure service for OAuth 2.0 token management (reusable beyond loyalty)
+* **API Gateway:** Single entry point for mobile app, OAuth validation, rate limiting
+
+==== Success Criteria
+
+* VCI assigned to 100% of mobile app users (via Salesforce integration)
+* Event Bus processing 1,000 events/sec with <100ms latency
+* OAuth Service handles token refresh without application downtime
+* API Gateway enforces authentication for all loyalty endpoints
+
+==== Dependencies
+
+* Salesforce CRM integration pattern established
+* Azure infrastructure provisioned (Event Hub, Key Vault, Functions)
+* Mobile app updated to use VCI in API calls
+
+=== TS-1: AS-1 Foundation (ProfileService Deployment)
+
+==== Objective
+Deploy ProfileService with basic customer profile management and Salesforce integration (supports both Flybuys and Salesforce Customer Support initiatives).
+
+==== Deliverables
+
+* **ProfileService Bounded Context:** Deployed to production with `CustomerProfile` aggregate
+* **Salesforce Integration:** ProfileService queries Salesforce for canonical customer data (ACL pattern)
+* **Profile API:** REST endpoints for customer profile queries, profile completeness
+
+==== Feature Flags
+
+* `OTR.Loyalty.Enabled`: OFF (master switch)
+* `OTR.Loyalty.PartnerLink.Flybuys`: OFF
+* `OTR.Loyalty.RewardPreferenceSelection`: OFF
+
+==== Success Criteria
+
+* ProfileService deployed to production (feature flags OFF, no customer impact)
+* Salesforce integration tested (query customer by VCI, <200ms p95)
+* Profile API available to admin portal (customer service agents can view profile)
+
+==== Customer Impact
+
+**None** - ProfileService deployed but not yet exposed to customers (feature flags OFF).
+
+=== TS-2: AS-2 Linking (OAuth Partner Linking)
+
+==== Objective
+Enable customers to link Flybuys accounts via mobile app OAuth flow and select reward preference.
+
+==== Deliverables
+
+* **PartnerLink Aggregate:** Deployed in ProfileService (tracks Flybuys linking status)
+* **OAuth Flow:** Mobile app integration with Flybuys OAuth (Authorization Code + PKCE)
+* **Reward Preference UI:** Mobile app screen for selecting Flybuys Points, Fuel Discount, or OTR Rewards
+* **EngagementService Integration:** "Flybuys linked successfully" email campaign
+
+==== Feature Flags (Enabled)
+
+* `OTR.Loyalty.Enabled`: **ON** (master switch)
+* `OTR.Loyalty.PartnerLink.Flybuys`: **ON** (enable Flybuys OAuth)
+* `OTR.Loyalty.RewardPreferenceSelection`: **ON** (enable preference selection UI)
+
+==== Success Criteria
+
+* 5,000 customers link Flybuys accounts in first month (10% of target audience)
+* OAuth linking success rate >95% (excluding user-initiated cancellations)
+* "Flybuys linked" campaign open rate >40% (Braze)
+
+==== Customer Impact
+
+**Positive** - Customers can link Flybuys accounts in mobile app. Preference selection available. No points earning yet (TS-3).
+
+=== TS-3: AS-3 Earning (Real-Time Transaction Adjudication)
+
+==== Objective
+Enable real-time Flybuys points earning at all OTR and REXP stores via POS integration.
+
+==== Deliverables
+
+* **LoyaltyService Bounded Context:** Deployed with `RewardTransaction` aggregate
+* **POS Integration:** OTR POS and OTR+ POS call LoyaltyService for credential resolution and transaction adjudication
+* **EagleEye ACL:** Translation layer protecting domain from EagleEye API changes
+* **Mobile Balance Query:** Flybuys balance displayed in mobile app (cached 5 min)
+
+==== Feature Flags (Enabled)
+
+* `OTR.Loyalty.TransactionAdjudication`: **ON** (enable real-time adjudication)
+* `OTR.Loyalty.PointsEarn.Flybuys`: **ON** (enable Flybuys points earning)
+
+==== Success Criteria
+
+* Transaction adjudication latency <500ms p95 (POS integration SLA)
+* 100% of OTR and REXP stores processing Flybuys transactions (1,000 stores)
+* Flybuys balance query success rate >99% (real-time API availability)
+* Customer "missing points" support calls reduced by 20% (real-time confirmation eliminates delay)
+
+==== Customer Impact
+
+**High Positive** - Customers earn Flybuys points at all OTR/REXP stores. Receipt shows provisional points. Balance visible in mobile app.
+
+=== TS-4: AS-4 Batch Processing (Automated Flybuys Posting)
+
+==== Objective
+Automate daily transaction posting to Flybuys, replacing manual Data Team CSV uploads.
+
+==== Deliverables
+
+* **Batch File Generation:** Daily job (01:00 UTC) classifies transactions, generates CSV, PGP encrypts
+* **SFTP Transmission:** Automated SFTP upload to Flybuys with retry logic (1-hour window)
+* **Acknowledgement Processing:** Parse Flybuys ACK file, retry failed transactions, alert on persistent failures
+* **Reconciliation Dashboard:** Admin portal showing daily batch success/failure rates
+
+==== Feature Flags (Enabled)
+
+* `OTR.Loyalty.FlybuysBatchPosting`: **ON** (enable automated batch posting)
+
+==== Success Criteria
+
+* Batch file transmission success rate >99.9% (automated retry logic)
+* Points credited to Flybuys accounts within 24 hours (vs 48+ hours manual)
+* Data Team manual intervention eliminated (15 hours/month saved)
+* Reconciliation dashboard accessible to operations team
+
+==== Customer Impact
+
+**Moderate Positive** - Points appear in Flybuys account faster (24 hours vs 48+ hours). Reduced "missing points" support calls.
+
+=== TS-5: AS-5 Full Integration (Digital Fuel Dockets, Analytics)
+
+==== Objective
+Complete Flybuys integration with digital fuel docket redemption and comprehensive analytics.
+
+==== Deliverables
+
+* **Digital Fuel Dockets:** Query available dockets from Flybuys API, redeem at POS (Coles-issued dockets)
+* **Campaign Integration:** Flybuys-targeted campaigns via EngagementService (e.g., "Earn 2X points this weekend")
+* **Analytics Dashboard:** Flybuys transaction volume, average points earned, linking conversion rate
+* **Reporting:** Daily/weekly/monthly Flybuys reconciliation reports for finance team
+
+==== Success Criteria
+
+* Digital fuel docket redemption success rate >95% (POS integration)
+* Flybuys-targeted campaigns achieving >30% open rate (Braze)
+* Analytics dashboard accessible to marketing team (real-time updates)
+
+==== Customer Impact
+
+**High Positive** - Full Flybuys feature parity. Customers can redeem Coles-issued dockets at OTR/REXP stores. Targeted offers based on Flybuys membership.
+
+== Non-Functional Requirements Met
+
+[width="100%",cols="35%,25%,40%",options="header",]
+|===
+|Requirement | Target | How We Meet It
+
+|**Transaction Adjudication Latency**
+|<500ms p95
+|Async event processing, EagleEye ACL caching, ProfileService synchronous query optimized
+
+|**OAuth Linking Success Rate**
+|>95%
+|User testing, clear error messaging, fallback to manual linking support
+
+|**Batch File Transmission**
+|99.9% success
+|Retry logic (1-hour window), SFTP circuit breaker, automated alerting to operations team
+
+|**Flybuys API Availability**
+|99% uptime
+|Circuit breaker pattern, cached balance (5-min TTL), graceful degradation to "balance unavailable"
+
+|**PCI DSS Compliance**
+|Level 1
+|OAuth tokens in Azure Key Vault (AES-256), no payment card data in loyalty domain
+
+|**Scalability**
+|10,000 TPS peak
+|Azure Functions autoscaling, Cosmos DB partition strategy (VivaConsumerId partition key)
+|===
+
+== Risks & Mitigation
+
+[width="100%",cols="30%,35%,35%",options="header",]
+|===
+|Risk | Impact | Mitigation Strategy
+
+|**Flybuys API Unavailability**
+|Customer cannot link accounts, balance queries fail
+|Circuit breaker pattern, cached balance (5-min TTL), fallback to "try again later" messaging. SLA monitoring with Flybuys.
+
+|**OAuth Flow Complexity**
+|Customers abandon linking (high drop-off rate)
+|User testing with 50 customers pre-launch. Clear error messaging. Support article with screenshots. Fallback to phone support for complex cases.
+
+|**Batch Transmission Failures**
+|Points not credited to Flybuys, customer complaints
+|Retry logic (5-min intervals for 1 hour). Automated alerting to operations team. Manual upload fallback if automated retry exhausted.
+
+|**EagleEye API Changes**
+|Transaction adjudication breaks, POS integration fails
+|ACL pattern isolates domain from EagleEye. Comprehensive integration tests. EagleEye API versioning support. Change notification SLA with vendor.
+
+|**Data Privacy Concerns**
+|Customer reluctance to link accounts (trust issues)
+|Clear consent screen in OAuth flow. Privacy policy update. FAQ: "Why is OTR asking for Flybuys login?" Customer support training.
+
+|**POS Integration Complexity**
+|D365 Commerce customization breaks existing POS functionality
+|Bidirectional ACL prevents domain coupling. Feature flags enable instant rollback. Comprehensive POS regression testing. Pilot with 10 stores before rollout.
+|===
+
+== Key Decisions Made
+
+See xref:architecture-definitions:flybuys_integration.adoc#key-architectural-patterns[Architecture Definition] for detailed rationale.
+
+[width="100%",cols="35%,65%",options="header",]
+|===
+|Decision | Rationale
+
+|**Flybuys uses Conformist pattern (no ACL)**
+|Flybuys API is stable, mature, well-documented (OAuth 2.0 standard). Partnership time-bound (2-3 years). ACL overhead not justified. If API becomes unstable, ACL can be added later.
+
+|**Dual-scheme tracking (Flybuys + Internal OTR)**
+|Maintains internal OTR shadow balance independently of partner relationship. Enables future pivot to OTR-native rewards without losing transaction history. EagleEye hosts both schemes.
+
+|**Two-phase transaction adjudication**
+|Validation (pre-payment) shows provisional points. Redemption (post-payment) finalizes points after payment captured. Prevents fraud, handles payment method switching, ensures displayed points match earned points.
+
+|**PartnerLink aggregate in ProfileService**
+|Partner linking is customer profile data, not loyalty transaction data. Reduces LoyaltyService complexity to single aggregate (RewardTransaction). ProfileService natural home for customer relationships.
+
+|**LoyaltyService as BFF/orchestrator**
+|LoyaltyService doesn't own wallet, points, tiers, campaigns (EagleEye owns). Acts as facade, queries EagleEye in real-time. Simplicity over local caching. Event translation (EagleEye webhooks → OTR domain events).
+|===
+
+== Future Capacity Delivered
+
+=== Reusable Patterns
+
+* **Partner Integration Template:** OAuth linking, reward preference, batch posting reusable for Shell, airline programs, future partners
+* **Event-Driven Architecture:** Event Bus infrastructure supports AI-driven offers (2026 roadmap), real-time campaign management
+* **BFF Pattern:** LoyaltyService facade enables mobile app evolution independent of backend platform changes
+
+=== Platform Evolution
+
+* **Subscription Integration:** SubscriptionService bounded context integrates with LoyaltyService for tier benefits (e.g., "Premium members earn 2X points")
+* **AI-Driven Offers:** RecommendationService consumes loyalty events for next-best-offer predictions (2026 capability)
+* **Multi-Partner Wallet:** Customer can link multiple partners (Flybuys, Shell, airline), select preference per transaction (advanced feature)
+
+=== Organizational Capability
+
+* **DDD Architecture Maturity:** First DDD bounded contexts (Profile, Loyalty, Engagement) establish patterns for future services
+* **Vendor Independence:** ACL pattern and BFF architecture reduce vendor lock-in risk (EagleEye swappable without mobile app rewrite)
+* **Scalable Event Platform:** Event Bus supports future real-time analytics, fraud detection, personalization engines
+
+---
+
+== Appendix: Glossary
+
+See xref:ROOT:ubiquitous_language.adoc[Ubiquitous Language] for complete glossary.
+
+*Key Terms:*
+
+* **VCI (Viva Consumer ID):** Salesforce Contact ID used as universal customer identifier across OTR ecosystem
+* **Partner Link:** Customer linkage to external coalition partner (Flybuys, Shell)
+* **Reward Preference:** Customer's choice of reward type (Flybuys Points, Fuel Discount Shell, OTR Rewards)
+* **Transaction Adjudication:** Process of determining reward eligibility and calculating points earned for a transaction
+* **ACL (Anti-Corruption Layer):** Translation layer protecting domain model from external system API changes
+* **BFF (Backend-for-Frontend):** Service pattern where backend service aggregates and translates for specific client needs
+
+== Appendix: Cross-References
+
+* **Architecture Definition:** xref:architecture-definitions:flybuys_integration.adoc[Flybuys Integration Architecture]
+* **Solution Architecture:** xref:solution-architectures:flybuys_integration.adoc[Flybuys Integration Solution]
+* **Bounded Contexts:**
+  - xref:bounded-contexts:profile.adoc[ProfileService]
+  - xref:bounded-contexts:loyalty.adoc[LoyaltyService]
+  - xref:bounded-contexts:engagement.adoc[EngagementService]
+* **Template:** xref:templates:initiative_template.adoc[Initiative Document Template]

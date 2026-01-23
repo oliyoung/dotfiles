@@ -1,0 +1,1348 @@
+2026-01-16T02:04:30.032Z [DEBUG] Watching for changes in setting files /mnt/c/Users/o.young/work/architecture/.claude...
+2026-01-16T02:04:30.093Z [DEBUG] [init] configureGlobalMTLS starting
+2026-01-16T02:04:30.093Z [DEBUG] [init] configureGlobalMTLS complete
+2026-01-16T02:04:30.093Z [DEBUG] [init] configureGlobalAgents starting
+2026-01-16T02:04:30.093Z [DEBUG] [init] configureGlobalAgents complete
+2026-01-16T02:04:30.127Z [DEBUG] [LSP MANAGER] initializeLspServerManager() called
+2026-01-16T02:04:30.127Z [DEBUG] [LSP MANAGER] Created manager instance, state=pending
+2026-01-16T02:04:30.128Z [DEBUG] [LSP MANAGER] Starting async initialization (generation 1)
+2026-01-16T02:04:30.362Z [DEBUG] Applying permission update: Adding 60 allow rule(s) to destination 'localSettings': ["Bash(done)","Bash(echo:*)","Bash(find:*)","Bash(git add:*)","Bash(git commit:*)","Bash(git mv:*)","Bash(git pull:*)","Bash(git push:*)","Bash(git restore:*)","Bash(git rm:*)","Bash(git stash:*)","Bash(mkdir:*)","Bash(python3:*)","Bash(xargs:*)","WebFetch(domain:developer.eagleeye.com)","Bash(cml-ts:*)","Bash(node test-parse.js:*)","Bash(node test-generator.js:*)","Bash(npm run build:*)","Bash(node test-external.js:*)","Bash(ls:*)","Bash(git diff:*)","Bash(grep:*)","Bash(wc:*)","Bash(git ls-tree:*)","Bash(git checkout:*)","Bash(git check-ignore:*)","Bash(sudo apt update:*)","Bash(sudo apt install:*)","Bash(npm install:*)","Bash(npx md-to-pdf:*)","Bash(tree:*)","Bash(chmod:*)","Bash(do git mv \"$file\" \"$file/_/-\")","Bash(sort:*)","Bash(cat:*)","Bash(asciidoctor:*)","WebFetch(domain:contextmapper.org)","Bash(npx puppeteer browsers:*)","Bash(asciidoctor-pdf:*)","Bash(ln:*)","Bash(npm ls:*)","Bash(sudo npm update:*)","Bash(export PUPPETEER_EXECUTABLE_PATH=/home/oliy/.cache/puppeteer/chrome/linux-131.0.6778.264/chrome-linux64/chrome)","Bash(export PUPPETEER_EXECUTABLE_PATH=/home/oliy/.cache/puppeteer/chrome-headless-shell/linux-143.0.7499.169/chrome-headless-shell-linux64/chrome-headless-shell:*)","WebSearch","WebFetch(domain:pubs.opengroup.org)","WebFetch(domain:medium.com)","WebFetch(domain:togaf.visual-paradigm.com)","Bash(node --version:*)","Bash(npm --version)","Bash(for file in domains/*.adoc)","Bash(for file in solution_architectures/*.adoc)","Bash(for file in events/*.adoc)","Bash(for file in executive_summaries/*.adoc)","Bash(npx antora:*)","Bash(for file in architecture_definitions/*.adoc)","Bash(git reset:*)","Bash(test:*)","Bash(bash:*)"]
+2026-01-16T02:04:30.362Z [DEBUG] [STARTUP] Loading MCP configs...
+2026-01-16T02:04:30.367Z [DEBUG] Found 0 plugins (0 enabled, 0 disabled)
+2026-01-16T02:04:30.367Z [DEBUG] Total LSP servers loaded: 0
+2026-01-16T02:04:30.367Z [DEBUG] [LSP SERVER MANAGER] getAllLspServers returned 0 server(s)
+2026-01-16T02:04:30.367Z [DEBUG] LSP manager initialized with 0 servers
+2026-01-16T02:04:30.367Z [DEBUG] [STARTUP] MCP configs loaded in 5ms
+2026-01-16T02:04:30.368Z [DEBUG] LSP server manager initialized successfully
+2026-01-16T02:04:30.368Z [DEBUG] LSP notification handlers registered successfully for all 0 server(s)
+2026-01-16T02:04:30.371Z [DEBUG] [STARTUP] Running setup()...
+2026-01-16T02:04:30.477Z [DEBUG] Stats cache is up to date
+2026-01-16T02:04:30.562Z [DEBUG] Loading skills from: managed=/etc/claude-code/.claude/skills, user=/home/oliy/.claude/skills, project=[]
+2026-01-16T02:04:31.640Z [DEBUG] Loaded 0 installed plugins from /home/oliy/.claude/plugins/installed_plugins.json
+2026-01-16T02:04:31.821Z [DEBUG] Error log sink initialized
+2026-01-16T02:04:31.830Z [DEBUG] Writing to temp file: /home/oliy/.claude/todos/6977e7e4-83c4-46c7-8257-69ca1ace5475-agent-6977e7e4-83c4-46c7-8257-69ca1ace5475.json.tmp.1042.1768529071830
+2026-01-16T02:04:31.839Z [DEBUG] Temp file written successfully, size: 2 bytes
+2026-01-16T02:04:31.839Z [DEBUG] Renaming /home/oliy/.claude/todos/6977e7e4-83c4-46c7-8257-69ca1ace5475-agent-6977e7e4-83c4-46c7-8257-69ca1ace5475.json.tmp.1042.1768529071830 to /home/oliy/.claude/todos/6977e7e4-83c4-46c7-8257-69ca1ace5475-agent-6977e7e4-83c4-46c7-8257-69ca1ace5475.json
+2026-01-16T02:04:31.839Z [DEBUG] File /home/oliy/.claude/todos/6977e7e4-83c4-46c7-8257-69ca1ace5475-agent-6977e7e4-83c4-46c7-8257-69ca1ace5475.json written atomically
+2026-01-16T02:04:31.950Z [DEBUG] getPluginSkills: Processing 0 enabled plugins
+2026-01-16T02:04:31.950Z [DEBUG] Total plugin skills loaded: 0
+2026-01-16T02:04:31.950Z [DEBUG] Total plugin commands loaded: 0
+2026-01-16T02:04:31.951Z [DEBUG] Registered 0 hooks from 0 plugins
+2026-01-16T02:04:32.142Z [DEBUG] [STARTUP] setup() completed in 1771ms
+2026-01-16T02:04:32.142Z [DEBUG] [STARTUP] Loading commands and agents...
+2026-01-16T02:04:32.267Z [DEBUG] Loaded 0 unique skills (managed: 0, user: 0, project: 0, legacy commands: 0)
+2026-01-16T02:04:32.268Z [DEBUG] getSkills returning: 0 skill dir commands, 0 plugin skills, 0 bundled skills
+2026-01-16T02:04:32.291Z [DEBUG] [Claude in Chrome] Chrome base path does not exist: /home/oliy/.config/google-chrome
+2026-01-16T02:04:32.309Z [DEBUG] Acquired PID lock for 2.1.7 (PID 1042)
+2026-01-16T02:04:32.310Z [DEBUG] Acquired PID lock on running version: /home/oliy/.local/share/claude/versions/2.1.7
+2026-01-16T02:04:32.473Z [DEBUG] Total plugin agents loaded: 0
+2026-01-16T02:04:32.477Z [DEBUG] [STARTUP] Commands and agents loaded in 335ms
+2026-01-16T02:04:32.477Z [DEBUG] [STARTUP] Running showSetupScreens()...
+2026-01-16T02:04:32.480Z [DEBUG] [render] initYoga starting
+2026-01-16T02:04:32.523Z [DEBUG] [render] initYoga complete
+2026-01-16T02:04:32.578Z [DEBUG] [keybindings] KeybindingSetup initialized with 40 bindings, 0 warnings
+2026-01-16T02:04:32.757Z [DEBUG] Creating shell snapshot for zsh (/bin/zsh)
+2026-01-16T02:04:32.757Z [DEBUG] Looking for shell config file: /home/oliy/.zshrc
+2026-01-16T02:04:32.757Z [DEBUG] Snapshots directory: /home/oliy/.claude/shell-snapshots
+2026-01-16T02:04:32.760Z [DEBUG] Creating snapshot at: /home/oliy/.claude/shell-snapshots/snapshot-zsh-1768529072757-xq7bvf.sh
+2026-01-16T02:04:32.760Z [DEBUG] Shell binary exists: true
+2026-01-16T02:04:32.760Z [DEBUG] Execution timeout: 10000ms
+2026-01-16T02:04:33.145Z [DEBUG] [STARTUP] showSetupScreens() completed in 668ms
+2026-01-16T02:04:33.149Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T02:04:33.149Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T02:04:33.174Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T02:04:33.178Z [DEBUG] Initialized versioned plugins system with 0 plugins
+2026-01-16T02:04:33.199Z [DEBUG] Writing to temp file: /home/oliy/.claude.json.tmp.1042.1768529073199
+2026-01-16T02:04:33.199Z [DEBUG] Preserving file permissions: 100600
+2026-01-16T02:04:33.215Z [DEBUG] Temp file written successfully, size: 15289 bytes
+2026-01-16T02:04:33.215Z [DEBUG] Applied original permissions to temp file
+2026-01-16T02:04:33.215Z [DEBUG] Renaming /home/oliy/.claude.json.tmp.1042.1768529073199 to /home/oliy/.claude.json
+2026-01-16T02:04:33.215Z [DEBUG] File /home/oliy/.claude.json written atomically
+2026-01-16T02:04:33.233Z [DEBUG] Getting matching hook commands for SessionStart with query: startup
+2026-01-16T02:04:33.233Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:04:33.233Z [DEBUG] Matched 0 unique hooks for query "startup" (0 before deduplication)
+2026-01-16T02:04:33.239Z [DEBUG] [render] initYoga starting
+2026-01-16T02:04:33.239Z [DEBUG] [render] initYoga complete
+2026-01-16T02:04:33.328Z [DEBUG] Failed to check metrics opt-out status: Request failed with status code 403
+2026-01-16T02:04:33.329Z [ERROR] AxiosError: Error
+    at jy (/$bunfs/root/claude:57:1144)
+    at <anonymous> (/$bunfs/root/claude:58:10103)
+    at emit (node:events:92:22)
+    at endReadableNT (internal:streams/readable:862:50)
+    at processTicksAndRejections (native:7:39)
+    at request (/$bunfs/root/claude:60:2149)
+    at processTicksAndRejections (native:7:39)
+2026-01-16T02:04:33.343Z [DEBUG] [keybindings] Skipping file watcher - user customization disabled
+2026-01-16T02:04:33.374Z [DEBUG] Successfully refreshed marketplace: claude-plugins-official
+2026-01-16T02:04:33.374Z [DEBUG] Plugin autoupdate: checking installed plugins
+2026-01-16T02:04:33.378Z [DEBUG] Git remote URL: https://github.com/otr-digital/architecture.git
+2026-01-16T02:04:33.378Z [DEBUG] Parsed repository: otr-digital/architecture from https://github.com/otr-digital/architecture.git
+2026-01-16T02:04:33.378Z [DEBUG] Parsed repository: otr-digital/architecture from URL: https://github.com/otr-digital/architecture.git
+2026-01-16T02:04:33.379Z [DEBUG] Path /mnt/c/Users/o.young/work/architecture already tracked for repo otr-digital/architecture
+2026-01-16T02:04:34.203Z [DEBUG] [keybindings] KeybindingSetup initialized with 40 bindings, 0 warnings
+2026-01-16T02:04:35.306Z [DEBUG] [keybindings] Skipping file watcher - user customization disabled
+2026-01-16T02:04:35.306Z [DEBUG] [REPL:mount] REPL mounted, disabled=false
+2026-01-16T02:04:40.435Z [DEBUG] Official marketplace auto-install skipped: already_attempted
+2026-01-16T02:04:40.437Z [DEBUG] performStartupChecks called
+2026-01-16T02:04:40.438Z [DEBUG] Starting background plugin installations
+2026-01-16T02:04:40.438Z [DEBUG] performBackgroundPluginInstallations called
+2026-01-16T02:04:42.278Z [DEBUG] AutoUpdaterWrapper: Installation type: native
+2026-01-16T02:04:43.855Z [DEBUG] Setting installation status: 0 marketplaces, 0 installable plugins, 0 uninstallable plugins
+2026-01-16T02:04:43.857Z [DEBUG] Loaded plugins - Enabled: 0, Disabled: 0, Commands: 0, Agents: 0, Errors: 0
+2026-01-16T02:04:43.872Z [DEBUG] Shell snapshot created successfully (38137 bytes)
+2026-01-16T02:04:43.933Z [DEBUG] Ripgrep first use test: PASSED (mode=builtin, path=/home/oliy/.local/share/claude/versions/2.1.7)
+2026-01-16T02:04:43.950Z [DEBUG] rg EAGAIN error detected, retrying with single-threaded mode (-j 1)
+2026-01-16T02:04:43.984Z [DEBUG] rg error (signal=undefined, code=ABORT_ERR, stderr: ), 0 results
+2026-01-16T02:04:43.984Z [ERROR] AbortError: AbortError: The operation was aborted.
+    at unknown
+    at abortChildProcess (node:child_process:937:42)
+    at onAbortListener2 (node:child_process:35:24)
+    at abort (unknown)
+    at <anonymous> (/$bunfs/root/claude:5108:6172)
+2026-01-16T02:04:44.020Z [DEBUG] Skills and commands included in Skill tool:
+2026-01-16T02:04:44.024Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T02:04:44.024Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T02:04:44.024Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T02:04:44.326Z [DEBUG] Writing to temp file: /home/oliy/.claude.json.tmp.1042.1768529084326
+2026-01-16T02:04:44.326Z [DEBUG] Preserving file permissions: 100600
+2026-01-16T02:04:44.343Z [DEBUG] Temp file written successfully, size: 15289 bytes
+2026-01-16T02:04:44.343Z [DEBUG] Applied original permissions to temp file
+2026-01-16T02:04:44.343Z [DEBUG] Renaming /home/oliy/.claude.json.tmp.1042.1768529084326 to /home/oliy/.claude.json
+2026-01-16T02:04:44.343Z [DEBUG] File /home/oliy/.claude.json written atomically
+2026-01-16T02:04:44.800Z [DEBUG] Checking for native installer update to version 2.1.7
+2026-01-16T02:04:46.639Z [DEBUG] Found 2.1.7 at /home/oliy/.local/bin/claude, skipping install
+2026-01-16T02:05:47.230Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T02:05:47.230Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T02:05:47.231Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T02:05:47.231Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T02:05:47.320Z [DEBUG] Getting matching hook commands for UserPromptSubmit with query: undefined
+2026-01-16T02:05:47.320Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:05:47.320Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-16T02:05:47.344Z [DEBUG] FileHistory: Added snapshot for 9cac8ef5-fd71-4cd1-91c9-e3ed748bab35, tracking 0 files
+2026-01-16T02:05:47.391Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-16T02:05:47.404Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T02:05:47.404Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T02:05:47.405Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T02:05:47.493Z [DEBUG] Total plugin output styles loaded: 0
+2026-01-16T02:05:47.500Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T02:05:47.520Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T02:05:47.520Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T02:05:47.520Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T02:05:49.516Z [DEBUG] Stream started - received first chunk
+2026-01-16T02:05:54.460Z [DEBUG] executePreToolHooks called for tool: Read
+2026-01-16T02:05:54.462Z [DEBUG] executePreToolHooks called for tool: Read
+2026-01-16T02:05:54.489Z [DEBUG] Getting matching hook commands for PreToolUse with query: Read
+2026-01-16T02:05:54.489Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:05:54.489Z [DEBUG] Matched 0 unique hooks for query "Read" (0 before deduplication)
+2026-01-16T02:05:54.489Z [DEBUG] Getting matching hook commands for PreToolUse with query: Read
+2026-01-16T02:05:54.489Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:05:54.489Z [DEBUG] Matched 0 unique hooks for query "Read" (0 before deduplication)
+2026-01-16T02:05:54.883Z [DEBUG] Getting matching hook commands for PostToolUse with query: Read
+2026-01-16T02:05:54.883Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:05:54.883Z [DEBUG] Matched 0 unique hooks for query "Read" (0 before deduplication)
+2026-01-16T02:05:54.883Z [DEBUG] Getting matching hook commands for PostToolUse with query: Read
+2026-01-16T02:05:54.883Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:05:54.883Z [DEBUG] Matched 0 unique hooks for query "Read" (0 before deduplication)
+2026-01-16T02:05:54.950Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T02:05:54.950Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T02:05:54.950Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T02:05:54.950Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T02:05:55.139Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T02:05:55.149Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T02:05:55.149Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T02:05:55.149Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T02:05:57.323Z [DEBUG] Stream started - received first chunk
+2026-01-16T02:06:31.430Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T02:06:31.446Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T02:06:31.446Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:06:31.447Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T02:06:31.557Z [DEBUG] Permission suggestions for Edit: [
+  {
+    "type": "setMode",
+    "mode": "acceptEdits",
+    "destination": "session"
+  }
+]
+2026-01-16T02:06:32.237Z [DEBUG] executePermissionRequestHooks called for tool: Edit
+2026-01-16T02:06:32.893Z [DEBUG] Getting matching hook commands for PermissionRequest with query: Edit
+2026-01-16T02:06:32.893Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:06:32.893Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T02:06:38.561Z [DEBUG] Getting matching hook commands for Notification with query: permission_prompt
+2026-01-16T02:06:38.561Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:06:38.561Z [DEBUG] Matched 0 unique hooks for query "permission_prompt" (0 before deduplication)
+2026-01-16T02:06:43.381Z [DEBUG] Applying permission update: Setting mode to 'acceptEdits'
+2026-01-16T02:06:43.437Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768529203437
+2026-01-16T02:06:43.440Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T02:06:43.451Z [DEBUG] Temp file written successfully, size: 6945 bytes
+2026-01-16T02:06:43.453Z [DEBUG] Applied original permissions to temp file
+2026-01-16T02:06:43.453Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768529203437 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T02:06:43.461Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T02:06:43.526Z [DEBUG] FileHistory: Tracked file modification for /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T02:06:43.566Z [DEBUG] [lspRecommendation] Looking for LSP plugins for .adoc
+2026-01-16T02:06:43.574Z [DEBUG] AutoUpdaterWrapper: Installation type: native
+2026-01-16T02:06:43.670Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T02:06:43.670Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:06:43.670Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T02:06:44.628Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T02:06:44.628Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T02:06:44.628Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T02:06:44.628Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T02:06:44.865Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T02:06:44.879Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T02:06:44.879Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T02:06:44.880Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T02:06:46.684Z [DEBUG] Stream started - received first chunk
+2026-01-16T02:06:55.784Z [DEBUG] Getting matching hook commands for Stop with query: undefined
+2026-01-16T02:06:55.784Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:06:55.784Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-16T02:06:59.537Z [DEBUG] Writing to temp file: /home/oliy/.claude.json.tmp.1042.1768529219537
+2026-01-16T02:06:59.537Z [DEBUG] Preserving file permissions: 100600
+2026-01-16T02:06:59.607Z [DEBUG] Temp file written successfully, size: 15289 bytes
+2026-01-16T02:06:59.607Z [DEBUG] Applied original permissions to temp file
+2026-01-16T02:06:59.607Z [DEBUG] Renaming /home/oliy/.claude.json.tmp.1042.1768529219537 to /home/oliy/.claude.json
+2026-01-16T02:06:59.607Z [DEBUG] File /home/oliy/.claude.json written atomically
+2026-01-16T02:06:59.614Z [DEBUG] Writing to temp file: /home/oliy/.claude.json.tmp.1042.1768529219614
+2026-01-16T02:06:59.614Z [DEBUG] Preserving file permissions: 100600
+2026-01-16T02:06:59.626Z [DEBUG] Temp file written successfully, size: 15289 bytes
+2026-01-16T02:06:59.626Z [DEBUG] Applied original permissions to temp file
+2026-01-16T02:06:59.626Z [DEBUG] Renaming /home/oliy/.claude.json.tmp.1042.1768529219614 to /home/oliy/.claude.json
+2026-01-16T02:06:59.626Z [DEBUG] File /home/oliy/.claude.json written atomically
+2026-01-16T02:07:13.700Z [ERROR] Error: Error: Failed to fetch version from https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/latest: timeout of 30000ms exceeded
+    at kI1 (/$bunfs/root/claude:3163:2232)
+    at processTicksAndRejections (native:7:39)
+2026-01-16T02:07:13.720Z [ERROR] Error: Error: Failed to fetch version from https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/latest: timeout of 30000ms exceeded
+    at kI1 (/$bunfs/root/claude:3163:2232)
+    at processTicksAndRejections (native:7:39)
+2026-01-16T02:07:45.878Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T02:07:45.878Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T02:07:45.878Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T02:07:45.878Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T02:07:45.909Z [DEBUG] Getting matching hook commands for UserPromptSubmit with query: undefined
+2026-01-16T02:07:45.909Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:07:45.909Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-16T02:07:45.910Z [DEBUG] FileHistory: Making snapshot for message 3c564858-729d-4ee3-bb65-bfb6a779b207
+2026-01-16T02:07:45.915Z [DEBUG] FileHistory: Added snapshot for 3c564858-729d-4ee3-bb65-bfb6a779b207, tracking 1 files
+2026-01-16T02:07:45.938Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-16T02:07:45.942Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T02:07:45.942Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T02:07:45.943Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T02:07:45.952Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T02:07:45.983Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T02:07:45.983Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T02:07:45.983Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T02:07:46.553Z [DEBUG] Stream started - received first chunk
+2026-01-16T02:07:48.734Z [DEBUG] Stream started - received first chunk
+2026-01-16T02:07:54.689Z [DEBUG] executePreToolHooks called for tool: Bash
+2026-01-16T02:07:54.690Z [DEBUG] executePreToolHooks called for tool: Glob
+2026-01-16T02:07:54.724Z [DEBUG] Getting matching hook commands for PreToolUse with query: Bash
+2026-01-16T02:07:54.724Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:07:54.724Z [DEBUG] Matched 0 unique hooks for query "Bash" (0 before deduplication)
+2026-01-16T02:07:54.724Z [DEBUG] Getting matching hook commands for PreToolUse with query: Glob
+2026-01-16T02:07:54.724Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:07:54.724Z [DEBUG] Matched 0 unique hooks for query "Glob" (0 before deduplication)
+2026-01-16T02:07:54.845Z [DEBUG] tree-sitter: loaded from embedded
+2026-01-16T02:07:55.014Z [DEBUG] No session environment scripts found
+2026-01-16T02:08:01.945Z [DEBUG] Getting matching hook commands for PostToolUse with query: Glob
+2026-01-16T02:08:01.945Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:08:01.945Z [DEBUG] Matched 0 unique hooks for query "Glob" (0 before deduplication)
+2026-01-16T02:08:01.985Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-16T02:08:01.987Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T02:08:01.988Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T02:08:01.988Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T02:08:02.095Z [DEBUG] Getting matching hook commands for PostToolUse with query: Bash
+2026-01-16T02:08:02.095Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:08:02.095Z [DEBUG] Matched 0 unique hooks for query "Bash" (0 before deduplication)
+2026-01-16T02:08:02.156Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T02:08:02.156Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T02:08:02.156Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T02:08:02.156Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T02:08:02.272Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T02:08:02.281Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T02:08:02.281Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T02:08:02.281Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T02:08:02.680Z [DEBUG] Stream started - received first chunk
+2026-01-16T02:08:04.640Z [DEBUG] Stream started - received first chunk
+2026-01-16T02:08:07.184Z [DEBUG] executePreToolHooks called for tool: Bash
+2026-01-16T02:08:07.250Z [DEBUG] Getting matching hook commands for PreToolUse with query: Bash
+2026-01-16T02:08:07.250Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:08:07.250Z [DEBUG] Matched 0 unique hooks for query "Bash" (0 before deduplication)
+2026-01-16T02:08:07.250Z [DEBUG] executePreToolHooks called for tool: Read
+2026-01-16T02:08:07.306Z [DEBUG] Getting matching hook commands for PreToolUse with query: Read
+2026-01-16T02:08:07.306Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:08:07.306Z [DEBUG] Matched 0 unique hooks for query "Read" (0 before deduplication)
+2026-01-16T02:08:07.751Z [DEBUG] Getting matching hook commands for PostToolUse with query: Read
+2026-01-16T02:08:07.751Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:08:07.751Z [DEBUG] Matched 0 unique hooks for query "Read" (0 before deduplication)
+2026-01-16T02:08:07.840Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-16T02:08:07.844Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T02:08:07.844Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T02:08:07.846Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T02:08:07.931Z [DEBUG] Getting matching hook commands for PostToolUse with query: Bash
+2026-01-16T02:08:07.931Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:08:07.931Z [DEBUG] Matched 0 unique hooks for query "Bash" (0 before deduplication)
+2026-01-16T02:08:07.978Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T02:08:07.978Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T02:08:07.978Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T02:08:07.978Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T02:08:08.090Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T02:08:08.100Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T02:08:08.100Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T02:08:08.100Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T02:08:08.991Z [DEBUG] Stream started - received first chunk
+2026-01-16T02:08:10.002Z [DEBUG] Stream started - received first chunk
+2026-01-16T02:09:20.617Z [WARN] Streaming stall detected: 64.1s gap between events (stall #1)
+2026-01-16T02:09:22.762Z [WARN] Streaming completed with 1 stall(s), total stall time: 64.1s
+2026-01-16T02:09:22.897Z [DEBUG] executePreToolHooks called for tool: Write
+2026-01-16T02:09:22.949Z [DEBUG] Getting matching hook commands for PreToolUse with query: Write
+2026-01-16T02:09:22.949Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:09:22.949Z [DEBUG] Matched 0 unique hooks for query "Write" (0 before deduplication)
+2026-01-16T02:09:23.116Z [DEBUG] FileHistory: Tracked file modification for /mnt/c/Users/o.young/work/architecture/templates/initiative_template.adoc
+2026-01-16T02:09:23.161Z [DEBUG] [lspRecommendation] Looking for LSP plugins for .adoc
+2026-01-16T02:09:24.112Z [DEBUG] rg error (signal=undefined, code=ABORT_ERR, stderr: ), 0 results
+2026-01-16T02:09:24.112Z [ERROR] AbortError: AbortError: The operation was aborted.
+    at unknown
+    at abortChildProcess (node:child_process:937:42)
+    at onAbortListener2 (node:child_process:35:24)
+    at abort (unknown)
+    at <anonymous> (/$bunfs/root/claude:4643:2148)
+2026-01-16T02:09:24.136Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/templates/initiative_template.adoc.tmp.1042.1768529364136
+2026-01-16T02:09:24.167Z [DEBUG] Temp file written successfully, size: 12111 bytes
+2026-01-16T02:09:24.167Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/templates/initiative_template.adoc.tmp.1042.1768529364136 to /mnt/c/Users/o.young/work/architecture/templates/initiative_template.adoc
+2026-01-16T02:09:24.177Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/templates/initiative_template.adoc written atomically
+2026-01-16T02:09:24.239Z [DEBUG] Getting matching hook commands for PostToolUse with query: Write
+2026-01-16T02:09:24.239Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:09:24.240Z [DEBUG] Matched 0 unique hooks for query "Write" (0 before deduplication)
+2026-01-16T02:09:24.364Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T02:09:24.365Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T02:09:24.365Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T02:09:24.365Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T02:09:24.542Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T02:09:24.557Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T02:09:24.557Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T02:09:24.557Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T02:09:27.127Z [DEBUG] Stream started - received first chunk
+2026-01-16T02:09:29.481Z [DEBUG] executePreToolHooks called for tool: Read
+2026-01-16T02:09:29.505Z [DEBUG] Getting matching hook commands for PreToolUse with query: Read
+2026-01-16T02:09:29.505Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:09:29.505Z [DEBUG] Matched 0 unique hooks for query "Read" (0 before deduplication)
+2026-01-16T02:09:29.715Z [DEBUG] Getting matching hook commands for PostToolUse with query: Read
+2026-01-16T02:09:29.715Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:09:29.715Z [DEBUG] Matched 0 unique hooks for query "Read" (0 before deduplication)
+2026-01-16T02:09:29.755Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T02:09:29.755Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T02:09:29.755Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T02:09:29.755Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T02:09:29.842Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T02:09:29.849Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T02:09:29.849Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T02:09:29.849Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T02:09:33.706Z [DEBUG] Stream started - received first chunk
+2026-01-16T02:09:44.384Z [ERROR] Error: Error: 1P event logging: 15 events failed to export
+    at queueFailedEvents (/$bunfs/root/claude:208:2077)
+    at async doExport (/$bunfs/root/claude:208:1257)
+    at processTicksAndRejections (native:7:39)
+2026-01-16T02:09:44.384Z [ERROR] Error: Error: {"message":"Failed to export 15 events","originalLine":"208","originalColumn":"1336","line":"208","column":"1336","sourceURL":"/$bunfs/root/claude","stack":"Error: Failed to export 15 events\n    at doExport (/$bunfs/root/claude:208:1336)\n    at processTicksAndRejections (native:7:39)","name":"Error"}
+    at error (/$bunfs/root/claude:2222:25028)
+    at <anonymous> (/$bunfs/root/claude:202:38580)
+    at sZ0 (/$bunfs/root/claude:202:39124)
+    at <anonymous> (/$bunfs/root/claude:203:17366)
+    at processTicksAndRejections (native:7:39)
+2026-01-16T02:10:30.179Z [ERROR] Error streaming, falling back to non-streaming mode: Request timed out.
+2026-01-16T02:10:30.180Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T02:10:30.180Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T02:10:30.180Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T02:14:30.178Z [ERROR] Error streaming, falling back to non-streaming mode: The operation timed out.
+2026-01-16T02:14:30.178Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T02:14:30.178Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T02:14:30.179Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T02:14:36.057Z [DEBUG] executePreToolHooks called for tool: Grep
+2026-01-16T02:14:36.058Z [DEBUG] Getting matching hook commands for PreToolUse with query: Grep
+2026-01-16T02:14:36.058Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:14:36.058Z [DEBUG] Matched 0 unique hooks for query "Grep" (0 before deduplication)
+2026-01-16T02:14:37.095Z [DEBUG] Getting matching hook commands for PostToolUse with query: Grep
+2026-01-16T02:14:37.095Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:14:37.095Z [DEBUG] Matched 0 unique hooks for query "Grep" (0 before deduplication)
+2026-01-16T02:14:37.118Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T02:14:37.118Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T02:14:37.119Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T02:14:37.119Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T02:14:37.178Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T02:14:37.186Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T02:14:37.186Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T02:14:37.186Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T02:14:39.126Z [DEBUG] Stream started - received first chunk
+2026-01-16T02:14:42.831Z [DEBUG] executePreToolHooks called for tool: Read
+2026-01-16T02:14:42.831Z [DEBUG] executePreToolHooks called for tool: Read
+2026-01-16T02:14:42.853Z [DEBUG] Getting matching hook commands for PreToolUse with query: Read
+2026-01-16T02:14:42.853Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:14:42.853Z [DEBUG] Matched 0 unique hooks for query "Read" (0 before deduplication)
+2026-01-16T02:14:42.853Z [DEBUG] Getting matching hook commands for PreToolUse with query: Read
+2026-01-16T02:14:42.853Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:14:42.853Z [DEBUG] Matched 0 unique hooks for query "Read" (0 before deduplication)
+2026-01-16T02:14:43.026Z [DEBUG] Getting matching hook commands for PostToolUse with query: Read
+2026-01-16T02:14:43.026Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:14:43.026Z [DEBUG] Matched 0 unique hooks for query "Read" (0 before deduplication)
+2026-01-16T02:14:43.026Z [DEBUG] Getting matching hook commands for PostToolUse with query: Read
+2026-01-16T02:14:43.026Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:14:43.026Z [DEBUG] Matched 0 unique hooks for query "Read" (0 before deduplication)
+2026-01-16T02:14:43.054Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T02:14:43.054Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T02:14:43.054Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T02:14:43.054Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T02:14:43.131Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T02:14:43.137Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T02:14:43.137Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T02:14:43.137Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T02:14:45.271Z [DEBUG] Stream started - received first chunk
+2026-01-16T02:15:07.743Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T02:15:07.760Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T02:15:07.760Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:15:07.760Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T02:15:07.868Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/CLAUDE.md.tmp.1042.1768529707868
+2026-01-16T02:15:07.870Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T02:15:07.880Z [DEBUG] Temp file written successfully, size: 19521 bytes
+2026-01-16T02:15:07.882Z [DEBUG] Applied original permissions to temp file
+2026-01-16T02:15:07.882Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/CLAUDE.md.tmp.1042.1768529707868 to /mnt/c/Users/o.young/work/architecture/CLAUDE.md
+2026-01-16T02:15:07.886Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/CLAUDE.md written atomically
+2026-01-16T02:15:07.919Z [DEBUG] FileHistory: Tracked file modification for /mnt/c/Users/o.young/work/architecture/CLAUDE.md
+2026-01-16T02:15:07.939Z [DEBUG] [lspRecommendation] Looking for LSP plugins for .md
+2026-01-16T02:15:07.947Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T02:15:07.947Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:15:07.947Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T02:15:08.094Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T02:15:08.110Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T02:15:08.110Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:15:08.110Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T02:15:08.204Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/CLAUDE.md.tmp.1042.1768529708204
+2026-01-16T02:15:08.206Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T02:15:08.217Z [DEBUG] Temp file written successfully, size: 21275 bytes
+2026-01-16T02:15:08.220Z [DEBUG] Applied original permissions to temp file
+2026-01-16T02:15:08.220Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/CLAUDE.md.tmp.1042.1768529708204 to /mnt/c/Users/o.young/work/architecture/CLAUDE.md
+2026-01-16T02:15:08.225Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/CLAUDE.md written atomically
+2026-01-16T02:15:08.290Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T02:15:08.290Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:15:08.290Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T02:15:08.410Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T02:15:08.410Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T02:15:08.410Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T02:15:08.410Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T02:15:08.509Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T02:15:08.518Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T02:15:08.518Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T02:15:08.519Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T02:15:11.191Z [DEBUG] Stream started - received first chunk
+2026-01-16T02:15:27.486Z [DEBUG] Getting matching hook commands for Stop with query: undefined
+2026-01-16T02:15:27.486Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:15:27.486Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-16T02:15:28.773Z [DEBUG] Writing to temp file: /home/oliy/.claude.json.tmp.1042.1768529728773
+2026-01-16T02:15:28.773Z [DEBUG] Preserving file permissions: 100600
+2026-01-16T02:15:28.785Z [DEBUG] Temp file written successfully, size: 15289 bytes
+2026-01-16T02:15:28.785Z [DEBUG] Applied original permissions to temp file
+2026-01-16T02:15:28.785Z [DEBUG] Renaming /home/oliy/.claude.json.tmp.1042.1768529728773 to /home/oliy/.claude.json
+2026-01-16T02:15:28.785Z [DEBUG] File /home/oliy/.claude.json written atomically
+2026-01-16T02:15:28.789Z [DEBUG] Writing to temp file: /home/oliy/.claude.json.tmp.1042.1768529728789
+2026-01-16T02:15:28.789Z [DEBUG] Preserving file permissions: 100600
+2026-01-16T02:15:28.794Z [DEBUG] Temp file written successfully, size: 15289 bytes
+2026-01-16T02:15:28.795Z [DEBUG] Applied original permissions to temp file
+2026-01-16T02:15:28.795Z [DEBUG] Renaming /home/oliy/.claude.json.tmp.1042.1768529728789 to /home/oliy/.claude.json
+2026-01-16T02:15:28.795Z [DEBUG] File /home/oliy/.claude.json written atomically
+2026-01-16T02:16:28.806Z [DEBUG] Getting matching hook commands for Notification with query: idle_prompt
+2026-01-16T02:16:28.806Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T02:16:28.806Z [DEBUG] Matched 0 unique hooks for query "idle_prompt" (0 before deduplication)
+2026-01-16T02:36:44.183Z [DEBUG] Checking for native installer update to version 2.1.9
+2026-01-16T02:36:44.187Z [DEBUG] Downloading native installer version 2.1.9
+2026-01-16T02:36:57.343Z [DEBUG] Atomically installed binary to /home/oliy/.local/share/claude/versions/2.1.9
+2026-01-16T02:36:57.429Z [DEBUG] Created directory /home/oliy/.local/bin for symlink
+2026-01-16T02:36:57.433Z [DEBUG] Atomically updated symlink /home/oliy/.local/bin/claude -> /home/oliy/.local/share/claude/versions/2.1.9
+2026-01-16T02:36:57.434Z [DEBUG] Successfully updated to version 2.1.9
+2026-01-16T03:30:55.883Z [DEBUG] Stored paste 9de7cb419d654ed6 to /home/oliy/.claude/paste-cache/9de7cb419d654ed6.txt
+2026-01-16T03:30:56.036Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T03:30:56.036Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T03:30:56.037Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T03:30:56.037Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T03:30:56.356Z [DEBUG] Getting matching hook commands for UserPromptSubmit with query: undefined
+2026-01-16T03:30:56.356Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:30:56.356Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-16T03:30:56.373Z [DEBUG] FileHistory: Making snapshot for message f47dfb79-0ede-444f-93d8-bd5481ba542f
+2026-01-16T03:30:56.405Z [DEBUG] FileHistory: Added snapshot for f47dfb79-0ede-444f-93d8-bd5481ba542f, tracking 3 files
+2026-01-16T03:30:56.593Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-16T03:30:56.607Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:30:56.607Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:30:56.608Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:30:56.626Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T03:30:56.663Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:30:56.663Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:30:56.663Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:30:57.511Z [DEBUG] Stream started - received first chunk
+2026-01-16T03:30:59.382Z [DEBUG] Stream started - received first chunk
+2026-01-16T03:31:15.908Z [DEBUG] Getting matching hook commands for Stop with query: undefined
+2026-01-16T03:31:15.908Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:31:15.908Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-16T03:32:17.220Z [DEBUG] Getting matching hook commands for Notification with query: idle_prompt
+2026-01-16T03:32:17.220Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:32:17.220Z [DEBUG] Matched 0 unique hooks for query "idle_prompt" (0 before deduplication)
+2026-01-16T03:34:43.946Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T03:34:43.946Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T03:34:43.946Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T03:34:43.946Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T03:34:44.001Z [DEBUG] Getting matching hook commands for UserPromptSubmit with query: undefined
+2026-01-16T03:34:44.001Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:34:44.001Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-16T03:34:44.019Z [DEBUG] FileHistory: Making snapshot for message 8b9b346a-187f-4ece-9e29-dd862b0fadf1
+2026-01-16T03:34:44.031Z [DEBUG] FileHistory: Added snapshot for 8b9b346a-187f-4ece-9e29-dd862b0fadf1, tracking 3 files
+2026-01-16T03:34:44.054Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-16T03:34:44.062Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:34:44.062Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:34:44.062Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:34:44.073Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T03:34:44.101Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:34:44.101Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:34:44.101Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:34:46.091Z [DEBUG] Stream started - received first chunk
+2026-01-16T03:35:04.868Z [DEBUG] Checking for native installer update to version 2.1.9
+2026-01-16T03:35:04.881Z [DEBUG] Version 2.1.9 already installed, updating symlink
+2026-01-16T03:35:04.882Z [DEBUG] Created directory /home/oliy/.local/bin for symlink
+2026-01-16T03:35:04.883Z [DEBUG] Successfully updated to version 2.1.9
+2026-01-16T03:35:07.970Z [ERROR] Error: Error: 1P event logging: 1 events failed to export
+    at queueFailedEvents (/$bunfs/root/claude:208:2077)
+    at async doExport (/$bunfs/root/claude:208:1257)
+    at processTicksAndRejections (native:7:39)
+2026-01-16T03:35:07.970Z [ERROR] Error: Error: {"message":"Failed to export 1 events","originalLine":"208","originalColumn":"1336","line":"208","column":"1336","sourceURL":"/$bunfs/root/claude","stack":"Error: Failed to export 1 events\n    at doExport (/$bunfs/root/claude:208:1336)\n    at processTicksAndRejections (native:7:39)","name":"Error"}
+    at error (/$bunfs/root/claude:2222:25028)
+    at <anonymous> (/$bunfs/root/claude:202:38580)
+    at sZ0 (/$bunfs/root/claude:202:39124)
+    at <anonymous> (/$bunfs/root/claude:203:17366)
+    at processTicksAndRejections (native:7:39)
+2026-01-16T03:39:39.429Z [ERROR] Error streaming, falling back to non-streaming mode: The operation timed out.
+2026-01-16T03:39:39.429Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:39:39.429Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:39:39.429Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:39:39.434Z [ERROR] Error streaming, falling back to non-streaming mode: Request timed out.
+2026-01-16T03:39:39.434Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:39:39.434Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:39:39.434Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:41:50.996Z [DEBUG] executePreToolHooks called for tool: Write
+2026-01-16T03:41:51.012Z [DEBUG] Getting matching hook commands for PreToolUse with query: Write
+2026-01-16T03:41:51.012Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:41:51.012Z [DEBUG] Matched 0 unique hooks for query "Write" (0 before deduplication)
+2026-01-16T03:41:51.073Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768534911073
+2026-01-16T03:41:51.075Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:41:51.087Z [DEBUG] Temp file written successfully, size: 20877 bytes
+2026-01-16T03:41:51.088Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:41:51.088Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768534911073 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:41:51.091Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:41:51.154Z [DEBUG] Getting matching hook commands for PostToolUse with query: Write
+2026-01-16T03:41:51.155Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:41:51.155Z [DEBUG] Matched 0 unique hooks for query "Write" (0 before deduplication)
+2026-01-16T03:41:52.079Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T03:41:52.079Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T03:41:52.079Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T03:41:52.079Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T03:41:52.162Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T03:41:52.168Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:41:52.168Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:41:52.168Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:41:54.469Z [DEBUG] Stream started - received first chunk
+2026-01-16T03:42:13.386Z [DEBUG] Getting matching hook commands for Stop with query: undefined
+2026-01-16T03:42:13.386Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:42:13.386Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-16T03:43:54.500Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T03:43:54.500Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T03:43:54.500Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T03:43:54.500Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T03:43:54.546Z [DEBUG] Getting matching hook commands for UserPromptSubmit with query: undefined
+2026-01-16T03:43:54.546Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:43:54.546Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-16T03:43:54.556Z [DEBUG] FileHistory: Making snapshot for message f794b8d9-a44e-4930-90f0-a2bb3a850355
+2026-01-16T03:43:54.580Z [DEBUG] FileHistory: Added snapshot for f794b8d9-a44e-4930-90f0-a2bb3a850355, tracking 3 files
+2026-01-16T03:43:54.614Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-16T03:43:54.619Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:43:54.619Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:43:54.619Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:43:54.623Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T03:43:54.649Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:43:54.649Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:43:54.649Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:43:55.191Z [DEBUG] Stream started - received first chunk
+2026-01-16T03:43:56.605Z [DEBUG] Stream started - received first chunk
+2026-01-16T03:44:45.536Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:44:45.553Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:44:45.553Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:44:45.553Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:44:45.656Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535085656
+2026-01-16T03:44:45.658Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:44:45.671Z [DEBUG] Temp file written successfully, size: 20887 bytes
+2026-01-16T03:44:45.673Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:44:45.673Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535085656 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:44:45.678Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:44:45.735Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:44:45.735Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:44:45.735Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:44:46.037Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:44:46.190Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:44:46.190Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:44:46.190Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:44:46.656Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535086656
+2026-01-16T03:44:46.660Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:44:46.677Z [DEBUG] Temp file written successfully, size: 20885 bytes
+2026-01-16T03:44:46.680Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:44:46.680Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535086656 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:44:46.686Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:44:46.899Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:44:46.899Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:44:46.900Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:44:47.193Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:44:47.379Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:44:47.379Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:44:47.379Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:44:47.969Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535087969
+2026-01-16T03:44:47.973Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:44:47.993Z [DEBUG] Temp file written successfully, size: 20883 bytes
+2026-01-16T03:44:47.996Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:44:47.997Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535087969 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:44:48.012Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:44:48.292Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:44:48.292Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:44:48.292Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:44:48.642Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:44:48.772Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:44:48.772Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:44:48.773Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:44:49.381Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535089381
+2026-01-16T03:44:49.385Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:44:49.402Z [DEBUG] Temp file written successfully, size: 20887 bytes
+2026-01-16T03:44:49.405Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:44:49.405Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535089381 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:44:49.413Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:44:49.650Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:44:49.650Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:44:49.650Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:44:50.033Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:44:50.177Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:44:50.177Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:44:50.177Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:44:50.709Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535090709
+2026-01-16T03:44:50.711Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:44:50.728Z [DEBUG] Temp file written successfully, size: 20870 bytes
+2026-01-16T03:44:50.731Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:44:50.731Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535090709 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:44:50.742Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:44:51.018Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:44:51.018Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:44:51.018Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:44:51.310Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:44:51.460Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:44:51.460Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:44:51.460Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:44:51.981Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535091981
+2026-01-16T03:44:51.984Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:44:52.000Z [DEBUG] Temp file written successfully, size: 20868 bytes
+2026-01-16T03:44:52.003Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:44:52.004Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535091981 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:44:52.010Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:44:52.273Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:44:52.273Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:44:52.273Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:44:52.599Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:44:52.752Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:44:52.752Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:44:52.752Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:44:53.333Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535093333
+2026-01-16T03:44:53.340Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:44:53.362Z [DEBUG] Temp file written successfully, size: 20882 bytes
+2026-01-16T03:44:53.366Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:44:53.366Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535093333 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:44:53.374Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:44:53.678Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:44:53.678Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:44:53.678Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:44:54.361Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:44:54.698Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:44:54.698Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:44:54.698Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:44:55.424Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535095424
+2026-01-16T03:44:55.429Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:44:55.446Z [DEBUG] Temp file written successfully, size: 20915 bytes
+2026-01-16T03:44:55.449Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:44:55.449Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535095424 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:44:55.456Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:44:55.943Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:44:55.943Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:44:55.943Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:44:56.645Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:44:56.854Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:44:56.854Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:44:56.854Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:44:57.454Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535097454
+2026-01-16T03:44:57.459Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:44:57.473Z [DEBUG] Temp file written successfully, size: 20931 bytes
+2026-01-16T03:44:57.476Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:44:57.476Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535097454 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:44:57.483Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:44:57.775Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:44:57.775Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:44:57.776Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:44:58.456Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:44:58.660Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:44:58.660Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:44:58.660Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:44:59.267Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535099267
+2026-01-16T03:44:59.286Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:44:59.322Z [DEBUG] Temp file written successfully, size: 20935 bytes
+2026-01-16T03:44:59.328Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:44:59.328Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535099267 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:44:59.336Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:44:59.651Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:44:59.651Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:44:59.651Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:45:00.214Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:45:00.385Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:45:00.385Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:45:00.385Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:45:01.086Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535101086
+2026-01-16T03:45:01.089Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:45:01.103Z [DEBUG] Temp file written successfully, size: 20933 bytes
+2026-01-16T03:45:01.106Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:45:01.106Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535101086 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:45:01.112Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:45:01.452Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:45:01.452Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:45:01.452Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:45:02.016Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:45:02.180Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:45:02.180Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:45:02.180Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:45:02.712Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535102712
+2026-01-16T03:45:02.716Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:45:02.733Z [DEBUG] Temp file written successfully, size: 20963 bytes
+2026-01-16T03:45:02.735Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:45:02.735Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535102712 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:45:02.741Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:45:03.038Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:45:03.038Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:45:03.038Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:45:03.498Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:45:03.660Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:45:03.660Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:45:03.660Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:45:04.158Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535104158
+2026-01-16T03:45:04.162Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:45:04.177Z [DEBUG] Temp file written successfully, size: 20975 bytes
+2026-01-16T03:45:04.180Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:45:04.180Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535104158 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:45:04.185Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:45:04.485Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:45:04.485Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:45:04.486Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:45:04.940Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:45:05.087Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:45:05.087Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:45:05.087Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:45:05.601Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535105601
+2026-01-16T03:45:05.605Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:45:05.619Z [DEBUG] Temp file written successfully, size: 20989 bytes
+2026-01-16T03:45:05.621Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:45:05.621Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535105601 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:45:05.628Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:45:05.916Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:45:05.916Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:45:05.916Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:45:06.471Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:45:06.623Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:45:06.623Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:45:06.623Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:45:07.155Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535107155
+2026-01-16T03:45:07.159Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:45:07.176Z [DEBUG] Temp file written successfully, size: 20976 bytes
+2026-01-16T03:45:07.179Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:45:07.180Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535107155 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:45:07.187Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:45:07.490Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:45:07.490Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:45:07.490Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:45:07.805Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T03:45:07.806Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T03:45:07.806Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T03:45:07.806Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T03:45:07.885Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T03:45:07.909Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:45:07.909Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:45:07.909Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:45:10.001Z [DEBUG] Stream started - received first chunk
+2026-01-16T03:45:19.949Z [DEBUG] Getting matching hook commands for Stop with query: undefined
+2026-01-16T03:45:19.949Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:45:19.949Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-16T03:46:06.021Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T03:46:06.021Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T03:46:06.021Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T03:46:06.021Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T03:46:06.052Z [DEBUG] Getting matching hook commands for UserPromptSubmit with query: undefined
+2026-01-16T03:46:06.052Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:46:06.052Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-16T03:46:06.052Z [DEBUG] FileHistory: Making snapshot for message 1fbbaf5d-3fa8-4c7a-8adf-01c4f7423380
+2026-01-16T03:46:06.103Z [DEBUG] FileHistory: Added snapshot for 1fbbaf5d-3fa8-4c7a-8adf-01c4f7423380, tracking 3 files
+2026-01-16T03:46:06.121Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-16T03:46:06.125Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:46:06.125Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:46:06.126Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:46:06.131Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T03:46:06.156Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:46:06.156Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:46:06.156Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:46:07.010Z [DEBUG] Stream started - received first chunk
+2026-01-16T03:46:07.944Z [DEBUG] Stream started - received first chunk
+2026-01-16T03:47:46.380Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:47:46.488Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:47:46.488Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:47:46.488Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:47:46.949Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535266949
+2026-01-16T03:47:46.952Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:47:46.969Z [DEBUG] Temp file written successfully, size: 21043 bytes
+2026-01-16T03:47:46.971Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:47:46.971Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535266949 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:47:46.977Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:47:47.203Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:47:47.203Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:47:47.203Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:47:47.484Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:47:47.636Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:47:47.636Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:47:47.636Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:47:48.083Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535268083
+2026-01-16T03:47:48.086Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:47:48.103Z [DEBUG] Temp file written successfully, size: 21058 bytes
+2026-01-16T03:47:48.105Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:47:48.105Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535268083 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:47:48.111Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:47:48.310Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:47:48.310Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:47:48.310Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:47:48.612Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:47:48.737Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:47:48.737Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:47:48.737Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:47:49.250Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535269250
+2026-01-16T03:47:49.254Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:47:49.268Z [DEBUG] Temp file written successfully, size: 21128 bytes
+2026-01-16T03:47:49.270Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:47:49.270Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535269250 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:47:49.277Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:47:49.503Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:47:49.503Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:47:49.503Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:47:49.840Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:47:49.969Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:47:49.969Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:47:49.969Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:47:50.442Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535270442
+2026-01-16T03:47:50.446Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:47:50.465Z [DEBUG] Temp file written successfully, size: 21165 bytes
+2026-01-16T03:47:50.469Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:47:50.470Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535270442 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:47:50.478Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:47:50.731Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:47:50.731Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:47:50.731Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:47:51.119Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:47:51.261Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:47:51.261Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:47:51.261Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:47:51.795Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535271795
+2026-01-16T03:47:51.799Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:47:51.812Z [DEBUG] Temp file written successfully, size: 21151 bytes
+2026-01-16T03:47:51.815Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:47:51.815Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535271795 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:47:51.821Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:47:52.092Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:47:52.092Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:47:52.092Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:47:52.581Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:47:52.713Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:47:52.713Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:47:52.713Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:47:53.260Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535273260
+2026-01-16T03:47:53.263Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:47:53.279Z [DEBUG] Temp file written successfully, size: 21195 bytes
+2026-01-16T03:47:53.282Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:47:53.282Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535273260 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:47:53.286Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:47:53.556Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:47:53.556Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:47:53.556Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:47:53.959Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:47:54.142Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:47:54.142Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:47:54.142Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:47:54.675Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535274675
+2026-01-16T03:47:54.679Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:47:54.691Z [DEBUG] Temp file written successfully, size: 21199 bytes
+2026-01-16T03:47:54.694Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:47:54.694Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535274675 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:47:54.701Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:47:55.085Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:47:55.085Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:47:55.085Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:47:55.651Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:47:55.869Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:47:55.869Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:47:55.869Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:47:57.082Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535277082
+2026-01-16T03:47:57.089Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:47:57.104Z [DEBUG] Temp file written successfully, size: 21209 bytes
+2026-01-16T03:47:57.109Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:47:57.109Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535277082 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:47:57.116Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:47:57.499Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:47:57.500Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:47:57.500Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:47:58.091Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:47:58.291Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:47:58.291Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:47:58.291Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:47:59.014Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535279014
+2026-01-16T03:47:59.019Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:47:59.033Z [DEBUG] Temp file written successfully, size: 21237 bytes
+2026-01-16T03:47:59.035Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:47:59.035Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535279014 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:47:59.042Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:47:59.410Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:47:59.410Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:47:59.410Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:00.000Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:48:00.230Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:48:00.230Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:48:00.230Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:01.003Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535281003
+2026-01-16T03:48:01.006Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:48:01.027Z [DEBUG] Temp file written successfully, size: 21258 bytes
+2026-01-16T03:48:01.030Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:48:01.030Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535281003 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:48:01.035Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:48:01.470Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:48:01.470Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:48:01.470Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:02.139Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:48:02.438Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:48:02.438Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:48:02.438Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:03.339Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535283339
+2026-01-16T03:48:03.346Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:48:03.365Z [DEBUG] Temp file written successfully, size: 21273 bytes
+2026-01-16T03:48:03.369Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:48:03.369Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535283339 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:48:03.376Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:48:03.842Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:48:03.842Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:48:03.842Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:04.456Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:48:04.663Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:48:04.663Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:48:04.663Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:05.349Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535285349
+2026-01-16T03:48:05.351Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:48:05.367Z [DEBUG] Temp file written successfully, size: 21333 bytes
+2026-01-16T03:48:05.370Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:48:05.370Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535285349 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:48:05.376Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:48:05.757Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:48:05.757Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:48:05.758Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:06.323Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:48:06.531Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:48:06.531Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:48:06.531Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:07.170Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535287170
+2026-01-16T03:48:07.172Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:48:07.188Z [DEBUG] Temp file written successfully, size: 21386 bytes
+2026-01-16T03:48:07.191Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:48:07.191Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535287170 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:48:07.197Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:48:07.683Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:48:07.683Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:48:07.683Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:08.353Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:48:08.570Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:48:08.570Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:48:08.570Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:09.404Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535289404
+2026-01-16T03:48:09.408Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:48:09.434Z [DEBUG] Temp file written successfully, size: 21437 bytes
+2026-01-16T03:48:09.438Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:48:09.438Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535289404 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:48:09.445Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:48:09.838Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:48:09.838Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:48:09.838Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:10.474Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:48:10.687Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:48:10.687Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:48:10.687Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:12.003Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535292003
+2026-01-16T03:48:12.021Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:48:12.069Z [DEBUG] Temp file written successfully, size: 21457 bytes
+2026-01-16T03:48:12.072Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:48:12.072Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535292003 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:48:12.097Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:48:12.728Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:48:12.728Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:48:12.728Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:13.518Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:48:13.820Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:48:13.820Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:48:13.820Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:15.158Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535295158
+2026-01-16T03:48:15.165Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:48:15.184Z [DEBUG] Temp file written successfully, size: 21478 bytes
+2026-01-16T03:48:15.188Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:48:15.188Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535295158 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:48:15.198Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:48:16.044Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:48:16.044Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:48:16.044Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:17.217Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:48:18.015Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:48:18.015Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:48:18.015Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:19.323Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535299323
+2026-01-16T03:48:19.327Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:48:19.344Z [DEBUG] Temp file written successfully, size: 21510 bytes
+2026-01-16T03:48:19.347Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:48:19.347Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535299323 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:48:19.353Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:48:19.883Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:48:19.883Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:48:19.883Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:20.631Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:48:20.858Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:48:20.858Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:48:20.858Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:21.661Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535301661
+2026-01-16T03:48:21.664Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:48:21.690Z [DEBUG] Temp file written successfully, size: 21588 bytes
+2026-01-16T03:48:21.693Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:48:21.693Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535301661 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:48:21.699Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:48:22.141Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:48:22.141Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:48:22.141Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:22.791Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:48:23.073Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:48:23.073Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:48:23.073Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:23.849Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535303849
+2026-01-16T03:48:23.853Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:48:23.866Z [DEBUG] Temp file written successfully, size: 21615 bytes
+2026-01-16T03:48:23.869Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:48:23.869Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535303849 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:48:23.876Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:48:23.884Z [ERROR] AxiosError: Error
+    at <anonymous> (/$bunfs/root/claude:58:10691)
+    at emit (node:events:92:22)
+    at <anonymous> (/$bunfs/root/claude:57:5642)
+    at request (/$bunfs/root/claude:60:2149)
+    at processTicksAndRejections (native:7:39)
+2026-01-16T03:48:24.189Z [ERROR] Error: Error: 1P event logging: 28 events failed to export
+    at queueFailedEvents (/$bunfs/root/claude:208:2077)
+    at async doExport (/$bunfs/root/claude:208:1257)
+    at processTicksAndRejections (native:7:39)
+2026-01-16T03:48:24.189Z [ERROR] Error: Error: {"message":"Failed to export 28 events","originalLine":"208","originalColumn":"1336","line":"208","column":"1336","sourceURL":"/$bunfs/root/claude","stack":"Error: Failed to export 28 events\n    at doExport (/$bunfs/root/claude:208:1336)\n    at processTicksAndRejections (native:7:39)","name":"Error"}
+    at error (/$bunfs/root/claude:2222:25028)
+    at <anonymous> (/$bunfs/root/claude:202:38580)
+    at sZ0 (/$bunfs/root/claude:202:39124)
+    at <anonymous> (/$bunfs/root/claude:203:17366)
+    at processTicksAndRejections (native:7:39)
+2026-01-16T03:48:24.411Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:48:24.411Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:48:24.411Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:48:24.866Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T03:48:24.866Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T03:48:24.866Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T03:48:24.866Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T03:48:24.942Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T03:48:24.954Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:48:24.954Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:48:24.954Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:52:39.429Z [ERROR] Error streaming, falling back to non-streaming mode: Request timed out.
+2026-01-16T03:52:39.429Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:52:39.429Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:52:39.429Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:52:57.529Z [DEBUG] Getting matching hook commands for Stop with query: undefined
+2026-01-16T03:52:57.529Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:52:57.529Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-16T03:53:33.753Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T03:53:33.753Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T03:53:33.753Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T03:53:33.753Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T03:53:33.800Z [DEBUG] Getting matching hook commands for UserPromptSubmit with query: undefined
+2026-01-16T03:53:33.800Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:53:33.800Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-16T03:53:33.816Z [DEBUG] FileHistory: Making snapshot for message 912a530b-fc61-495f-8a29-0f1e1b854730
+2026-01-16T03:53:33.837Z [DEBUG] FileHistory: Added snapshot for 912a530b-fc61-495f-8a29-0f1e1b854730, tracking 3 files
+2026-01-16T03:53:33.861Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-16T03:53:33.866Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:53:33.866Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:53:33.866Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:53:33.874Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T03:53:33.905Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:53:33.905Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:53:33.905Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:53:37.272Z [DEBUG] Stream started - received first chunk
+2026-01-16T03:53:48.364Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:53:48.380Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:53:48.380Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:53:48.380Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:53:48.475Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535628475
+2026-01-16T03:53:48.477Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:53:48.493Z [DEBUG] Temp file written successfully, size: 21714 bytes
+2026-01-16T03:53:48.495Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:53:48.495Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535628475 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:53:48.500Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:53:48.537Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:53:48.537Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:53:48.537Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:53:48.911Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:53:49.051Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:53:49.051Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:53:49.051Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:53:49.504Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535629504
+2026-01-16T03:53:49.507Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:53:49.519Z [DEBUG] Temp file written successfully, size: 21744 bytes
+2026-01-16T03:53:49.522Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:53:49.522Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535629504 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:53:49.528Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:53:49.895Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:53:49.895Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:53:49.895Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:53:50.835Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:53:50.999Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:53:50.999Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:53:50.999Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:53:51.663Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535631663
+2026-01-16T03:53:51.666Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:53:51.682Z [DEBUG] Temp file written successfully, size: 21753 bytes
+2026-01-16T03:53:51.684Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:53:51.684Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535631663 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:53:51.691Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:53:52.018Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:53:52.018Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:53:52.018Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:53:52.530Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:53:52.699Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:53:52.699Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:53:52.699Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:53:53.342Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535633342
+2026-01-16T03:53:53.345Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:53:53.363Z [DEBUG] Temp file written successfully, size: 21736 bytes
+2026-01-16T03:53:53.365Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:53:53.365Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535633342 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:53:53.371Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:53:53.691Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:53:53.691Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:53:53.691Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:53:54.376Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T03:53:54.376Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T03:53:54.376Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T03:53:54.376Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T03:53:54.486Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T03:53:54.498Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:53:54.498Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:53:54.499Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:53:56.666Z [DEBUG] Stream started - received first chunk
+2026-01-16T03:53:59.221Z [DEBUG] executePreToolHooks called for tool: Grep
+2026-01-16T03:53:59.258Z [DEBUG] Getting matching hook commands for PreToolUse with query: Grep
+2026-01-16T03:53:59.258Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:53:59.258Z [DEBUG] Matched 0 unique hooks for query "Grep" (0 before deduplication)
+2026-01-16T03:54:01.404Z [DEBUG] Getting matching hook commands for PostToolUse with query: Grep
+2026-01-16T03:54:01.404Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:54:01.404Z [DEBUG] Matched 0 unique hooks for query "Grep" (0 before deduplication)
+2026-01-16T03:54:01.439Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T03:54:01.439Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T03:54:01.439Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T03:54:01.439Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T03:54:01.513Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T03:54:01.523Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:54:01.523Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:54:01.523Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:54:06.903Z [DEBUG] Stream started - received first chunk
+2026-01-16T03:54:08.312Z [ERROR] AxiosError: Error
+    at <anonymous> (/$bunfs/root/claude:58:10691)
+    at emit (node:events:92:22)
+    at <anonymous> (/$bunfs/root/claude:57:5642)
+    at request (/$bunfs/root/claude:60:2149)
+    at processTicksAndRejections (native:7:39)
+2026-01-16T03:54:15.951Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:54:15.965Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:54:15.965Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:54:15.965Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:54:16.066Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535656066
+2026-01-16T03:54:16.068Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:54:16.084Z [DEBUG] Temp file written successfully, size: 21745 bytes
+2026-01-16T03:54:16.086Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:54:16.086Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535656066 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:54:16.092Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:54:16.129Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:54:16.129Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:54:16.129Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:54:16.164Z [DEBUG] executePreToolHooks called for tool: Grep
+2026-01-16T03:54:16.200Z [DEBUG] Getting matching hook commands for PreToolUse with query: Grep
+2026-01-16T03:54:16.200Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:54:16.200Z [DEBUG] Matched 0 unique hooks for query "Grep" (0 before deduplication)
+2026-01-16T03:54:17.988Z [DEBUG] Getting matching hook commands for PostToolUse with query: Grep
+2026-01-16T03:54:17.988Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:54:17.988Z [DEBUG] Matched 0 unique hooks for query "Grep" (0 before deduplication)
+2026-01-16T03:54:18.101Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T03:54:18.102Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T03:54:18.102Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T03:54:18.102Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T03:54:18.217Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T03:54:18.246Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:54:18.246Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:54:18.247Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:54:20.470Z [DEBUG] Stream started - received first chunk
+2026-01-16T03:54:26.333Z [DEBUG] Getting matching hook commands for Stop with query: undefined
+2026-01-16T03:54:26.334Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:54:26.334Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-16T03:55:53.968Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T03:55:53.969Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T03:55:53.969Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T03:55:53.969Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T03:55:54.013Z [DEBUG] Getting matching hook commands for UserPromptSubmit with query: undefined
+2026-01-16T03:55:54.013Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:55:54.013Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-16T03:55:54.013Z [DEBUG] FileHistory: Making snapshot for message ede03872-337e-4c22-8e28-e297961945ed
+2026-01-16T03:55:54.040Z [DEBUG] FileHistory: Added snapshot for ede03872-337e-4c22-8e28-e297961945ed, tracking 3 files
+2026-01-16T03:55:54.058Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-16T03:55:54.060Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:55:54.060Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:55:54.061Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:55:54.070Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T03:55:54.094Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:55:54.094Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:55:54.094Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:55:54.893Z [DEBUG] Stream started - received first chunk
+2026-01-16T03:55:56.352Z [DEBUG] Stream started - received first chunk
+2026-01-16T03:56:00.105Z [DEBUG] executePreToolHooks called for tool: Grep
+2026-01-16T03:56:00.128Z [DEBUG] Getting matching hook commands for PreToolUse with query: Grep
+2026-01-16T03:56:00.128Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:56:00.128Z [DEBUG] Matched 0 unique hooks for query "Grep" (0 before deduplication)
+2026-01-16T03:56:01.102Z [DEBUG] Getting matching hook commands for PostToolUse with query: Grep
+2026-01-16T03:56:01.102Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:56:01.102Z [DEBUG] Matched 0 unique hooks for query "Grep" (0 before deduplication)
+2026-01-16T03:56:01.117Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T03:56:01.117Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T03:56:01.117Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T03:56:01.117Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T03:56:01.160Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T03:56:01.163Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:56:01.163Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:56:01.163Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:56:03.452Z [DEBUG] Stream started - received first chunk
+2026-01-16T03:56:12.204Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:56:12.218Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:56:12.218Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:56:12.218Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:56:12.317Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535772317
+2026-01-16T03:56:12.320Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:56:12.333Z [DEBUG] Temp file written successfully, size: 21757 bytes
+2026-01-16T03:56:12.335Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:56:12.335Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535772317 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:56:12.339Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:56:12.384Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:56:12.384Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:56:12.384Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:56:12.759Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:56:12.959Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:56:12.959Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:56:12.959Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:56:13.610Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535773610
+2026-01-16T03:56:13.616Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:56:13.640Z [DEBUG] Temp file written successfully, size: 21775 bytes
+2026-01-16T03:56:13.644Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:56:13.644Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535773610 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:56:13.651Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:56:13.896Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:56:13.896Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:56:13.896Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:56:14.338Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:56:14.523Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:56:14.523Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:56:14.523Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:56:15.239Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535775239
+2026-01-16T03:56:15.244Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:56:15.263Z [DEBUG] Temp file written successfully, size: 21784 bytes
+2026-01-16T03:56:15.267Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:56:15.267Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535775239 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:56:15.277Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:56:15.699Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:56:15.699Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:56:15.699Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:56:16.273Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:56:16.464Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:56:16.464Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:56:16.464Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:56:17.064Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535777064
+2026-01-16T03:56:17.071Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:56:17.093Z [DEBUG] Temp file written successfully, size: 21784 bytes
+2026-01-16T03:56:17.096Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:56:17.096Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535777064 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:56:17.105Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:56:17.641Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:56:17.641Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:56:17.641Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:56:18.513Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:56:18.656Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:56:18.656Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:56:18.656Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:56:19.219Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535779219
+2026-01-16T03:56:19.223Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:56:19.242Z [DEBUG] Temp file written successfully, size: 21784 bytes
+2026-01-16T03:56:19.246Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:56:19.246Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535779219 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:56:19.254Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:56:19.494Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:56:19.494Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:56:19.494Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:56:19.852Z [DEBUG] executePreToolHooks called for tool: Edit
+2026-01-16T03:56:19.975Z [DEBUG] Getting matching hook commands for PreToolUse with query: Edit
+2026-01-16T03:56:19.975Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:56:19.975Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:56:20.632Z [DEBUG] Writing to temp file: /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535780631
+2026-01-16T03:56:20.642Z [DEBUG] Preserving file permissions: 100777
+2026-01-16T03:56:20.670Z [DEBUG] Temp file written successfully, size: 21793 bytes
+2026-01-16T03:56:20.675Z [DEBUG] Applied original permissions to temp file
+2026-01-16T03:56:20.676Z [DEBUG] Renaming /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc.tmp.1042.1768535780631 to /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc
+2026-01-16T03:56:20.684Z [DEBUG] File /mnt/c/Users/o.young/work/architecture/initiatives/flybuys_strategic_data.adoc written atomically
+2026-01-16T03:56:21.229Z [DEBUG] Getting matching hook commands for PostToolUse with query: Edit
+2026-01-16T03:56:21.229Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:56:21.230Z [DEBUG] Matched 0 unique hooks for query "Edit" (0 before deduplication)
+2026-01-16T03:56:21.559Z [DEBUG] executePreToolHooks called for tool: Grep
+2026-01-16T03:56:21.777Z [DEBUG] Getting matching hook commands for PreToolUse with query: Grep
+2026-01-16T03:56:21.777Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:56:21.777Z [DEBUG] Matched 0 unique hooks for query "Grep" (0 before deduplication)
+2026-01-16T03:56:25.427Z [DEBUG] Getting matching hook commands for PostToolUse with query: Grep
+2026-01-16T03:56:25.427Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:56:25.428Z [DEBUG] Matched 0 unique hooks for query "Grep" (0 before deduplication)
+2026-01-16T03:56:26.307Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-16T03:56:26.307Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-16T03:56:26.308Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-16T03:56:26.308Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-16T03:56:26.590Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-16T03:56:26.608Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:56:26.608Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:56:26.608Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:56:28.791Z [DEBUG] Stream started - received first chunk
+2026-01-16T03:56:33.475Z [DEBUG] Getting matching hook commands for Stop with query: undefined
+2026-01-16T03:56:33.475Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:56:33.475Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-16T03:57:39.428Z [ERROR] Error streaming, falling back to non-streaming mode: Request timed out.
+2026-01-16T03:57:39.429Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T03:57:39.429Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T03:57:39.429Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T03:58:57.344Z [DEBUG] Getting matching hook commands for SessionEnd with query: prompt_input_exit
+2026-01-16T03:58:57.344Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T03:58:57.344Z [DEBUG] Matched 0 unique hooks for query "prompt_input_exit" (0 before deduplication)
+2026-01-16T03:58:57.357Z [DEBUG] Cleaned up session snapshot: /home/oliy/.claude/shell-snapshots/snapshot-zsh-1768529072757-xq7bvf.sh
+2026-01-16T03:58:57.358Z [DEBUG] LSP server manager shut down successfully
+2026-01-16T03:58:57.370Z [DEBUG] FileHistory: Making snapshot for message f3c50394-1ac9-4afb-8f19-a4f5eca5de93
+2026-01-16T03:58:57.393Z [DEBUG] FileHistory: Added snapshot for f3c50394-1ac9-4afb-8f19-a4f5eca5de93, tracking 3 files
+2026-01-16T03:58:57.398Z [DEBUG] UserCommandMessage rendering: "exit" (args: "none", isSkillFormat: false)

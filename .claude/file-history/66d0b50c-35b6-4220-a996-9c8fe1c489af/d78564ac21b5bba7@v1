@@ -1,0 +1,472 @@
+# Flybuys Integration Content Mapping
+
+This document maps existing content from `flybuys_integration.adoc` to appropriate document types following TOGAF and DDD best practices.
+
+## Document Type Definitions
+
+### 1. Architecture Definition Document (TOGAF Phase C)
+**Purpose:** Define the Information Systems Architecture - what systems exist, how they integrate, what patterns are used.
+
+**Focus:**
+- System-level architecture and integration patterns
+- Bounded context relationships and responsibilities
+- Cross-context flows and orchestration
+- Gap analysis (AS-IS vs TO-BE state)
+- Technical requirements and capabilities
+- Architectural patterns and rationale
+
+**Audience:** Solution Architects, Domain Architects, Technical Leads
+
+### 2. Initiative Document
+**Purpose:** Describe a specific implementation project - what we're building, why, how (phased approach), and when.
+
+**Focus:**
+- Business case and value proposition
+- Customer journeys and user stories
+- Phased implementation plan (TS-0 → TS-5)
+- Feature delivery roadmap
+- Customer-facing capabilities
+- Success metrics and KPIs
+
+**Audience:** Business Owners, Product Managers, Programme Leads, Stakeholders
+
+### 3. Solution Architecture Document
+**Purpose:** Technology product selections and implementation specifications for a specific architecture.
+
+**Focus:**
+- Technology product catalogue (Azure/AWS services, SaaS vendors)
+- Infrastructure specifications (compute, storage, networking)
+- Deployment architecture (environments, CI/CD pipelines)
+- Operational procedures (monitoring, alerting, incident response)
+- Non-functional requirements (performance, scalability, security)
+- Detailed sequence diagrams with error scenarios
+
+**Audience:** Solution Architects, DevOps Engineers, Infrastructure Teams
+
+---
+
+## Content Mapping Table
+
+| Current Section in flybuys_integration.adoc | Lines | Move To | Rationale |
+|---------------------------------------------|-------|---------|-----------|
+| **== Introduction & Vision** | 25-50 | **Initiative** | Business vision, customer value proposition |
+| **=== Purpose** | 27-32 | **Initiative** | Problem statement and business context |
+| **=== Vision** | 34-35 | **Initiative** | Strategic vision statement |
+| **=== Architectural Approach** | 37-49 | **Architecture Definition** (summary) + **Solution Architecture** (details) | High-level pattern summary stays in Arch Def; tech stack details move to Solution Arch |
+| **=== Architecture Overview (diagram)** | 52-102 | **Architecture Definition** ✅ | System-level integration view - KEEP |
+| **==== Key Architectural Patterns** | 104-116 | **Architecture Definition** ✅ | Pattern catalogue - KEEP |
+| **== Technical Requirements** | 118-139 | **Architecture Definition** ✅ | Requirements traceability - KEEP |
+| **=== Technical Requirements Mapping** | 141-181 | **Architecture Definition** ✅ | Maps business → technical requirements - KEEP |
+| **=== Stakeholder Analysis** | 183-204 | **Initiative** | Programme stakeholders and engagement strategy |
+| **=== Baseline Architecture** | 206-294 | **Architecture Definition** ✅ | AS-IS state analysis - KEEP |
+| **==== Current Business Capability** | 208-222 | **Architecture Definition** ✅ | Capability baseline - KEEP |
+| **==== Current Value Stream** | 224-270 | **Initiative** | Customer journey pain points (business context) |
+| **===== Customer Redeems Flybuys Fuel Discount** | 226-270 | **Initiative** | AS-IS customer journey |
+| **==== Pain Points** | 285-294 | **Architecture Definition** ✅ | Gap identification - KEEP |
+| **=== Target State Architecture** | 296-555 | **Split** | |
+| **==== Business Capability** | 298-316 | **Architecture Definition** ✅ | TO-BE capability mapping - KEEP |
+| **==== Value Stream** | 318-555 | **Initiative** | TO-BE customer journeys |
+| **===== Customer Links Flybuys and Earns Points** | 320-555 | **Initiative** | TO-BE customer journey with flows |
+| **==== OAuth Partner Linking Flow** | 322-403 | **Initiative** | Customer-facing journey |
+| **==== Transaction Adjudication Flow** | 405-468 | **Architecture Definition** (simplified) + **Solution Architecture** (detailed) | High-level flow in Arch Def; detailed error scenarios in Solution Arch |
+| **===== Detailed Sequence Diagrams** | 470-472 | **Solution Architecture** | Reference to comprehensive flow documentation |
+| **==== Gap Analysis** | 557-585 | **Architecture Definition** ✅ | Capability and technology gaps - KEEP |
+| **===== Business Capability Gaps** | 559-572 | **Architecture Definition** ✅ | Gap identification - KEEP |
+| **===== Technology Transformation Requirements** | 574-585 | **Architecture Definition** ✅ | Technology transformation needed - KEEP |
+| **== Technical Architecture** | 587-1650+ | **Split** | |
+| **=== Technical Capability Requirements** | 589-606 | **Architecture Definition** ✅ | Capability requirements - KEEP |
+| **==== Requirements Traceability** | 608-658 | **Architecture Definition** ✅ | Traceability matrix - KEEP |
+| **=== Service Catalogues** | 660-895 | **Split** | |
+| **==== Application Portfolio Catalogue** | 662-726 | **Architecture Definition** ✅ | Application inventory - KEEP |
+| **==== Technology Capability Requirements** | 728-780 | **Architecture Definition** ✅ | Technology-agnostic capabilities - KEEP |
+| **==== Feature Flag Register** | 782-835 | **Solution Architecture** | Operational deployment configuration |
+| **==== Data Entity Catalogue** | 838-894 | **Architecture Definition** ✅ | Data ownership mapping - KEEP |
+| **=== Baseline Architecture (Legacy Systems)** | 896-1060 | **Architecture Definition** ✅ | AS-IS system inventory - KEEP |
+| **=== Gap Analysis** | 1062-1197 | **Architecture Definition** ✅ | Already mapped above - KEEP |
+| **=== Target State Architecture** | 1199-1228 | **Architecture Definition** ✅ | Principles and patterns - KEEP |
+| **==== Architectural Building Blocks (ABB)** | 1230-1650+ | **Architecture Definition** (condensed) | **REFACTOR** - Use condensed ABB sections that reference BC files |
+| **===== ABB-001 Profile Service** | 1271-1375 | **Architecture Definition** (condensed) | **REFACTOR** - Remove duplication, reference profile.adoc |
+| **===== ABB-002 Loyalty Service** | 1376-1650 | **Architecture Definition** (condensed) | **REFACTOR** - Remove duplication, reference loyalty.adoc |
+| **===== ABB-003 Location Service** | ~1652-1680 | **Architecture Definition** (condensed) | **REFACTOR** - Minimal summary, reference location.adoc |
+| **===== ABB-004 Engagement Service** | ~1683-1742 | **Architecture Definition** (condensed) | **REFACTOR** - Minimal summary, reference engagement.adoc |
+| **===== ABB-005 through ABB-015** | ~1743-2000+ | **Architecture Definition** (infrastructure) + **Solution Architecture** (implementation) | Infrastructure patterns in Arch Def; specific tech in Solution Arch |
+
+---
+
+## Recommended Document Structure
+
+### architecture_definitions/flybuys_integration.adoc (TARGET: ~1,200 lines)
+
+**Purpose:** TOGAF Phase C - Information Systems Architecture
+
+**Structure:**
+```
+= Flybuys Integration - Architecture Definition
+:togaf-adm-phase: Phase C: Information Systems Architectures
+
+== Executive Summary
+- Problem statement
+- Architectural approach summary
+- Key patterns applied
+
+== Technical Requirements
+- TR-001 through TR-016
+- Requirements traceability matrix
+
+== Baseline Architecture (AS-IS)
+- Current business capabilities
+- Existing system components
+- Pain points
+- Technical debt inventory
+
+== Target State Architecture (TO-BE)
+- Architecture overview diagram
+- Business capability mapping
+- Bounded context catalog (condensed ABB sections)
+- Integration patterns and rationale
+- Key architectural decisions
+
+== Gap Analysis
+- Business capability gaps
+- Technology transformation requirements
+- Missing bounded contexts
+- Missing integration patterns
+
+== Architecture Patterns Applied
+- Anti-Corruption Layer (ACL)
+- Backend-for-Frontend (BFF)
+- Event-Driven Architecture
+- OAuth 2.0 + PKCE
+- Strangler Fig
+
+== Cross-References
+- Bounded Context Documentation: profile.adoc, loyalty.adoc, engagement.adoc
+- Solution Architecture: solution-architectures/flybuys_integration.adoc
+- Initiative Plan: initiatives/flybuys_integration.adoc
+```
+
+---
+
+### initiatives/flybuys_integration.adoc (NEW: ~800 lines)
+
+**Purpose:** Initiative delivery plan - what we're building, why, and how
+
+**Structure:**
+```
+= Flybuys Coalition Loyalty Integration
+:project: OTR-002
+:domain: Loyalty
+:status: Discovery
+
+== What We're Building
+
+=== Business Vision
+> Enable customers to seamlessly link coalition loyalty partners...
+
+=== Features Delivered
+[Table: Feature | Capability | Business Value]
+
+== Why This Matters
+
+=== Business Case
+- Customer lifetime value impact
+- Competitive positioning
+- Revenue protection
+- Strategic flexibility
+
+=== Customer Pain Points (AS-IS)
+- Customer Redeems Flybuys Fuel Discount (current state journey)
+- No linking process
+- Manual batch processing
+- No real-time adjudication
+
+== Customer Journey (TO-BE)
+
+=== Customer Links Flybuys Digital Identity and Earns Points
+[Mermaid: OAuth Partner Linking Flow]
+[Mermaid: Transaction Adjudication Flow]
+[Value stream table with timings]
+
+=== Key Improvements
+- Real-time adjudication (<500ms)
+- Self-service OAuth linking
+- Mobile balance visibility
+
+== Architecture Approach
+
+=== Design Principles
+- Vendor independence through ACL
+- Event-driven loose coupling
+- Single source of truth per domain
+
+=== Bounded Contexts Introduced
+- ProfileService: Partner linking, reward preferences
+- LoyaltyService: Transaction adjudication, batch posting
+- EngagementService: Campaign triggers
+
+=== Key Capabilities Delivered
+[Table: Capability | How It Works | Customer Value]
+
+== Implementation Phases
+
+=== TS-0: Foundation (Pre-requisites)
+- VCI established as customer identifier
+- Event Bus infrastructure
+- OAuth Service deployed
+
+=== TS-1: AS-1 Foundation
+- ProfileService deployed
+- Basic customer profile management
+- Salesforce integration
+
+=== TS-2: AS-2 Linking
+- Flybuys OAuth linking flow
+- Reward preference selection
+- Partner link status tracking
+
+=== TS-3: AS-3 Earning
+- Real-time transaction adjudication
+- Flybuys points earning
+- Mobile balance display
+
+=== TS-4: AS-4 Batch Processing
+- Daily batch file generation
+- SFTP transmission to Flybuys
+- Reconciliation and retry logic
+
+=== TS-5: AS-5 Full Integration
+- Digital fuel dockets
+- Campaign integration
+- Analytics and reporting
+
+== Non-Functional Requirements Met
+- Transaction adjudication: <500ms p95
+- OAuth linking: <3 minutes end-to-end
+- Batch file transmission: 99.9% success rate
+
+== Risks & Mitigation
+- Flybuys API availability → Circuit breaker, fallback to batch
+- OAuth flow complexity → User testing, error messaging
+- Batch transmission failures → Retry logic, alerting
+
+== Key Decisions Made
+- Flybuys uses Conformist pattern (no ACL) - stable API
+- Dual-scheme tracking (Flybuys + Internal OTR shadow balance)
+- Two-phase transaction adjudication (Validation + Redemption)
+
+== Future Capacity Delivered
+- Partner integration pattern reusable for Shell, future partners
+- Event-driven architecture enables AI-driven offers (2026)
+- Subscription integration patterns established
+```
+
+---
+
+### solution-architectures/flybuys_integration.adoc (NEW: ~1,000 lines)
+
+**Purpose:** Technology selections and implementation specifications
+
+**Structure:**
+```
+= Flybuys Integration - Solution Architecture
+:togaf-adm-phase: Phase D & E: Technology Architecture & Opportunities/Solutions
+
+== Technology Portfolio Catalogue
+
+=== Azure/AWS Service Selections
+[Table: Capability | Azure Service | Rationale | Cost Model]
+
+Examples:
+- Event Messaging → Azure Event Hub → At-least-once delivery, CloudEvents support
+- Secure Credential Storage → Azure Key Vault → AES-256, PCI DSS Level 1
+- NoSQL Data Storage → Azure Cosmos DB → Partition key performance, global distribution
+- Batch Job Scheduling → Azure Functions (Timer Trigger) → Serverless, cron-based
+
+=== Third-Party SaaS Platforms
+[Table: Capability | SaaS Platform | Integration Pattern | License Cost]
+
+Examples:
+- Loyalty Engine → EagleEye AIR → ACL via REST API → Enterprise license
+- Marketing Automation → Braze → ACL via webhooks → Per-user pricing
+- Customer Identity → Microsoft Entra External ID → OAuth 2.0 → Per-MAU pricing
+
+== Infrastructure Architecture
+
+=== Compute Architecture
+- Azure Functions (Consumption Plan) for event processing
+- Azure App Service (Premium Plan) for API endpoints
+- Autoscaling configuration: CPU > 70%, scale out
+
+=== Storage Architecture
+- Azure Cosmos DB: ProfileService (Azure SQL), LoyaltyService (NoSQL)
+- Partition strategy: VivaConsumerId partition key
+- Retention policies: RewardTransaction 30-day TTL
+
+=== Networking Architecture
+- Virtual Network isolation
+- Private endpoints for Azure services
+- API Management for external API exposure
+
+=== Security Architecture
+- Azure Key Vault for secrets management
+- Managed identities for service-to-service auth
+- Network security groups and firewall rules
+
+== Detailed Sequence Diagrams
+
+=== OAuth Partner Linking - Error Scenarios
+[Mermaid: Authorization denied scenario]
+[Mermaid: Token exchange failure scenario]
+[Mermaid: Partner already linked scenario]
+
+=== Transaction Adjudication - Error Scenarios
+[Mermaid: ProfileService timeout scenario]
+[Mermaid: EagleEye circuit breaker scenario]
+[Mermaid: Duplicate transaction handling]
+
+=== Batch File Processing - Error Scenarios
+[Mermaid: SFTP timeout with retry logic]
+[Mermaid: Partial batch rejection scenario]
+
+== Deployment Architecture
+
+=== Environment Strategy
+- Development (dev.otr.com.au)
+- UAT (uat.otr.com.au)
+- Production (api.otr.com.au)
+
+=== CI/CD Pipeline
+- GitHub Actions for build/test
+- Azure DevOps for deployment
+- Infrastructure as Code (Bicep/Terraform)
+
+=== Feature Flag Deployment Matrix
+[Table: Flag | AS-1 | AS-2 | AS-3 | AS-4 | AS-5]
+- Rollout schedule by architecture state
+- Flag dependencies and enablement order
+- Rollback procedures
+
+== Operational Procedures
+
+=== Monitoring & Alerting
+- Application Insights for distributed tracing
+- Log Analytics for centralized logging
+- Alert rules: Transaction adjudication latency > 500ms p95
+
+=== Incident Response
+- On-call rotation
+- Runbooks for common issues
+- Escalation procedures
+
+=== Batch Job Monitoring
+- Daily batch file success/failure alerts
+- SFTP transmission retry monitoring
+- Flybuys acknowledgement file processing
+
+== Performance Specifications
+
+=== Transaction Adjudication
+- Target latency: <500ms p95
+- Throughput: 1000 TPS peak
+- Availability: 99.9% uptime
+
+=== OAuth Linking Flow
+- End-to-end completion: <3 minutes
+- Token refresh: <100ms
+- Success rate: >95%
+
+=== Batch Processing
+- File generation: <45 minutes
+- SFTP transmission: <15 minutes
+- Success rate: 99.9%
+
+== Cost Model
+
+=== Azure Services Monthly Estimate
+[Table: Service | Configuration | Monthly Cost (AUD)]
+
+=== SaaS Platform Licensing
+[Table: Platform | Pricing Model | Monthly Cost (AUD)]
+
+=== Total Cost of Ownership (3 years)
+- Capital expenditure
+- Operational expenditure
+- Licensing and support costs
+```
+
+---
+
+## Content Redistribution Summary
+
+### Current: flybuys_integration.adoc (2,726 lines)
+
+**Breaking down to:**
+
+1. **architecture_definitions/flybuys_integration.adoc** (~1,200 lines)
+   - Technical requirements ✅
+   - Baseline architecture ✅
+   - Target state architecture (condensed ABBs)
+   - Gap analysis ✅
+   - Integration patterns ✅
+
+2. **initiatives/flybuys_integration.adoc** (~800 lines)
+   - Business vision and case
+   - Customer journeys (AS-IS and TO-BE)
+   - Phased implementation plan
+   - Feature delivery roadmap
+   - Stakeholder analysis
+
+3. **solution-architectures/flybuys_integration.adoc** (~1,000 lines)
+   - Technology product selections
+   - Infrastructure specifications
+   - Detailed sequence diagrams (error scenarios)
+   - Deployment architecture
+   - Operational procedures
+   - Feature flag deployment matrix
+
+**Total: 3,000 lines** (slight expansion for clarity and structure)
+
+---
+
+## Migration Checklist
+
+- [ ] Create `initiatives/flybuys_integration.adoc` from template
+- [ ] Create `solution-architectures/flybuys_integration.adoc`
+- [ ] Move business vision/case to initiative document
+- [ ] Move customer journey flows to initiative document
+- [ ] Move technology selections to solution architecture
+- [ ] Move detailed error scenarios to solution architecture
+- [ ] Move feature flag deployment matrix to solution architecture
+- [ ] Replace verbose ABB sections with condensed versions (reference BC files)
+- [ ] Update cross-references between documents
+- [ ] Archive original `flybuys_integration.adoc` as `flybuys_integration_ORIGINAL.adoc.bak`
+- [ ] Update `README.adoc` or repository index with new document locations
+
+---
+
+## Key Benefits of Split
+
+### For Architects
+- Architecture Definition focuses on **patterns and decisions**
+- Solution Architecture focuses on **technology and implementation**
+- Clear separation of concerns
+
+### For Business Stakeholders
+- Initiative document tells the **business story**
+- Customer journeys and value proposition upfront
+- Phased delivery plan visible
+
+### For Engineers
+- Solution Architecture provides **implementation specifications**
+- Technology selections and rationale documented
+- Operational procedures and runbooks included
+
+### For Maintainability
+- Bounded context files are **single source of truth** for aggregates/events
+- Architecture Definition references BC files (no duplication)
+- Each document has single responsibility
+
+### For Reusability
+- Initiative template reusable for future projects
+- Solution Architecture patterns reusable for other integrations
+- Architecture Definition patterns become organizational knowledge

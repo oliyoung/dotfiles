@@ -1,0 +1,544 @@
+=== Target State Architecture
+
+==== Architectural Building Blocks (ABB)
+
+[width="100%",cols="10%,68%,22%",options="header",]
+|===
+|ABB ID | ABB Name | Kind
+|ABB-001 | <<abb-001-profile-service,Profile Service>> | Microservice
+|ABB-002 | <<abb-002-loyalty-service,Loyalty Service>> | Microservice
+|ABB-003 | <<abb-003-location-service,Location Service>> | Microservice
+|ABB-004 | <<abb-004-engagement-service,Engagement Service>> | Microservice
+|ABB-005 | <<abb-005-event-bus,Event Bus>> | Infrastructure
+|ABB-006 | <<abb-006-oauth-service,OAuth Service>> | Microservice
+|ABB-007 | <<abb-007-api-gateway,API Gateway>> | Infrastructure
+|ABB-008 | <<abb-008-application-config,App Config / Feature Flags>> | Infrastructure
+|ABB-009 | <<abb-009-application-monitoring,Application Monitoring>> | Infrastructure
+|ABB-010 | <<abb-010-mobile-application,Mobile Application>> | End User Client
+|ABB-011 | <<abb-011-caching,Caching>> | Infrastructure
+|ABB-012 | <<abb-012-braze-acl,Braze ACL>> | Integration
+|ABB-013 | <<abb-013-flybuys-acl,Flybuys ACL>> | Integration
+|ABB-014 | <<abb-014-eagleeye-acl,EagleEye ACL>> | Integration
+|ABB-015 | <<abb-015-points-file-management,Points File Management>> | Application Service
+|===
+
+[[abb-001-profile-service]]
+===== ABB-001 Profile Service
+
+See xref:bounded-contexts:profile.adoc[ProfileService Bounded Context] for complete architecture documentation.
+
+====== Role in Flybuys Integration
+
+ProfileService manages customer partner account linking and reward preferences, enabling customers to link their Flybuys accounts via OAuth 2.0 and select their preferred reward type.
+
+*Core Responsibilities:*
+
+* OAuth 2.0 partner account linking (Flybuys, Shell Card)
+* Reward preference management (Flybuys Points, Fuel Discount Shell, OTR Rewards)
+* Partner link status tracking and synchronization
+* Reward preference validation (ensures Flybuys Points requires linked account)
+
+*Key Aggregates in Flybuys Integration:*
+
+* `PartnerLink`: Tracks customer linkage to external partners (Flybuys, Shell)
+* `CustomerProfile`: Stores OTR-specific enrichment with VCI reference to Salesforce
+
+*Domain Events Published:*
+
+* `PartnerLinked`: Customer successfully linked partner account
+* `PartnerUnlinked`: Customer unlinked partner account
+* `RewardPreferenceChanged`: Customer changed reward preference
+
+*Integration Pattern:*
+
+* **Upstream**: Salesforce CRM (canonical customer data via Conformist pattern)
+* **Downstream**: LoyaltyService queries synchronously for partner link status during transaction adjudication
+* **Event-Driven**: Publishes partner linking events to Event Bus for EngagementService consumption
+
+*Feature Flags:*
+
+* `OTR.Loyalty.PartnerLink.Flybuys`: Enable Flybuys OAuth linking flow
+* `OTR.Loyalty.RewardPreferenceSelection`: Enable reward preference selection UI
+
+See xref:bounded-contexts:profile.adoc#architecture-decision-log[Profile Service Architecture Decisions] for detailed rationale on:
+
+* Why ProfileService bridges Salesforce and OTR ecosystem
+* Why PartnerLink aggregate moved from LoyaltyService to ProfileService
+* Bidirectional integration pattern with EngagementService
+
+[[abb-002-loyalty-service]]
+===== ABB-002 Loyalty Service
+
+See xref:bounded-contexts:loyalty.adoc[LoyaltyService Bounded Context] for complete architecture documentation.
+
+====== Role in Flybuys Integration
+
+LoyaltyService orchestrates transaction adjudication, manages Flybuys batch posting, and provides loyalty credential resolution for POS integration. Acts as Backend-for-Frontend (BFF) and Anti-Corruption Layer for EagleEye.
+
+*Core Responsibilities:*
+
+* Transaction adjudication orchestration (queries ProfileService for reward preference, EagleEye for campaigns)
+* Flybuys batch file generation and SFTP transmission (daily partner transaction posting)
+* Loyalty credential resolution (EAN-13 barcode → VCI for POS integration)
+* Event translation from EagleEye webhooks to OTR domain events
+
+*Key Aggregate in Flybuys Integration:*
+
+* `RewardTransaction`: Audit trail of transaction adjudication results (30-day TTL)
+  - Stores summary context: itemCount, itemSummary, transactionAmount
+  - Tracks which loyalty schemes participated (FLYBUYS, INTERNAL_OTR)
+  - Records payment method for eligibility audit
+
+*Domain Events Published:*
+
+* `TransactionAdjudicated`: Transaction rewards determined
+* `PointsEarned`: Points earned in loyalty scheme (includes scheme: FLYBUYS or INTERNAL_OTR)
+* `DailyPointsFileGenerated`: Daily Flybuys batch file generated
+* `DailyPointsFileTransmitted`: Batch file transmitted to Flybuys via SFTP
+
+*Integration Patterns:*
+
+* **BFF**: Orchestrates ProfileService (reward preference), EagleEye (campaigns/wallet), Flybuys (balance queries)
+* **ACL for EagleEye**: Translates between EagleEye domain model and OTR domain
+* **Conformist for Flybuys**: Conforms to Flybuys REST API (stable, mature API)
+* **Bidirectional ACL for POS**: Protects Loyalty domain from D365 Commerce coupling
+
+====== POS Integration: Loyalty Credential Resolution
+
+*Critical Flow for Flybuys Integration:*
+
+LoyaltyService provides barcode resolution service that enables POS to determine customer identity and reward preference before transaction adjudication.
+
+*Supported Credentials:*
+
+1. OTR Mobile Application barcode (EAN-13)
+2. SPS Mobile Application barcode (EAN-13)
+3. OTR Loyalty Pass (Apple/Google Wallet)
+4. Physical Flybuys Card (must be pre-linked via OAuth)
+5. Flybuys Mobile Application barcode (must be pre-linked via OAuth)
+
+*Resolution Flow:*
+
+[source,mermaid]
+----
+sequenceDiagram
+    participant POS as POS Terminal
+    participant Loyalty as LoyaltyService
+    participant Profile as ProfileService
+
+    POS->>Loyalty: POST /credentials/resolve<br/>{barcode: "EAN13"}
+    Loyalty->>Loyalty: Decode barcode → externalMemberId
+    Loyalty->>Profile: GET /partners?externalMemberId=xxx
+    Profile-->>Loyalty: {vivaConsumerId, rewardPreference}
+    Loyalty-->>POS: {vivaConsumerId, walletId, rewardPreference}
+    Note over POS,Loyalty: Resolution: <100ms p95
+----
+
+*Why This Matters:*
+
+* Unifies barcode handling across OTR and REXP stores
+* Enables Flybuys earning at all POS locations (not just REXP)
+* Strangler Fig pattern replacing legacy Coupon Scanner
+* Resolves customer identity before transaction adjudication (required for real-time rewards)
+
+====== Flybuys Batch Processing
+
+*Transaction Posting Pattern:*
+
+LoyaltyService implements daily batch file generation and SFTP transmission to Flybuys for partner points posting.
+
+*Key Components:*
+
+* **TransactionClassifier**: Domain service with business rules for base vs bonus points
+* **Batch Job**: Scheduled at 01:00 UTC daily, processes previous business day
+* **File Format**: CSV with PGP encryption, Flybuys-specified schema
+* **Transmission**: SFTP with retry logic (1-hour window for transmission)
+
+*Business Logic (Domain):*
+
+* Fuel earning: 1 point per litre
+* Retail earning: 1 point per $1 spent
+* Product exclusions: tobacco, gift cards, etc.
+* Payment method awareness: Shell Card grants excluded from points calculation
+
+*Implementation Note:*
+
+CSV generation, SFTP transmission, and scheduling are application/infrastructure concerns. Domain logic (classification, eligibility rules, payment method rules) lives in `TransactionClassifier` service.
+
+*Feature Flags:*
+
+* `OTR.Loyalty.TransactionAdjudication`: Enable real-time transaction adjudication
+* `OTR.Loyalty.PointsEarn.Flybuys`: Enable Flybuys points earning
+* `OTR.Loyalty.FlybuysBatchPosting`: Enable daily batch file posting to Flybuys
+
+See xref:bounded-contexts:loyalty.adoc#architecture-decisions[Loyalty Service Architecture Decisions] for detailed rationale on:
+
+* Why LoyaltyService owns only RewardTransaction aggregate (single aggregate principle)
+* Dual-scheme points tracking (Flybuys + Internal OTR shadow balance)
+* Two-phase transaction adjudication (Validation + Redemption) with payment method awareness
+* Why wallet, points ledger, membership, and campaigns are owned by EagleEye
+
+[[abb-003-location-service]]
+===== ABB-003 Location Service
+
+See xref:bounded-contexts:location.adoc[LocationService Bounded Context] for complete architecture documentation.
+
+====== Role in Flybuys Integration
+
+LocationService provides store location data for proximity-based features and campaign targeting. Enables "which loyalty programmes are available at each store" capability (TR-013).
+
+*Core Responsibilities:*
+
+* Store location data management (coordinates, address, store type)
+* Proximity-based store finder
+* Store-specific offer targeting (via EngagementService integration)
+
+*Key Aggregate:*
+
+* `Store`: Store location, operational status, loyalty programme availability
+
+*Integration with Flybuys:*
+
+* Provides store metadata for campaign targeting (Flybuys available at REXP stores)
+* Enables geo-fencing for location-based offers
+* Supports "find stores with Flybuys" feature in mobile app
+
+[[abb-004-engagement-service]]
+===== ABB-004 Engagement Service
+
+See xref:bounded-contexts:engagement.adoc[EngagementService Bounded Context] for complete architecture documentation.
+
+====== Role in Flybuys Integration
+
+EngagementService translates loyalty domain events (partner linking, points earned) into Braze campaign triggers for customer engagement.
+
+*Core Responsibilities:*
+
+* Event-to-campaign trigger routing (OTR domain events → Braze track events)
+* Campaign execution orchestration (via Braze Canvas/Journey Builder)
+* Customer communication preference management (via Braze)
+
+*Architecture Pattern:*
+
+* **Fully Stateless**: Zero aggregates, pure event routing and ACL translation
+* **Bidirectional Braze Integration**: Outbound events trigger campaigns, inbound webhooks track engagement
+
+*Key Events Consumed from Flybuys Integration:*
+
+* `PartnerLinked` (ProfileService) → Trigger "Flybuys linked successfully" campaign
+* `PointsEarned` (LoyaltyService) → Trigger "You earned X points" notification
+* `DailyPointsFileTransmitted` (LoyaltyService) → Analytics tracking
+
+*Key Events Published:*
+
+* `CommunicationSent`: Marketing communication sent to customer
+* `CommunicationOpened`: Customer opened communication
+* `CommunicationClicked`: Customer clicked link in communication
+
+See xref:bounded-contexts:engagement.adoc#architecture-decisions[Engagement Service Architecture Decisions] for rationale on:
+
+* Why EngagementService is fully stateless (all state in Braze/Salesforce)
+* Bidirectional Braze integration pattern
+* Real-time event streaming for immediate campaign triggers
+
+[[abb-005-event-bus]]
+===== ABB-005 Event Bus
+
+====== Context Relationship
+
+Event Bus enables loose coupling between bounded contexts through asynchronous domain event publishing and subscription.
+
+====== Pattern
+
+Open Host Service (OHS) + Published Language (PL) pattern from Domain-Driven Design.
+
+*Key Characteristics:*
+
+* At-least-once delivery guarantees
+* Dead letter queue for failed events
+* CloudEvents 1.0 standard for event schemas
+* Event versioning support (schema evolution)
+
+====== Technology Stack
+
+**Capability Required:** Event Messaging (see <<Technology Capability Requirements>>)
+
+Technology selection documented in xref:solution-architectures:flybuys_integration.adoc#Technology%2520Portfolio%2520Catalogue[Solution Architecture Technology Portfolio Catalogue].
+
+====== Published Language
+
+*Event Schemas:*
+
+All domain events published to Event Bus follow CloudEvents 1.0 specification with OTR-specific extensions:
+
+[source,json]
+----
+{
+  "specversion": "1.0",
+  "type": "com.otr.loyalty.PartnerLinked",
+  "source": "/bounded-contexts/profile",
+  "id": "A234-1234-1234",
+  "time": "2026-01-19T03:56:00Z",
+  "datacontenttype": "application/json",
+  "data": {
+    "vivaConsumerId": "VCI-123456",
+    "partner": "FLYBUYS",
+    "externalMemberId": "123456789012",
+    "linkedAt": "2026-01-19T03:56:00Z"
+  }
+}
+----
+
+*Event Categories:*
+
+* Profile events: `com.otr.profile.*` (ProfileService)
+* Loyalty events: `com.otr.loyalty.*` (LoyaltyService)
+* Engagement events: `com.otr.engagement.*` (EngagementService)
+
+====== Event Consumers
+
+[width="100%",cols="25%,30%,45%",options="header",]
+|===
+|Bounded Context | Events Consumed | Purpose
+|EngagementService | `PartnerLinked`, `PointsEarned`, `TransactionAdjudicated` | Trigger customer engagement campaigns in Braze
+|LoyaltyService | `PartnerLinked`, `PartnerUnlinked`, `RewardPreferenceChanged` | Update eligibility for partner rewards (optional audit)
+|EDP (Data Platform) | All events | Analytics, reporting, data warehouse
+|===
+
+[[abb-006-oauth-service]]
+===== ABB-006 OAuth Service
+
+====== Pattern
+
+Generic infrastructure service providing OAuth 2.0 token management for ANY OTR integration (not loyalty-specific).
+
+====== Rationale
+
+* OAuth token lifecycle is infrastructure concern, not domain logic
+* Generic service reusable across bounded contexts (loyalty, payments, future integrations)
+* Separation enables PCI compliance and security isolation
+* Token refresh/revocation independent from domain services
+
+====== Technology Stack
+
+**Capability Required:** Customer Identity Platform with OAuth 2.0 support (see <<Technology Capability Requirements>>)
+
+Technology selection documented in xref:solution-architectures:flybuys_integration.adoc#Technology%2520Portfolio%2520Catalogue[Solution Architecture Technology Portfolio Catalogue].
+
+====== Responsibilities
+
+* OAuth 2.0 Authorization Code Flow with PKCE
+* Secure token storage (AES-256 encryption via Azure Key Vault)
+* Automatic token refresh (proactive 50-minute timer)
+* Token revocation and cleanup
+* OAuth provider abstraction (Flybuys, future partners)
+
+*What OAuth Service Does NOT Do:*
+
+* Business logic (partner linking status → ProfileService)
+* Domain events (ProfileService publishes `PartnerLinked` event)
+* Partner-specific rules (ProfileService enforces "FLYBUYS_POINTS requires linked account")
+
+====== Integration with Flybuys
+
+[source,mermaid]
+----
+sequenceDiagram
+    participant Mobile as Mobile App
+    participant Profile as ProfileService
+    participant OAuth as OAuth Service
+    participant Flybuys as Flybuys OAuth Server
+    participant KeyVault as Azure Key Vault
+
+    Mobile->>Profile: POST /partners {initiateOAuth}
+    Profile->>OAuth: POST /oauth/authorize {partner: FLYBUYS}
+    OAuth->>Flybuys: Redirect to authorize endpoint
+    Flybuys-->>Mobile: Authorization code
+    Mobile->>Profile: POST /partners {oauthCode, codeVerifier}
+    Profile->>OAuth: POST /oauth/token {code, verifier}
+    OAuth->>Flybuys: POST /token {code, verifier}
+    Flybuys-->>OAuth: {access_token, refresh_token}
+    OAuth->>KeyVault: Store tokens (AES-256)
+    OAuth-->>Profile: {oauthProviderId}
+    Profile->>Profile: Create PartnerLink aggregate
+    Profile-->>Mobile: 201 Created {partnerLinkId}
+----
+
+[[abb-007-api-gateway]]
+===== ABB-007 API Gateway
+
+See xref:bounded-contexts:interfaces:api_gateway.adoc[API Gateway Interface] for complete documentation.
+
+====== Role in Flybuys Integration
+
+API Gateway provides single entry point for mobile app, enforces authentication, and routes requests to appropriate bounded contexts.
+
+*Key Features:*
+
+* OAuth token validation (Microsoft Entra External ID)
+* Rate limiting (prevent abuse)
+* Request/response transformation
+* API versioning support
+
+*Routes for Flybuys Integration:*
+
+* `/api/v1/partners/*` → ProfileService (partner linking)
+* `/api/v1/loyalty/*` → LoyaltyService (transaction adjudication, wallet queries)
+* `/api/v1/flybuys/balance` → LoyaltyService (Flybuys balance query via ACL)
+
+[[abb-008-application-config]]
+===== ABB-008 App Config / Feature Flags
+
+See <<Feature Flag Register>> for complete catalogue.
+
+====== Role in Flybuys Integration
+
+Feature flags enable phased rollout of Flybuys capabilities without code deployment.
+
+*Critical Flags:*
+
+* `OTR.Loyalty.Enabled`: Master switch for all loyalty features
+* `OTR.Loyalty.PartnerLink.Flybuys`: Enable Flybuys OAuth linking flow
+* `OTR.Loyalty.PointsEarn.Flybuys`: Enable Flybuys points earning
+* `OTR.Loyalty.FlybuysBatchPosting`: Enable daily batch file posting
+
+*Rollout Pattern:*
+
+1. Deploy code with flags OFF
+2. Enable in non-production environments
+3. Gradual rollout: 1% → 10% → 50% → 100%
+4. Instant rollback capability if issues detected
+
+[[abb-009-application-monitoring]]
+===== ABB-009 Application Monitoring
+
+====== Role in Flybuys Integration
+
+Distributed tracing and metrics for transaction adjudication flow, partner API calls, and batch processing.
+
+*Key Metrics:*
+
+* Transaction adjudication latency (target: <500ms p95)
+* Partner API availability (Flybuys balance queries)
+* Batch file transmission success rate
+* OAuth linking success/failure rates
+
+*Distributed Tracing:*
+
+Correlation IDs propagate through entire transaction adjudication flow:
+
+Mobile App → API Gateway → ProfileService → LoyaltyService → EagleEye → Flybuys
+
+[[abb-010-mobile-application]]
+===== ABB-010 Mobile Application
+
+See xref:bounded-contexts:interfaces:mobile.adoc[Mobile Application Interface] for complete documentation.
+
+====== Role in Flybuys Integration
+
+Mobile app provides customer-facing UI for Flybuys account linking, reward preference selection, and points balance display.
+
+*Key Features:*
+
+* OAuth 2.0 + PKCE flow for Flybuys linking (security: no client secret)
+* Reward preference selection UI (Flybuys Points, Fuel Discount, OTR Rewards)
+* Real-time Flybuys balance display (cached with 5-minute TTL)
+* Digital loyalty credential (QR code / barcode for POS scanning)
+
+[[abb-011-caching]]
+===== ABB-011 Caching
+
+====== Role in Flybuys Integration
+
+In-memory caching reduces latency for frequently accessed data (Flybuys balance, partner link status).
+
+*Caching Strategy:*
+
+* **Flybuys Balance**: 5-minute TTL (balance changes infrequently)
+* **Partner Link Status**: 10-minute TTL (linking status rarely changes)
+* **Wallet Grants**: 2-minute TTL (offers more dynamic)
+
+*Cache Invalidation:*
+
+* Event-driven: `PartnerLinked` event invalidates partner link cache
+* Time-based: TTL expiry for freshness guarantee
+
+[[abb-012-braze-acl]]
+===== ABB-012 Braze ACL
+
+See xref:bounded-contexts:engagement.adoc#braze-acl[EngagementService Braze ACL] for complete documentation.
+
+====== Role in Flybuys Integration
+
+Translates loyalty domain events into Braze campaign triggers for customer engagement.
+
+*Event Translations:*
+
+* `PartnerLinked` → Braze track event → "Flybuys linked successfully" campaign
+* `PointsEarned` → Braze track event → "You earned X points" notification
+* `TransactionAdjudicated` → Braze track event → Post-transaction survey/offer
+
+[[abb-013-flybuys-acl]]
+===== ABB-013 Flybuys ACL
+
+====== Pattern
+
+**Conformist** - LoyaltyService conforms to Flybuys REST API without translation layer.
+
+====== Rationale
+
+* Flybuys API is stable, well-documented, industry-standard (OAuth 2.0 + REST)
+* Partnership time-bound (2-3 years), ACL overhead not justified
+* API changes unlikely (mature Flybuys platform)
+
+*If Flybuys API becomes unstable:*
+
+Implement ACL adapter in LoyaltyService to protect domain model from partner changes.
+
+====== Integration Points
+
+* **Balance Query**: GET `/members/{memberId}/balance` → cached response
+* **Transaction Posting**: Daily batch SFTP (CSV file)
+* **OAuth**: Standard OAuth 2.0 Authorization Code Flow
+
+[[abb-014-eagleeye-acl]]
+===== ABB-014 EagleEye ACL
+
+See xref:bounded-contexts:loyalty.adoc#eagleeye-acl[LoyaltyService EagleEye ACL] for complete documentation.
+
+====== Role in Flybuys Integration
+
+Translates between EagleEye's loyalty platform model and OTR's domain language.
+
+*Key Translations:*
+
+* EagleEye `Account` → OTR `Wallet` (grants, offers, discounts)
+* EagleEye `Wallet Transaction` → OTR `PointsEarned` domain event
+* EagleEye `Campaign` → OTR campaign eligibility model
+
+[[abb-015-points-file-management]]
+===== ABB-015 Points File Management
+
+====== Responsibility
+
+Application service orchestrating daily Flybuys batch file generation, PGP encryption, and SFTP transmission.
+
+*Domain Logic (in LoyaltyService):*
+
+* `TransactionClassifier`: Business rules for base/bonus points, product exclusions, payment method awareness
+
+*Application Logic (infrastructure):*
+
+* Batch job scheduling (01:00 UTC daily)
+* CSV file generation from classified transactions
+* PGP encryption (Flybuys public key)
+* SFTP transmission with retry logic (1-hour window)
+* Acknowledgement file processing
+
+*Error Handling:*
+
+* Transmission failure: Retry every 5 minutes for 1 hour
+* Partial batch rejection: Log failed transactions, alert operations team
+* SFTP timeout: Circuit breaker pattern, fallback to manual upload
+
+See xref:solution-architectures:flybuys_integration.adoc#Batch%2520Processing[Solution Architecture Batch Processing] for implementation details.

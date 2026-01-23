@@ -1,0 +1,380 @@
+= OTR-002 Flybuys Integration
+:domain: Loyalty
+:domain-architect: O.Young@otr.com.au
+:project: OTR-002
+:status: In Progress
+:target-delivery: 2026-Q2
+:doctype: article
+:toc: left
+:toclevels: 3
+:sectanchors:
+:sectlinks:
+:sectnums:
+:icons: font
+:source-highlighter: highlightjs
+:experimental:
+
+[discrete]
+=== Initiative Information
+
+[cols="2,5"]
+|===
+|Project Code |{project}
+|Domain |{domain}
+|Status |icon:hourglass-half[role=yellow] {status}
+|Target Delivery |{target-delivery}
+|Domain Architect |mailto:{domain-architect}[{domain-architect}]
+|===
+
+'''
+
+== What We're Building
+
+A new Loyalty system that allows all OTRG customers to
+
+[cols="1,2"]
+|===
+| Feature | Description
+
+| Link their Flybuys account
+| via the OTR mobile app (OAuth secure linking)
+
+| Choose their reward preference
+| earn Flybuys points OR OTR fuel discounts at every transaction
+
+| Scan Flybuys cards at POS
+| physical cards, mobile app barcodes, or Apple/Google Wallet passes
+
+| Earn Flybuys points automatically
+| points post to Flybuys account within 24 hours
+
+| Check Flybuys balance
+| in OTR mobile app - real-time balance queries with caching
+|===
+
+== Architecture Approach
+
+NOTE: This and the xref:initiatives:salesforce_customer_support.adoc[Salesforce Customer Support] initiative are the first implementations of the overall Domain-Driven Design (DDD) architecture for OTR Group's digital platform. Depending on sequencing, some architectural elements may be delivered in either initiative.
+
+At its core, this is a foundational architecture with the goal of creating a clear, shared structure for how our digital platforms represent Customers, Decisions, and Outcomes, and to distribute a common understanding of domain knowledge between business and technology.
+
+Instead of embedding business rules and assumptions across apps, POS flows, and third-party tools, it gives teams a common frame of reference, improves communication across product and technology, and makes complex customer journeys easier to reason about, change, and govern.
+
+Importantly, this structure is not specific to this single project, or even loyalty as a capability, it aims to provide a repeatable way to introduce all the capabilities presented in the road-map, from promotions or subscriptions to future partners, without re-wiring core customer and commerce flows each time.
+
+By making domain knowledge explicit and stable, the architecture reduces long-term complexity, lowers delivery risk, and enables the digital and eCommerce ecosystem to evolve with confidence as business priorities shift.
+
+=== New "Profile Service"
+
+Customer partner account management
+
+- Handles Flybuys account linking via OAuth
+- Stores customer reward preferences (Flybuys vs OTR)
+- Manages partner link status (linked/unlinked)
+
+=== New "Loyalty Service"
+
+Transaction processing and partner integration
+
+- Resolves loyalty credentials at POS (Flybuys cards → customer identity)
+- Processes transaction adjudication (calculates rewards)
+- Generates nightly batch files for Flybuys
+- Queries Flybuys balances (with Redis caching)
+
+=== New "Engagement Service"
+
+Customer engagement and notifications
+
+- Consumes domain events from Profile and Loyalty services
+- Triggers customer campaigns and notifications (push, email, in-app)
+- Anti-Corruption Layer for Braze marketing automation
+- Tracks campaign delivery and customer engagement
+
+=== Integration Points
+
+[cols="1,2"]
+|===
+| Integration | Description
+
+| Flybuys APIs
+| OAuth linking, balance queries, batch file acknowledgements
+
+| EagleEye
+| Transaction adjudication engine (determines point earnings)
+
+| Braze
+| Marketing automation platform (via Engagement Service ACL)
+
+| D365 Commerce
+| POS transaction data source
+
+| Azure Key Vault
+| Secure OAuth token storage
+
+| Event Bus
+| Domain events for service coordination
+|===
+
+== Key Capabilities Delivered
+
+[cols="1,2,2"]
+|===
+| Capability | How It Works | Business Value
+
+| *Secure Linking*
+| OAuth 2.0 + PKCE flow (industry standard)
+| Customer trust, compliance with Flybuys security requirements
+
+| *Dual Reward Options*
+| Customer chooses Flybuys points OR OTR fuel discount per transaction
+| Flexibility increases customer satisfaction
+
+| *POS Integration*
+| Barcode scanning (5 credential types supported)
+| Works with existing POS hardware, no customer friction
+
+| *Fast Credential Resolution*
+| <500ms p95 response time
+| No POS checkout delays
+
+| *Batch Points Posting*
+| Nightly batch file to Flybuys (SFTP, PGP encrypted)
+| Meets Flybuys integration standards
+
+| *Balance Visibility*
+| Real-time balance queries with 5-minute cache
+| Reduces Flybuys API costs, fast app response
+
+| *Automated Notifications*
+| Event-driven campaigns via Engagement Service (push, email, in-app)
+| Timely customer communication, improved engagement
+|===
+
+== Customer Journey
+
+=== Mobile App (Account Linking)
+
+. Customer taps "_Link Flybuys Account_" in OTR app
+. Redirects to Flybuys for secure login
+. Customer authorises OTR to access their Flybuys account
+. Returns to OTR app - account linked, reward preference set to Flybuys Points
+. *Customer receives welcome notification*: "_You're earning Flybuys points now!_" (via Engagement Service)
+
+[mermaid]
+----
+sequenceDiagram
+    actor Customer
+    participant OTR as OTR Mobile App
+    participant Flybuys as Flybuys Website
+    participant Engagement as Engagement Service
+
+    Customer ->> OTR: Tap "Link Flybuys Account"
+    OTR ->> Flybuys: Redirect for secure login
+    Customer ->> Flybuys: Enter credentials & authorize OTR
+    Flybuys -->> OTR: Authorization success + redirect
+    OTR ->> OTR: Link Flybuys account\nSet reward preference = Flybuys Points
+    OTR ->> Engagement: Trigger welcome notification
+    Engagement -->> Customer: "You're earning Flybuys points now!"
+----
+
+=== Point-of-Sale (Earning Rewards)
+
+. *Customer* scans *Loyalty Credentials* at POS
+. POS sends *Loyalty Credentials* to Loyalty Service for resolution
+. *Loyalty Service* identifies customer and reward preference
+. Transaction processed through *EagleEye* for *Transaction Adjudication*
+. Points earned, stored locally, batch sent to Flybuys overnight
+. *Customer receives transaction notification*: "_You earned 150 Flybuys points!_" (within seconds via Engagement Service)
+. Customer sees points in Flybuys app within 24 hours
+
+[mermaid]
+----
+sequenceDiagram
+    actor Customer
+    participant POS as POS Terminal
+    participant Loyalty as Loyalty Service
+    participant EagleEye as EagleEye Adjudication
+    participant Engagement as Engagement Service
+    participant Flybuys as Flybuys Platform
+
+    Customer ->> POS: Scan Flybuys card / barcode
+    POS ->> Loyalty: Send barcode for resolution\n(<500ms)
+    Loyalty -->> POS: Customer identified\nReward preference = Flybuys
+    POS ->> EagleEye: Submit transaction for adjudication
+    EagleEye -->> Loyalty: Points earned
+    Loyalty ->> Loyalty: Store points locally
+    Loyalty ->> Flybuys: Batch points (overnight)
+    Loyalty ->> Engagement: Trigger transaction notification
+    Engagement -->> Customer: "You earned 150 Flybuys points!"
+    Flybuys -->> Customer: Points visible in Flybuys app\n(within 24 hours)
+----
+
+== Implementation Phases
+
+Phased Rollout via Feature Flags
+
+[cols="1,2,1,2"]
+|===
+| Phase | Capability Enabled | Users | Success Criteria
+
+| *TS-0: Current State*
+| Legacy OTR App API & Flybuys supported REXP programmes
+| All customers
+| Baseline established
+
+| *TS-1: Foundation*
+| Profile Service (dual-write to legacy)
+| 500 pilot users
+| 100% response parity with legacy API
+
+| *TS-2: Linking*
+| OAuth account linking, balance queries
+| Pilot stores, gradual rollout
+| >95% OAuth success rate
+
+| *TS-3: Grants*
+| Transaction adjudication, POS barcode scanning, batch file posting
+| All OTRG stores
+| >98% batch acknowledgement within 24 hours
+
+| *TS-4: Target State*
+| New platform architecture
+| All customers
+| All OTR App Users have a VCI & Loyalty Wallet
+|===
+
+*Rollback Strategy*: Feature flags allow instant rollback at each phase without code deployment.
+
+== Non-Functional Requirements Met
+
+[cols="1,2,2"]
+|===
+| Requirement | Target | How We Achieve It
+
+| *Credential Resolution Speed*
+| <500ms p95
+| Direct database lookup, cached Flybuys data
+
+| *Balance Query Speed*
+| <2s p95
+| Redis cache with 5-minute TTL, circuit breaker on Flybuys API
+
+| *System Uptime*
+| 99.9% (ProfileService), 99.5% (LoyaltyService), 99.5% (EngagementService)
+| Azure auto-scaling, health checks, monitoring
+
+| *Notification Latency*
+| <500ms p95 (event to notification trigger)
+| Event-driven architecture, Braze webhook integration
+
+| *Batch Window*
+| Complete within 1 hour (01:00-02:00 UTC)
+| Optimized aggregation queries, parallel SFTP upload
+
+| *Points Posting*
+| >98% acknowledged within 24 hours
+| Retry logic, manual intervention alerts
+
+| *Data Residency*
+| All customer data in Australia East region
+| Azure region pinning, compliance validation
+|===
+
+== Risks & Mitigation
+
+[cols="1,1,2"]
+|===
+| Risk | Impact | Mitigation
+
+| *Flybuys API downtime*
+| Customers can't link accounts, balance queries fail
+| Circuit breaker returns cached balance, OAuth linking queued for retry
+
+| *Batch file transmission failure*
+| Points don't post to Flybuys
+| Automatic retry with exponential backoff, manual intervention alerts, regenerate from database
+
+| *Braze webhook failures*
+| Customers don't receive notifications
+| Circuit breaker with dead letter queue, retry logic, monitoring alerts
+
+| *OAuth token expiry*
+| Partner API calls fail silently
+| Automated token refresh every 50 minutes, monitoring alerts on refresh failures
+
+| *POS integration delays*
+| Checkout slowdowns
+| <500ms p95 SLA, timeout fallback to proceed without loyalty
+
+| *Data migration errors*
+| Customer linking status lost
+| Dual-write during TS-1, legacy remains authoritative, validation scripts
+|===
+
+== Key Decisions Made
+
+[cols="1,2,2"]
+|===
+| Decision | Rationale | Trade-off Accepted
+
+| *Event-driven integration* (not REST between services)
+| Loose coupling, resilience to downstream failures
+| Eventual consistency (acceptable per business requirements)
+
+| *Engagement Service as Braze ACL*
+| Isolates domain model from marketing platform changes
+| Additional service to maintain (justifies platform independence)
+
+| *Redis cache for balance queries*
+| Reduce Flybuys API costs, improve response times
+| 5-minute cache staleness (acceptable for balance display)
+
+| *Nightly batch file* (not real-time)
+| Meets Flybuys integration standard, simplifies retry logic
+| 24-hour delay for points posting (acceptable per Flybuys SLA)
+
+| *Dual-write during TS-1*
+| Zero-risk rollback, gradual validation
+| Temporary complexity
+
+| *30-day TTL on RewardTransactions*
+| Audit trail summary only, reduces database costs
+| Full audit trail in external system (D365 Commerce)
+|===
+
+== Future Capacity Delivered
+
+[cols="1,3"]
+|===
+| Stream | Capacity
+
+| *Coaltion Loyalty*
+| Establishes a standard pattern approach to managing link:../ubiquitous_language.adoc#coalition-partner[Coalition Partner] relationships, beyond supporting Flybuys
+
+| *Dealer Loyalty*
+| Creates a generic Loyalty interface uncoupled from end-client POS and terminals, capable of supporting any future Loyalty programme via any channel
+
+| *FTUE*
+| Provides feature flags and automatic loyalty programme enrollment consistent across brand and delivery channel
+
+| *Fuel Gamification*
+| Engagement and Loyalty frameworks that support innovation and experimentation with standardised tooling, making operational changes independent from engineering
+
+| *Loyalty Value Chain*
+| The final transition from segmented and fit-for-purpose existing Loyalty into a singluar group-wide, event-based, scalable and channel-agnostic Loyalty Programme
+
+| *Memberships*
+| Qualified and detailed Customer profiles, connected to a Loyalty capability with best-of-breed Engagement facilities
+
+| *Payment Platform*
+| Genericised Loyalty Credentials enables a Customer to be identified and have their profile resolved by payment tokenisation
+
+| *Product Personalistion*
+| Qualified and detailed Customer profiles, connected to a Loyalty capability with best-of-breed Engagement facilities
+
+| *Stored Value*
+| A brand & channel agnostic centralised Loyalty Service that supports gifting, grant attribution and stored value
+
+| *White Label Delivery*
+|
+|===

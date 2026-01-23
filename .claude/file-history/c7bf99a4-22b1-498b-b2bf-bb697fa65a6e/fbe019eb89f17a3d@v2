@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://api.otr.com.au/schemas/CreateCustomerProfileRequest.schema.json",
+  "title": "Create Customer Profile Request",
+  "description": "Request schema for creating a new customer profile. Used by Just-In-Time Integration during customer login (AS-1 Foundation).",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Customer email address (used as external key for Salesforce Contact upsert).",
+      "example": "customer@example.com"
+    },
+    "firstName": {
+      "type": "string",
+      "description": "Customer first name (optional).",
+      "minLength": 1,
+      "maxLength": 100,
+      "example": "John"
+    },
+    "lastName": {
+      "type": "string",
+      "description": "Customer last name (optional).",
+      "minLength": 1,
+      "maxLength": 100,
+      "example": "Smith"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Customer phone number in E.164 format (optional).",
+      "pattern": "^\\+[1-9]\\d{1,14}$",
+      "example": "+61412345678"
+    },
+    "rewardPreference": {
+      "type": "string",
+      "enum": [
+        "OTR_FUEL_DISCOUNT",
+        "FLYBUYS_POINTS",
+        "SHELL_PRICE_SAVE"
+      ],
+      "description": "Default reward preference (optional, defaults to OTR_FUEL_DISCOUNT).",
+      "default": "OTR_FUEL_DISCOUNT",
+      "example": "OTR_FUEL_DISCOUNT"
+    }
+  },
+  "required": ["email"],
+  "additionalProperties": false
+}

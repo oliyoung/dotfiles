@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+"""
+Convert relative AsciiDoc cross-references to Antora module-based format
+"""
+
+import re
+import os
+from pathlib import Path
+
+# Define conversion mappings
+CONVERSIONS = [
+    # Bounded contexts (all paths including subdirectories)
+    (r'xref:\.\./bounded_context/external/([^[\]#]+)', r'xref:bounded-contexts:\1'),
+    (r'xref:\.\./bounded_context/interfaces/([^[\]#]+)', r'xref:bounded-contexts:\1'),
+    (r'xref:\.\./bounded_context/([^[\]#]+)', r'xref:bounded-contexts:\1'),
+
+    # Domains
+    (r'xref:\.\./domains/([^[\]#]+)', r'xref:domains:\1'),
+
+    # Solution architectures
+    (r'xref:\.\./solution_architectures/([^[\]#]+)', r'xref:solution-architectures:\1'),
+
+    # Architecture definitions
+    (r'xref:\.\./architecture_definitions/([^[\]#]+)', r'xref:architecture-definitions:\1'),
+
+    # Events
+    (r'xref:\.\./events/([^[\]#]+)', r'xref:events:\1'),
+
+    # Executive summaries (go to ROOT)
+    (r'xref:\.\./executive_summaries/([^[\]#]+)', r'xref:ROOT:\1'),
+
+    # Ubiquitous language (goes to ROOT)
+    (r'xref:\.\./ubiquitous_language\.adoc', r'xref:ROOT:ubiquitous_language.adoc'),
+
+    # Specifications - need to handle these specially
+    (r'xref:\.\./specifications/REST/([^[\]#]+)', r'xref:ROOT:\1'),
+    (r'xref:\.\./specifications/AsyncAPI/([^[\]#]+)', r'xref:ROOT:\1'),
+    (r'xref:\.\./specifications/JSON%2520Schemas/([^[\]#]+)', r'xref:ROOT:\1'),
+    (r'xref:/specifications/rest/([^[\]#]+)', r'xref:ROOT:\1'),
+]
+
+def convert_file(file_path):
+    """Convert cross-references in a single file"""
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        original_content = content
+
+        # Apply all conversions
+        for pattern, replacement in CONVERSIONS:
+            content = re.sub(pattern, replacement, content)
+
+        # Only write if changes were made
+        if content != original_content:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            return True
+        return False
+    except Exception as e:
+        print(f"Error processing {file_path}: {e}")
+        return False
+
+def main():
+    """Convert all .adoc files in the repository"""
+
+    # Directories to process
+    directories = [
+        'bounded_context',
+        'domains',
+        'solution_architectures',
+        'architecture_definitions',
+        'events',
+        'executive_summaries',
+    ]
+
+    # Also check root for ubiquitous_language.adoc
+    root_files = ['ubiquitous_language.adoc']
+
+    total_files = 0
+    converted_files = 0
+
+    # Process directories
+    for directory in directories:
+        if not os.path.exists(directory):
+            print(f"Skipping {directory} (not found)")
+            continue
+
+        for root, dirs, files in os.walk(directory):
+            for filename in files:
+                if filename.endswith('.adoc'):
+                    file_path = os.path.join(root, filename)
+                    total_files += 1
+                    if convert_file(file_path):
+                        converted_files += 1
+                        print(f"✓ Converted: {file_path}")
+
+    # Process root files
+    for filename in root_files:
+        if os.path.exists(filename):
+            total_files += 1
+            if convert_file(filename):
+                converted_files += 1
+                print(f"✓ Converted: {filename}")
+
+    print(f"\n{'='*60}")
+    print(f"Conversion complete!")
+    print(f"Total files processed: {total_files}")
+    print(f"Files converted: {converted_files}")
+    print(f"Files unchanged: {total_files - converted_files}")
+    print(f"{'='*60}")
+
+if __name__ == '__main__':
+    main()

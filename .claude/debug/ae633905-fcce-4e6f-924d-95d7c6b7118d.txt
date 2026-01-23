@@ -1,0 +1,99 @@
+2026-01-16T01:51:31.057Z [DEBUG] [init] configureGlobalMTLS starting
+2026-01-16T01:51:31.057Z [DEBUG] [init] configureGlobalMTLS complete
+2026-01-16T01:51:31.057Z [DEBUG] [init] configureGlobalAgents starting
+2026-01-16T01:51:31.057Z [DEBUG] [init] configureGlobalAgents complete
+2026-01-16T01:51:31.060Z [DEBUG] [LSP MANAGER] initializeLspServerManager() called
+2026-01-16T01:51:31.060Z [DEBUG] [LSP MANAGER] Created manager instance, state=pending
+2026-01-16T01:51:31.060Z [DEBUG] [LSP MANAGER] Starting async initialization (generation 1)
+2026-01-16T01:51:31.063Z [DEBUG] [STARTUP] Loading MCP configs...
+2026-01-16T01:51:31.064Z [DEBUG] Found 0 plugins (0 enabled, 0 disabled)
+2026-01-16T01:51:31.064Z [DEBUG] Total LSP servers loaded: 0
+2026-01-16T01:51:31.064Z [DEBUG] [LSP SERVER MANAGER] getAllLspServers returned 0 server(s)
+2026-01-16T01:51:31.064Z [DEBUG] LSP manager initialized with 0 servers
+2026-01-16T01:51:31.064Z [DEBUG] [STARTUP] MCP configs loaded in 1ms
+2026-01-16T01:51:31.064Z [DEBUG] LSP server manager initialized successfully
+2026-01-16T01:51:31.064Z [DEBUG] LSP notification handlers registered successfully for all 0 server(s)
+2026-01-16T01:51:31.066Z [DEBUG] [STARTUP] Running setup()...
+2026-01-16T01:51:31.075Z [DEBUG] Stats cache is up to date
+2026-01-16T01:51:31.095Z [DEBUG] Loading skills from: managed=/etc/claude-code/.claude/skills, user=/home/oliy/.claude/skills, project=[]
+2026-01-16T01:51:31.115Z [DEBUG] Loaded 0 installed plugins from /home/oliy/.claude/plugins/installed_plugins.json
+2026-01-16T01:51:31.122Z [ERROR] Error: Error: EIO: i/o error, scandir '/mnt/c/Users'
+    at readdirSync (unknown)
+    at <anonymous> (/$bunfs/root/claude:12:1883)
+    at rF (/$bunfs/root/claude:11:34565)
+    at readdirSync (/$bunfs/root/claude:12:1844)
+    at eo9 (/$bunfs/root/claude:2935:967)
+    at P7$ (/$bunfs/root/claude:2934:58730)
+    at isRelevant (/$bunfs/root/claude:4924:26506)
+    at isRelevant (/$bunfs/root/claude:4924:26558)
+    at <anonymous> (/$bunfs/root/claude:4924:22127)
+    at map (native:1:11)
+2026-01-16T01:51:31.122Z [DEBUG] Error log sink initialized
+2026-01-16T01:51:31.128Z [DEBUG] Writing to temp file: /home/oliy/.claude/todos/ae633905-fcce-4e6f-924d-95d7c6b7118d-agent-ae633905-fcce-4e6f-924d-95d7c6b7118d.json.tmp.546188.1768528291128
+2026-01-16T01:51:31.136Z [DEBUG] Temp file written successfully, size: 2 bytes
+2026-01-16T01:51:31.136Z [DEBUG] Renaming /home/oliy/.claude/todos/ae633905-fcce-4e6f-924d-95d7c6b7118d-agent-ae633905-fcce-4e6f-924d-95d7c6b7118d.json.tmp.546188.1768528291128 to /home/oliy/.claude/todos/ae633905-fcce-4e6f-924d-95d7c6b7118d-agent-ae633905-fcce-4e6f-924d-95d7c6b7118d.json
+2026-01-16T01:51:31.137Z [DEBUG] File /home/oliy/.claude/todos/ae633905-fcce-4e6f-924d-95d7c6b7118d-agent-ae633905-fcce-4e6f-924d-95d7c6b7118d.json written atomically
+2026-01-16T01:51:31.158Z [DEBUG] getPluginSkills: Processing 0 enabled plugins
+2026-01-16T01:51:31.158Z [DEBUG] Total plugin skills loaded: 0
+2026-01-16T01:51:31.158Z [DEBUG] Total plugin commands loaded: 0
+2026-01-16T01:51:31.159Z [DEBUG] Registered 0 hooks from 0 plugins
+2026-01-16T01:51:31.161Z [DEBUG] [STARTUP] setup() completed in 95ms
+2026-01-16T01:51:31.161Z [DEBUG] [STARTUP] Loading commands and agents...
+2026-01-16T01:51:31.174Z [DEBUG] Total plugin agents loaded: 0
+2026-01-16T01:51:31.174Z [DEBUG] Loaded 0 unique skills (managed: 0, user: 0, project: 0, legacy commands: 0)
+2026-01-16T01:51:31.175Z [DEBUG] getSkills returning: 0 skill dir commands, 0 plugin skills, 0 bundled skills
+2026-01-16T01:51:31.179Z [DEBUG] [STARTUP] Commands and agents loaded in 18ms
+2026-01-16T01:51:31.179Z [DEBUG] [STARTUP] Running showSetupScreens()...
+2026-01-16T01:51:31.180Z [DEBUG] [render] initYoga starting
+2026-01-16T01:51:31.188Z [DEBUG] [Claude in Chrome] Chrome base path does not exist: /home/oliy/.config/google-chrome
+2026-01-16T01:51:31.197Z [DEBUG] Acquired PID lock for 2.1.7 (PID 546188)
+2026-01-16T01:51:31.198Z [DEBUG] Acquired PID lock on running version: /home/oliy/.local/share/claude/versions/2.1.7
+2026-01-16T01:51:31.223Z [DEBUG] [render] initYoga complete
+2026-01-16T01:51:31.278Z [DEBUG] [keybindings] KeybindingSetup initialized with 40 bindings, 0 warnings
+2026-01-16T01:51:31.292Z [DEBUG] Creating shell snapshot for zsh (/bin/zsh)
+2026-01-16T01:51:31.292Z [DEBUG] Looking for shell config file: /home/oliy/.zshrc
+2026-01-16T01:51:31.292Z [DEBUG] Snapshots directory: /home/oliy/.claude/shell-snapshots
+2026-01-16T01:51:31.293Z [DEBUG] Creating snapshot at: /home/oliy/.claude/shell-snapshots/snapshot-zsh-1768528291292-1htqqt.sh
+2026-01-16T01:51:31.293Z [DEBUG] Shell binary exists: true
+2026-01-16T01:51:31.293Z [DEBUG] Execution timeout: 10000ms
+2026-01-16T01:51:31.316Z [DEBUG] [STARTUP] showSetupScreens() completed in 137ms
+2026-01-16T01:51:31.317Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T01:51:31.317Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T01:51:31.326Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T01:51:31.328Z [DEBUG] Initialized versioned plugins system with 0 plugins
+2026-01-16T01:51:31.337Z [DEBUG] Writing to temp file: /home/oliy/.claude.json.tmp.546188.1768528291337
+2026-01-16T01:51:31.337Z [DEBUG] Preserving file permissions: 100600
+2026-01-16T01:51:31.365Z [DEBUG] Temp file written successfully, size: 15289 bytes
+2026-01-16T01:51:31.365Z [DEBUG] Applied original permissions to temp file
+2026-01-16T01:51:31.365Z [DEBUG] Renaming /home/oliy/.claude.json.tmp.546188.1768528291337 to /home/oliy/.claude.json
+2026-01-16T01:51:31.366Z [DEBUG] File /home/oliy/.claude.json written atomically
+2026-01-16T01:51:31.381Z [DEBUG] Getting matching hook commands for SessionStart with query: startup
+2026-01-16T01:51:31.381Z [DEBUG] Found 0 hook matchers in settings
+2026-01-16T01:51:31.381Z [DEBUG] Matched 0 unique hooks for query "startup" (0 before deduplication)
+2026-01-16T01:51:31.386Z [DEBUG] [render] initYoga starting
+2026-01-16T01:51:31.386Z [DEBUG] [render] initYoga complete
+2026-01-16T01:51:31.412Z [DEBUG] [keybindings] Skipping file watcher - user customization disabled
+2026-01-16T01:51:31.417Z [DEBUG] Git remote URL: null
+2026-01-16T01:51:31.417Z [DEBUG] No git remote URL found
+2026-01-16T01:51:31.417Z [DEBUG] Not in a GitHub repository, skipping path mapping update
+2026-01-16T01:51:31.427Z [DEBUG] Shell snapshot created successfully (38137 bytes)
+2026-01-16T01:51:31.466Z [DEBUG] [keybindings] KeybindingSetup initialized with 40 bindings, 0 warnings
+2026-01-16T01:51:31.497Z [DEBUG] [keybindings] KeybindingSetup initialized with 40 bindings, 0 warnings
+2026-01-16T01:51:31.622Z [DEBUG] Failed to check metrics opt-out status: Request failed with status code 403
+2026-01-16T01:51:31.622Z [ERROR] AxiosError: Error
+    at jy (/$bunfs/root/claude:57:1144)
+    at <anonymous> (/$bunfs/root/claude:58:10103)
+    at emit (node:events:92:22)
+    at endReadableNT (internal:streams/readable:862:50)
+    at processTicksAndRejections (native:7:39)
+    at request (/$bunfs/root/claude:60:2149)
+    at processTicksAndRejections (native:7:39)
+2026-01-16T01:51:31.800Z [DEBUG] Successfully refreshed marketplace: claude-plugins-official
+2026-01-16T01:51:31.800Z [DEBUG] Plugin autoupdate: checking installed plugins
+2026-01-16T01:51:32.211Z [DEBUG] rg error (signal=null, code=2, stderr: rg: /mnt/c/Users/o.young/work/architecture: IO error for operation on /mnt/c/Users/o.young/work/architecture: Input/output error (os error 5)
+), 0 results
+2026-01-16T01:51:32.224Z [DEBUG] Skills and commands included in Skill tool:
+2026-01-16T01:51:32.225Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-16T01:51:32.225Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-16T01:51:32.225Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-16T01:51:32.228Z [DEBUG] Ripgrep first use test: PASSED (mode=builtin, path=/home/oliy/.local/share/claude/versions/2.1.7)

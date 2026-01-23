@@ -1,0 +1,511 @@
+= Profile Bounded Context
+O.Young@otr.com.au
+v0.1, 2025-12-19
+:project-name: OTRG Apps & Ecommerce Architecture
+:togaf-adm-phase: Phase C: Information Systems Architectures
+:document-type: Bounded Context
+:status: Draft
+:version: 0.1
+:domain: Profile
+:bounded-context-type: APPLICATION
+:domain-architect: O.Young@otr.com.au
+:doctype: article
+:toc: left
+:toclevels: 4
+:sectanchors:
+:sectlinks:
+:sectnums:
+:icons: font
+:source-highlighter: highlightjs
+:experimental:
+:description: Bounded Context for the Profile Domain
+:keywords: profile, customer, bounded context, togaf, ddd
+
+== ProfileService
+
+Unified customer profile service providing enriched customer data for
+OTRG ecosystem.
+
+=== Related Initiatives
+
+ProfileService is a foundational bounded context supporting multiple strategic initiatives:
+
+* **xref:initiatives:salesforce_customer_support.adoc[OTR-001 Salesforce Customer Support]**: Provides Just-In-Time Contact reconciliation with Salesforce Service Cloud
+* **xref:initiatives:flybuys_integration.adoc[OTR-002 Flybuys Integration]**: Manages customer partner account linking (Flybuys, Shell) and reward preference tracking
+
+NOTE: These initiatives are the first implementations of OTR's Domain-Driven Design (DDD) architecture. Depending on sequencing, ProfileService capabilities may be delivered incrementally across either initiative.
+
+=== Domain Vision Statement
+
+Provide unified, enriched customer profiles bridging
+link:external/salesforce_crm.adoc[Salesforce] canonical
+data with OTRG-specific attributes, behavioral insights, and risk
+assessments.
+
+=== Responsibilities
+
+**Core Capabilities (All Initiatives):**
+
+* OTR-specific customer profile management
+* Customer lifecycle stage and onboarding tracking
+* Engagement metrics caching for profile enrichment
+
+**Salesforce Customer Support (OTR-001):**
+
+* Just-In-Time Contact reconciliation with Salesforce Service Cloud
+* Contact ID resolution for feedback submission
+* Foundation for unified customer view across Viva Energy channels
+
+**Flybuys Integration (OTR-002):**
+
+* Partner linking status tracking (Flybuys, Shell Card)
+* Reward preference management (Flybuys Points, Fuel Discount, OTR Rewards)
+* OAuth partner account linking coordination
+
+**Future Capabilities:**
+
+* Customer risk assessment (fraud, refund, churn)
+* Refund history tracking
+
+=== Implementation Technology
+
+Azure Functions, .NET Core, Azure SQL,
+link:external/salesforce_crm.adoc[Salesforce] API,
+link:interfaces/[Event Bus]
+
+=== What This Service Owns
+
+ProfileService owns OTR-specific enrichment data and bridges
+link:external/salesforce_crm.adoc[Salesforce] canonical
+customer records.
+
+==== Core Aggregates
+
+[width="100%",cols="9%,91%",options="header",]
+|===
+|Aggregate Name |Description
+|`CustomerProfile` |OTRG-specific Customer profile attributes enriching
+link:external/salesforce_crm.adoc[Salesforce] canonical
+data. Stores behavioural data, preferences, and app-specific attributes.
+
+|`PartnerLink` |Securely connects Customers’ OTRG accounts to external
+partner services (like Flybuys and Shell) using industry-standard
+authentication. Manages the connection status and customer preferences.
+
+|`RiskAssessment` |Customer risk, fraud, and value scores for instant
+refund decisions. Provides both computed scores and raw factors for
+transparency.
+
+|`RefundHistory` |Customer refund transaction history for risk
+assessment. Tracks refund requests, processing, and outcomes.
+|===
+
+==== NOT in this Context (Owned by Other Systems)
+
+[width="100%",cols="26%,65%,9%",options="header",]
+|===
+|Action / Entity |Description |Relationship
+|Canonical Customer data |Name, email, phone →
+link:external/salesforce_crm.adoc[Salesforce] CRM |HTTPS
+API
+
+|Viva Consumer ID (VCI) generation |Customer identifier generation →
+link:external/salesforce_crm.adoc[Salesforce] CRM |HTTPS
+API
+
+|Marketing communication preferences |Communication preferences → Braze
+(via EngagementService) |Event Bus
+
+|Loyalty status |Points, tiers, wallet → EagleEye (via LoyaltyService)
+|Event Bus
+
+|Transaction details |Full transaction data → D365 Commerce (POS
+Context) |Event Bus
+
+|Reward transaction adjudication |Transaction reward processing →
+LoyaltyService |HTTPS API
+
+|OAuth tokens |OAuth token management → OAuth Service (Infrastructure)
+|Infrastructure
+|===
+
+=== Domain Events
+
+==== Profile Lifecycle Events
+
+* *ProfileCreated*: New customer profile created
+* *ProfileUpdated*: Customer profile information updated
+* *ProfileVerificationChanged*: Profile verification status changed
+(email/phone verification)
+* *ProfileCompletenessChanged*: Profile completeness score changed
+(0-100)
+* *LifeCycleStageChanged*: Customer lifecycle stage changed (PROSPECT →
+NEW → ACTIVE → DORMANT → AT_RISK → CHURNED)
+* *OnboardingCompleted*: Customer completed onboarding flow
+* *OnboardingProgressUpdated*: Customer progressed through onboarding
+steps
+
+==== Partner Linking Events (Moved from LoyaltyService)
+
+* *PartnerLinked*: Customer linked external partner account (Flybuys,
+Shell)
+* *PartnerUnlinked*: Customer unlinked external partner account
+* *PartnerLinkChanged*: Partner link status changed (LINKED →
+SYNC_FAILED → UNLINKED)
+* *RewardPreferenceChanged*: Customer changed reward program preference
+(FLYBUYS_POINTS, FUEL_DISCOUNT_SHELL, OTR_REWARDS)
+
+==== Risk Assessment Events
+
+* *RiskStatusChanged*: Customer risk status changed (LOW → MEDIUM → HIGH
+→ CRITICAL)
+* *FraudIndicatorDetected*: Potential fraud indicator detected (multiple
+accounts, chargeback pattern, login anomaly, etc.)
+
+==== Refund History Events
+
+* *RefundRequested*: Customer requested refund
+* *RefundProcessed*: Refund processed and completed
+
+=== Key Services
+
+[width="100%",cols="19%,81%",options="header",]
+|===
+|Service Name |Description
+|`ProfileQueryService` |Query customer profile
+(link:external/salesforce_crm.adoc[Salesforce] canonical
++ OTR enrichment), profile completeness, partner links
+
+|`RiskAssessmentService` |Get comprehensive risk assessment (scores +
+raw factors), calculate risk scores, fraud/refund/churn risk queries
+
+|`RefundHistoryService` |Query refund history, record new refund
+requests, calculate refund statistics
+
+|`PartnerLinkService` |Create partner link, update reward preference,
+sync with partner, revoke partner link
+
+|`EngagementSyncService` |Update cached engagement summary from
+EngagementService, get cached engagement summary
+
+|`[Salesforce](external/salesforce_crm.adoc)ProfileAdapter`
+|ACL for link:external/salesforce_crm.adoc[Salesforce]
+integration - query canonical customer data, resolve email to VCI,
+validate VCI
+|===
+
+=== Integration Points
+
+* *Upstream*:
+link:external/salesforce_crm.adoc[Salesforce] (canonical
+customer data), EngagementService (engagement metrics)
+* *Downstream*: LoyaltyService, EngagementService, RefundService
+(future)
+* *Bidirectional*: EngagementService (profile enrichment ↔ engagement
+summaries)
+
+=== Bounded Context Boundaries
+
+* ProfileService enriches
+link:external/salesforce_crm.adoc[Salesforce] canonical
+data with OTR-specific attributes
+* link:external/salesforce_crm.adoc[Salesforce] is system
+of record for customer identity and core contact details
+* ProfileService is system of record for OTR-specific behavior and risk
+data
+* More volatile than
+link:external/salesforce_crm.adoc[Salesforce] (frequent
+updates from app usage, transactions)
+
+=== Architecture Decision Log
+
+==== Decision 0: ProfileService as Foundation for Multiple Initiatives
+
+*Decision:* ProfileService is designed as a foundational bounded context supporting both xref:initiatives:salesforce_customer_support.adoc[OTR-001 (Salesforce Customer Support)] and xref:initiatives:flybuys_integration.adoc[OTR-002 (Flybuys Integration)] initiatives.
+
+*Rationale:*
+
+* Both initiatives require customer identity management
+* Both initiatives integrate with Salesforce (OTR-001 for Cases, OTR-002 for VCI)
+* ProfileService provides reusable capabilities across initiatives
+* Implementing ProfileService once reduces duplication and complexity
+* Establishes DDD architecture pattern for future bounded contexts
+
+*Capabilities per Initiative:*
+
+**Salesforce Customer Support (OTR-001):**
+
+* Just-In-Time Contact reconciliation (upsert by email)
+* Salesforce Contact ID resolution for feedback submission
+* Foundation for unified customer view
+* Enables Case creation with validated Contact IDs
+
+**Flybuys Integration (OTR-002):**
+
+* Partner account linking (Flybuys, Shell Card)
+* Reward preference tracking (Flybuys Points vs Fuel Discount)
+* OAuth token coordination with infrastructure OAuth Service
+* Enables Flybuys earning at POS
+
+*Implementation Approach:*
+
+* Core ProfileService aggregates support both use cases
+* `CustomerProfile` aggregate stores Salesforce VCI and OTR enrichment
+* `PartnerLink` aggregate (OTR-002) can be implemented independently
+* Salesforce integration (OTR-001) establishes VCI as customer identifier
+* Either initiative can deliver ProfileService first, other reuses foundation
+
+*Sequencing Flexibility:*
+
+* If OTR-001 first: ProfileService Contact reconciliation enables feedback, `PartnerLink` added later
+* If OTR-002 first: ProfileService partner linking enables Flybuys, Contact reconciliation added later
+* Both initiatives benefit from shared Salesforce integration patterns
+
+==== Decision 1: ProfileService Bridges link:external/salesforce_crm.adoc[Salesforce] and OTR Ecosystem
+
+*Decision:* ProfileService acts as an Anti-Corruption Layer between
+link:external/salesforce_crm.adoc[Salesforce] (canonical
+customer records) and OTR-specific profile data.
+
+*Rationale:*
+
+* link:external/salesforce_crm.adoc[Salesforce] owns
+canonical customer identity (VCI, name, email, phone)
+* OTR App Database contains richer OTR-specific profile data
+* Admin portal currently operates independently from
+link:external/salesforce_crm.adoc[Salesforce]
+* ProfileService evolves existing OTR App database to bridge both
+systems
+* VCI (Viva Consumer ID) will be introduced through either xref:initiatives:salesforce_customer_support.adoc[OTR-001] or xref:initiatives:flybuys_integration.adoc[OTR-002] initiative
+
+*Current State:*
+
+* OTR App Database → Admin Portal (email-keyed, no VCI)
+* link:external/salesforce_crm.adoc[Salesforce] → Viva
+brands (VCI-keyed)
+* No connection between systems
+
+*Future State:*
+
+* ProfileService stores OTR-specific enrichment with VCI
+* Queries link:external/salesforce_crm.adoc[Salesforce]
+for canonical customer data
+* Admin portal enhanced to use VCI
+* External systems (EagleEye, Braze) keyed by VCI
+
+*Implementation:*
+
+* ProfileService stores OTR-specific attributes with VCI reference
+* Synchronous queries to
+link:external/salesforce_crm.adoc[Salesforce] for
+canonical customer data
+* Customer-Supplier (Conformist) pattern with
+link:external/salesforce_crm.adoc[Salesforce]
+* ProfileService owns OTR enrichment,
+link:external/salesforce_crm.adoc[Salesforce] owns
+identity
+
+==== Decision 2: Risk Assessment for Instant Refunds
+
+*Decision:* ProfileService provides scored risk assessment and raw
+factors to enable instant refund decisions by other business units.
+
+*Rationale:*
+
+* Current refund turnaround is 15 days due to poor workflows
+* Target: Immediate refunds for right customers based on risk profile
+* Risk profile = loyalty + fraud + behavioral factors
+* ProfileService doesn’t process refunds, just provides assessment
+
+*Risk Assessment Factors:*
+
+*ProfileService Owned:*
+
+* Refund history (count, frequency, amounts, reasons)
+* Transaction behavior (frequency, recency, transaction value)
+* Account health (tenure, verification status)
+* Fraud indicators (disputes, chargebacks, anomalies)
+* Engagement metrics (app usage, support interactions)
+* Customer value (lifetime value, profitability)
+
+*Aggregated from Other Services:*
+
+* Loyalty tier/status → LoyaltyService
+
+*API Design:*
+
+* Provides both computed risk score AND raw factors
+* Enables other business units to apply their own scoring logic
+* Transparency for audit and debugging
+
+*Implementation:*
+
+* RiskAssessment aggregate calculates scores
+* REST API endpoint: GET /profiles/\{vci}/risk-assessment
+* Admin portal can display for customer service agents
+* Future: RefundService orchestrates instant refund decisions
+
+==== Decision 3: PartnerLink Aggregate Moved from LoyaltyService
+
+*Decision:* PartnerLink aggregate moved from LoyaltyService to
+ProfileService.
+
+*Rationale:*
+
+* Partner linking is customer profile data, not loyalty transaction data
+* ProfileService is natural home for customer relationships
+* Reduces LoyaltyService complexity to single aggregate
+(RewardTransaction)
+
+*Migration Impact:*
+
+* LoyaltyService queries ProfileService synchronously for partner link
+status
+* Pattern: GET /profiles/\{vci}/partner-links
+* Similar to how LoyaltyService queries EagleEye (real-time
+orchestration)
+
+*Implementation:*
+
+* PartnerLink aggregate tracks linking status and reward preference
+* OAuth tokens managed by infrastructure OAuth Service (not in
+aggregate)
+* ProfileService publishes PartnerLinked/PartnerUnlinked events
+* LoyaltyService consumes events for auditing/analytics
+
+==== Decision 4: Bidirectional Integration with EngagementService
+
+*Decision:* ProfileService and EngagementService have bidirectional
+integration with hybrid event/batch synchronization pattern.
+
+*Rationale:*
+
+* Both services need data from each other
+* Each maintains system of record status for their domain
+* Eventual consistency acceptable (not real-time)
+* Strong event-based architecture with pragmatic batching
+
+*ProfileService → EngagementService (for segmentation/targeting):*
+
+* Events: ProfileCreated, ProfileUpdated, PartnerLinkChanged,
+RiskStatusChanged
+* Batch: Daily profile enrichment (risk scores, profile completeness)
+* Use case: Campaign targeting, segmentation
+
+*EngagementService → ProfileService (for profile enrichment):*
+
+* Events: EngagementTierChanged (highly engaged → disengaged)
+* Batch: Daily engagement score rollup (click rates, app usage
+summaries)
+* Use case: Risk assessment, profile completeness
+
+*Each Service is System of Record:*
+
+* EngagementService owns: Campaign interactions, notification
+preferences
+* ProfileService owns: Customer attributes, risk scores, partner links
+
+*Implementation:*
+
+* Open Host Service + Published Language pattern (both directions)
+* Event Bus for real-time critical changes
+* Scheduled batch jobs for comprehensive summaries
+* Cached summaries stored locally (eventual consistency)
+
+==== Decision 5: ProfileService More Volatile Than link:external/salesforce_crm.adoc[Salesforce]
+
+*Decision:* ProfileService updates more frequently than
+link:external/salesforce_crm.adoc[Salesforce] because it
+tracks behavioral and transactional data.
+
+*Rationale:*
+
+* link:external/salesforce_crm.adoc[Salesforce]:
+Canonical customer data changes infrequently (name, email)
+* ProfileService: Behavioral data changes constantly (app usage,
+transactions)
+* ProfileService optimized for high-frequency updates
+* link:external/salesforce_crm.adoc[Salesforce] optimized
+for identity and contact management
+
+*Volatility Comparison:*
+
+* link:external/salesforce_crm.adoc[Salesforce] updates:
+Customer changes email, phone, address (infrequent)
+* ProfileService updates: Every transaction, login, app interaction
+(frequent)
+
+*Implementation:*
+
+* ProfileService database optimized for write-heavy workload
+* link:external/salesforce_crm.adoc[Salesforce] sync
+handles identity changes only
+* No need for ProfileService to push behavioral data to
+link:external/salesforce_crm.adoc[Salesforce]
+* ProfileService is authoritative for OTR behavioral data
+
+==== Decision 6: Synchronous Integration from LoyaltyService
+
+*Decision:* LoyaltyService queries ProfileService synchronously for
+partner link status during transaction adjudication.
+
+*Rationale:*
+
+* Transaction adjudication needs current partner status
+* Real-time query ensures accuracy
+* Similar pattern to LoyaltyService querying EagleEye
+* No local caching complexity
+
+*Flow:*
+
+[arabic]
+. Transaction adjudication request arrives at LoyaltyService
+. LoyaltyService queries ProfileService: GET
+/profiles/\{vci}/partner-links
+. ProfileService returns partner linking status
+. LoyaltyService uses status for reward calculation
+. Transaction adjudication completes
+
+*Implementation:*
+
+* REST API for partner link queries
+* Low latency required (<100ms)
+* Circuit breaker pattern for resilience
+* Fallback to default (OTR Rewards) if ProfileService unavailable
+
+=== Key Architectural Patterns
+
+==== 1. Anti-Corruption Layer (ACL)
+
+* link:external/salesforce_crm.adoc[Salesforce]ProfileAdapter:
+Protects domain from
+link:external/salesforce_crm.adoc[Salesforce] API changes
+* Translates between
+link:external/salesforce_crm.adoc[Salesforce]
+Contact/Person Account and OTR profile model
+* Single place to update when
+link:external/salesforce_crm.adoc[Salesforce] changes
+
+==== 2. Backend-for-Frontend (BFF)
+
+* ProfileService aggregates from multiple sources
+(link:external/salesforce_crm.adoc[Salesforce],
+EngagementService)
+* Provides unified profile API for mobile app and other services
+* Enriches canonical data with OTR-specific attributes
+
+==== 3. Hybrid Event/Batch Synchronization
+
+* Critical changes via domain events (real-time)
+* Comprehensive summaries via batch jobs (periodic)
+* Balances consistency needs with performance
+
+==== 4. Query-and-Enrich Pattern
+
+* Queries link:external/salesforce_crm.adoc[Salesforce]
+for canonical customer data (real-time)
+* Enriches with OTR-specific attributes from local database
+* Returns unified CustomerProfileResponse
+* No local caching of
+link:external/salesforce_crm.adoc[Salesforce] data
+(always fresh)

@@ -1,0 +1,1233 @@
+     1→= Salesforce Customer Support
+     2→:project-name: Salesforce Customer Support
+     3→:togaf-adm-phase: Phase C: Information Systems Architectures
+     4→:last-updated: 2026-01-07
+     5→:document-type: Solution  Definition Document
+     6→:status: Discovery
+     7→:version: 0.1
+     8→:programme-lead:
+     9→:domain-architect: O.Young@otr.com.au
+    10→:doctype: article
+    11→:toc: left
+    12→:toclevels: 4
+    13→:sectanchors:
+    14→:sectlinks:
+    15→:sectnums:
+    16→:icons: font
+    17→:source-highlighter: highlightjs
+    18→:experimental:
+    19→:description:
+    20→:keywords:
+    21→
+    22→<<<
+    23→== Introduction & Vision
+    24→
+    25→=== Purpose
+    26→
+    27→OTR digital customers currently submit feedback and support requests through D365 Customer Engagement, while Viva Energy's broader business units use Salesforce Service Cloud. This fragmentation prevents support agents from having a unified view of customer interactions and creates operational inefficiency.
+    28→
+    29→This architecture definition documents the **first implementation of OTR's target Domain-Driven Design (DDD) architecture** by establishing two new bounded contexts (ProfileService and EngagementService), consolidating customer support onto Salesforce Service Cloud, and implementing event-driven integration patterns that will serve as the foundation for future bounded contexts (including Flybuys integration).
+    30→
+    31→=== Vision
+    32→
+    33→> Unify customer support across all Viva Energy channels by consolidating OTR digital customer feedback onto Salesforce Service Cloud, establishing the foundational DDD architecture with ProfileService and EngagementService bounded contexts that protect digital channels from external system changes while enabling support agents to deliver exceptional customer experiences with complete interaction history.
+    34→
+    35→=== Architectural Approach
+    36→
+    37→This architecture establishes OTR's **first bounded context implementation** using Domain-Driven Design strategic patterns:
+    38→
+    39→* *link:../bounded_context/profile.adoc[ProfileService]* (NEW bounded context): Just-In-Time Contact reconciliation with Salesforce, upsert by email, returns Salesforce Contact ID to digital channels - foundation for future Flybuys partner linking
+    40→* *link:../bounded_context/engagement.adoc[EngagementService]* (NEW bounded context): Customer feedback submission facade, Anti-Corruption Layer for Salesforce Case creation, Braze integration for push notifications, async Case processing via Event Bus
+    41→* *Event-driven integration* (NEW pattern): Domain event publishing using existing AWS infrastructure (SNS+SQS/EventBridge/Kinesis) - first implementation establishing pattern for future bounded contexts
+    42→* *Anti-Corruption Layer*: EngagementService isolates digital channels from Salesforce API changes, translates between OTR domain language and Salesforce Service Cloud API
+    43→* *Conformist Pattern*: ProfileService and EngagementService conform to existing Salesforce configuration (shared Viva Energy instance, multi-tenant governance)
+    44→* *Big bang cutover*: Single deployment after Contact migration, no phased rollout, D365 CE retirement post-cutover
+    45→
+    46→=== Scope
+    47→
+    48→==== In Scope
+    49→
+    50→- Solution Building Blocks (SBBs) - specific technology products and versions
+    51→- Interface specifications (APIs, events, data formats)
+    52→- Data architecture and schema specifications
+    53→- Deployment architecture and infrastructure configuration
+    54→- Transition architecture with phased implementation states
+    55→- Technical validation criteria and testing approach
+    56→- External system integration specifications
+    57→
+    58→=== Out Of Scope (covered in Architecture Definition):
+    59→- Business requirements and stakeholder analysis
+    60→- Architecture decisions and rationale (ADRs)
+    61→- Bounded context definitions and responsibilities
+    62→- High-level integration patterns (ACL, Conformist, OHS+PL)
+    63→- Business capability mapping and value streams
+    64→- Non-functional requirements (referenced, not duplicated)
+    65→- Architecture principles and governance
+    66→
+    67→=== Architecture Overview
+    68→
+    69→[mermaid]
+    70→----
+    71→---
+    72→config:
+    73→  layout: elk
+    74→---
+    75→flowchart TB
+    76→    Customer(["Customer"]) -- Uses --> MobileApp["Mobile App<br>iOS/Android"]
+    77→    Customer -- Shops at --> POS["OTR/OTR+ POS<br>D365 Commerce"]
+    78→    MobileApp -- Authenticate --> EntraID["Microsoft Entra"]
+    79→    MobileApp -- Identifies & Reconciles --> ProfileService["ProfileService"]
+    80→    ProfileService <-- Reconcile App User as Salesforce Contact --> Salesforce["Salesforce"]
+    81→    ProfileService -- On Create --> EventBus["EventBus"]
+    82→    EventBus -- Emits CreateUser Event --> LoyaltyService["LoyaltyService"] & EngagementService["EngagementService"]
+    83→    LoyaltyService -- Reconcile Wallet --> EagleEye["EagleEye"]
+    84→    EngagementService -- Reconcile Braze Profile --> Braze["Braze"]
+    85→    EngagementService --> Salesforce
+    86→    D365CE["D365CE"] -- Data Migration --> Salesforce
+    87→    MobileApp -- Submits Feedback --> EngagementService
+    88→
+    89→    Customer:::customer
+    90→    MobileApp:::presentation
+    91→    POS:::presentation
+    92→    EntraID:::external
+    93→    ProfileService:::newService
+    94→    Salesforce:::external
+    95→    EventBus:::infrastructure
+    96→    LoyaltyService:::newService
+    97→    EngagementService:::newService
+    98→    EagleEye:::external
+    99→    Braze:::external
+   100→    D365CE:::external
+   101→    classDef newService fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+   102→    classDef external fill:#FF9800,stroke:#E65100,stroke-width:2px,color:#fff
+   103→    classDef infrastructure fill:#2196F3,stroke:#0D47A1,stroke-width:2px,color:#fff
+   104→    classDef presentation fill:#9C27B0,stroke:#4A148C,stroke-width:2px,color:#fff
+   105→    classDef customer fill:#607D8B,stroke:#263238,stroke-width:2px,color:#fff
+   106→----
+   107→
+   108→
+   109→==== Key Architectural Patterns
+   110→
+   111→[width="100%",cols="25%,35%,40%",options="header",]
+   112→|===
+   113→|Pattern |Application |Rationale
+   114→
+   115→|*Anti-Corruption Layer (ACL)*
+   116→|EngagementService → Salesforce Service Cloud
+   117→|Protects digital channels (Mobile App, Web) from Salesforce API changes, translates between OTR domain language and Salesforce Case/Contact model, enables independent evolution of internal domain model
+   118→
+   119→|*Conformist*
+   120→|ProfileService → Salesforce, EngagementService → Salesforce
+   121→|Shared Viva Energy Salesforce instance - we conform to existing configuration, governance, and API contracts (external system we don't control)
+   122→
+   123→|*Backend-for-Frontend (BFF)*
+   124→|EngagementService
+   125→|Aggregates customer feedback submission, Contact lookup, async Case creation, and Braze notification orchestration for digital channel clients
+   126→
+   127→|*Event-Driven Architecture (OHS+PL)*
+   128→|Event Bus (SNS+SQS/EventBridge/Kinesis)
+   129→|Loose coupling between bounded contexts, async domain event publishing (`SupportCaseCreated`, `SupportCaseUpdated`, `CustomerFeedbackSubmitted`), foundation for future bounded contexts
+   130→
+   131→|*Just-In-Time (JIT) Integration*
+   132→|ProfileService → Salesforce Contact reconciliation
+   133→|Reconcile app users as Salesforce Contacts on-demand (upsert by email), no pre-sync required, ensures Salesforce has current Contact data
+   134→
+   135→|*Async Processing*
+   136→|EngagementService Case creation via Event Bus
+   137→|Non-blocking user experience, resilience to Salesforce downtime, automatic retry with exponential backoff, dead letter queue for operations team intervention
+   138→
+   139→|*Strangler Fig*
+   140→|Not applicable
+   141→|Big bang cutover (no gradual migration) - D365 CE fully replaced, not incrementally strangled
+   142→
+   143→|===
+   144→
+   145→
+   146→<<<
+   147→== Executive Summary
+   148→
+   149→=== Challenge
+   150→
+   151→OTR digital customers (Mobile App, Web) currently submit feedback and support requests to D365 Customer Engagement, while Viva Energy's broader business units (fuel wholesale, Shell Card customers, other retail channels) use Salesforce Service Cloud. This creates:
+   152→
+   153→* *Fragmented customer support platform*: Customer support data split across two systems, preventing support agents from having a unified view of customer interactions across all channels
+   154→* *Operational inefficiency*: Maintaining two separate customer support platforms increases operational overhead and costs
+   155→* *Poor support experience*: D365 CE is not working well for digital customer support, impacting customer satisfaction and case resolution times
+   156→* *Post-merger consolidation opportunity*: Following Viva Energy's acquisition of OTR, strategic alignment on Salesforce as the enterprise customer support platform
+   157→
+   158→=== Solution
+   159→
+   160→This architecture establishes the **foundational Domain-Driven Design (DDD) implementation** for OTR's target state architecture by introducing two new bounded contexts (link:../bounded_context/profile.adoc[ProfileService], link:../bounded_context/engagement.adoc[EngagementService]) and event-driven integration patterns:
+   161→
+   162→==== New Bounded Contexts
+   163→
+   164→* *link:../bounded_context/profile.adoc[ProfileService]* (NEW): Just-In-Time (JIT) Contact reconciliation with Salesforce, upsert by email, returns Salesforce Contact ID to Mobile App
+   165→* *link:../bounded_context/engagement.adoc[EngagementService]* (NEW): Customer feedback submission, Anti-Corruption Layer (ACL) for Salesforce Case creation, Braze integration for customer notifications, async Case processing via Event Bus
+   166→* *Event Bus* (NEW pattern): Domain event publishing using existing AWS infrastructure (SNS+SQS/EventBridge/Kinesis) - first implementation of event-driven architecture pattern
+   167→
+   168→==== Integration Architecture
+   169→
+   170→* *Salesforce = System of Record*: Salesforce Service Cloud (shared Viva Energy instance) owns Contact and Case data
+   171→* *Conformist Pattern*: ProfileService and EngagementService conform to existing Salesforce configuration and API contracts
+   172→* *Anti-Corruption Layer*: EngagementService protects digital channels from Salesforce API changes, translates between OTR domain language and Salesforce
+   173→* *Async Case Creation*: Non-blocking user experience, resilience to Salesforce downtime, automatic retry with exponential backoff, dead letter queue for failed Cases
+   174→* *Event-Driven Notifications*: Salesforce webhook → EngagementService → Braze push notifications for Case status updates
+   175→
+   176→==== Migration Approach
+   177→
+   178→* *Contact Migration*: One-time migration from app-specific database → Salesforce (upsert with flexible matching by email/phone/VCI)
+   179→* *No Case Migration*: Historical D365 CE Cases not migrated (fresh start in Salesforce)
+   180→* *Big Bang Cutover*: Single deployment, no phased rollout or parallel run
+   181→* *D365 CE Retirement*: Complete decommissioning of D365 Customer Engagement post-cutover
+   182→
+   183→=== Key Architectural Significance
+   184→
+   185→This migration is **not just a system replacement** - it establishes the first implementation of OTR's target DDD architecture:
+   186→
+   187→* First bounded contexts implemented (ProfileService, EngagementService)
+   188→* First event-driven domain event pattern (foundation for future bounded contexts)
+   189→* Foundation for Flybuys integration (ProfileService Contact reconciliation reused)
+   190→* Establishes integration patterns (Conformist, ACL, Event-Driven) for future services
+   191→
+   192→=== Success Criteria
+   193→
+   194→* All digital customer feedback routed to Salesforce Service Cloud within 30 days of launch
+   195→* Support agents have unified customer view across all Viva Energy channels (digital, wholesale, Shell Card, other retail)
+   196→* D365 Customer Engagement decommissioned within 90 days post-cutover
+   197→* Customer satisfaction score improves by 15% within 6 months
+   198→* Average case resolution time decreases by 20% within 6 months
+   199→* Zero data loss during Contact migration (100% validation pass rate)
+   200→* Mobile App feedback submission success rate > 99.5% (including async Case creation)
+   201→
+   202→=== Technical Constraints
+   203→
+   204→* Shared Salesforce instance (Viva Energy multi-tenant environment)
+   205→* Conform to existing Salesforce configuration and governance (data isolation strategy TBD with Salesforce admin team)
+   206→* Contact migration must complete before cutover (no parallel run)
+   207→* Async Case creation mandatory (non-blocking user experience)
+   208→
+   209→=== Open Technical Decisions (TBD)
+   210→
+   211→* Salesforce Case field mapping for digital feedback categories (App, Service, Order, Rewards, Refund, Delete Account)
+   212→* Salesforce data isolation strategy (Record Types, custom fields, queues)
+   213→* Salesforce REST API authentication method (OAuth 2.0, Connected App, JWT bearer flow)
+   214→* Salesforce webhook mechanism for Case updates (Outbound Messages, Platform Events, Process Builder)
+   215→* Retry policy configuration (attempts, backoff intervals)
+   216→* Expected feedback volume and Salesforce API rate limit strategy
+   217→
+   218→== Technical Requirements
+   219→
+   220→[width="100%",cols="8%,92%",options="header",]
+   221→|===
+   222→|ID |Description
+   223→
+   224→|TR-CS-001
+   225→|Every Mobile App user must have a Salesforce Contact record in Salesforce Service Cloud (shared Viva Energy instance)
+   226→
+   227→|TR-CS-002
+   228→|ProfileService must reconcile Mobile App users as Salesforce Contacts using Just-In-Time (JIT) upsert by email address
+   229→
+   230→|TR-CS-003
+   231→|ProfileService must return Salesforce Contact ID to Mobile App for feedback submission
+   232→
+   233→|TR-CS-004
+   234→|Mobile App must support customer feedback submission with fields: Category (App, Service, Order, Rewards, Refund, Delete Account), Store Name, Time of Visit, Contact Phone Number, Free Text Message
+   235→
+   236→|TR-CS-005
+   237→|EngagementService must create Salesforce Cases asynchronously via Event Bus (non-blocking user experience)
+   238→
+   239→|TR-CS-006
+   240→|EngagementService must acknowledge feedback submission immediately to Mobile App user ("Feedback submitted" confirmation)
+   241→
+   242→|TR-CS-007
+   243→|EngagementService must send push notification to customer via Braze when Case is successfully created in Salesforce
+   244→
+   245→|TR-CS-008
+   246→|EngagementService must retry failed Case creation with configurable exponential backoff and dead letter queue for operations team intervention
+   247→
+   248→|TR-CS-009
+   249→|Salesforce must be the System of Record for Contact and Case data (no local persistence in ProfileService or EngagementService)
+   250→
+   251→|TR-CS-010
+   252→|Contact migration from app-specific database to Salesforce must complete before Mobile App cutover (upsert with flexible matching by email/phone/VCI)
+   253→
+   254→|TR-CS-011
+   255→|No Case migration from D365 Customer Engagement to Salesforce (fresh start, historical Cases not migrated)
+   256→
+   257→|TR-CS-012
+   258→|EngagementService must publish domain events (`SupportCaseCreated`, `SupportCaseUpdated`, `CustomerFeedbackSubmitted`) to Event Bus for consumption by other bounded contexts
+   259→
+   260→|TR-CS-013
+   261→|EngagementService must receive Salesforce webhook notifications when Cases are updated/resolved by support agents
+   262→
+   263→|TR-CS-014
+   264→|EngagementService must trigger Braze push notifications to customers when Cases are updated/resolved (via Salesforce webhook → EngagementService → Braze)
+   265→
+   266→|TR-CS-015
+   267→|ProfileService and EngagementService must conform to existing Salesforce configuration and API contracts (Conformist pattern)
+   268→
+   269→|TR-CS-016
+   270→|All changes must be communicated using event-driven architecture via Event Bus (using existing AWS infrastructure: SNS+SQS/EventBridge/Kinesis)
+   271→
+   272→|TR-CS-017
+   273→|Mobile App feedback submission success rate must exceed 99.5% (including async Case creation completion)
+   274→
+   275→|TR-CS-018
+   276→|Contact migration must achieve 100% validation pass rate (zero data loss)
+   277→
+   278→|TR-CS-019
+   279→|D365 Customer Engagement must be fully decommissioned within 90 days post-cutover
+   280→
+   281→|===
+   282→
+   283→== Technical Architecture
+   284→
+   285→=== Technical Capability Requirements
+   286→
+   287→==== Requirements Traceability
+   288→
+   289→=== Service Catalogues
+   290→
+   291→==== Application Portfolio Catalogue
+   292→
+   293→==== Technology Capability Requirements
+   294→
+   295→==== Feature Flag Register
+   296→
+   297→==== Data Entity Catalogue
+   298→
+   299→=== Baseline Architecture
+   300→
+   301→==== Existing System Components
+   302→
+   303→[width="100%",cols="25%,35%,40%",options="header",]
+   304→|===
+   305→|Component |Current State |Status
+   306→
+   307→|*D365 Customer Engagement*
+   308→|Customer support platform for OTR digital customers (Mobile App, Web), handles feedback submission and case management
+   309→|**DEPRECATED** - Being replaced by Salesforce Service Cloud
+   310→
+   311→|*App-Specific Customer Database*
+   312→|Stores customer contact data for Mobile App users, separate from Viva Energy systems
+   313→|**MIGRATING** - One-time migration to Salesforce, then deprecated
+   314→
+   315→|*Mobile App*
+   316→|iOS/Android native apps with feedback submission form (free text only, no category selection currently)
+   317→|**REQUIRES UPDATE** - Add feedback form fields (Category, Store Name, Time of Visit, Contact Phone Number), integrate with ProfileService and EngagementService APIs
+   318→
+   319→|*Salesforce Service Cloud*
+   320→|Shared Viva Energy instance handling customer support for fuel wholesale, Shell Card customers, other retail channels
+   321→|**EXPANDING** - Adding OTR digital customer support Cases and Contacts
+   322→
+   323→|*Existing AWS Infrastructure*
+   324→|SNS+SQS / EventBridge / Kinesis available for event-driven architecture
+   325→|**REUSING** - Event Bus implementation leverages existing infrastructure
+   326→
+   327→|===
+   328→
+   329→==== Integration Architecture
+   330→
+   331→*Current state:*
+   332→
+   333→* Mobile App → D365 Customer Engagement (direct integration)
+   334→* App-specific customer database → standalone (no Salesforce integration)
+   335→* No event-driven architecture (synchronous, tightly coupled)
+   336→* No Anti-Corruption Layer protecting digital channels
+   337→* Viva Energy support teams use Salesforce, OTR digital support uses D365 CE (fragmented)
+   338→
+   339→==== Technical Debt
+   340→
+   341→*No longer relevant* - D365 CE being deprecated, not documenting technical debt of system being retired.
+   342→
+   343→*New technical debt introduced by this migration:*
+   344→
+   345→* Salesforce field mapping TBD (requires coordination with Viva Energy Salesforce admin team)
+   346→* Data isolation strategy TBD (Record Types, custom fields, queues - multi-tenant governance)
+   347→* Salesforce webhook mechanism TBD (Outbound Messages vs Platform Events vs Process Builder)
+   348→* Expected feedback volume unknown (gathering data for rate limit planning)
+   349→
+   350→=== Gap Analysis
+   351→
+   352→==== Missing Capabilities
+   353→
+   354→[width="100%",cols="30%,70%",options="header",]
+   355→|===
+   356→|Missing Capability |Description
+   357→
+   358→|*ProfileService bounded context*
+   359→|No existing service for Contact reconciliation with Salesforce - requires new microservice implementing JIT upsert by email, returning Salesforce Contact ID
+   360→
+   361→|*EngagementService bounded context*
+   362→|No existing service for customer feedback facade - requires new microservice implementing Anti-Corruption Layer for Salesforce Case creation, Braze integration, async processing via Event Bus
+   363→
+   364→|*Event Bus domain event pattern*
+   365→|No existing domain event publishing infrastructure - requires implementing event-driven architecture pattern using existing AWS infrastructure (SNS+SQS/EventBridge/Kinesis)
+   366→
+   367→|*Async Case creation workflow*
+   368→|Current D365 CE integration is synchronous - requires implementing async processing with retry logic, exponential backoff, dead letter queue
+   369→
+   370→|*Salesforce webhook integration*
+   371→|No existing capability to receive Salesforce notifications - requires implementing webhook receiver in EngagementService for Case update notifications
+   372→
+   373→|*Braze push notification orchestration*
+   374→|No existing integration for Case-related push notifications - requires implementing Braze campaign triggers from EngagementService
+   375→
+   376→|*Contact migration tooling*
+   377→|No existing tooling for app database → Salesforce Contact migration with upsert logic (match by email/phone/VCI)
+   378→
+   379→|*Feedback form enhancements*
+   380→|Mobile App feedback form lacks structured fields (Category, Store Name, Time of Visit, Contact Phone Number) - requires UI updates
+   381→
+   382→|===
+   383→
+   384→==== Missing Bounded Contexts
+   385→
+   386→[width="100%",cols="30%,30%,40%",options="header",]
+   387→|===
+   388→|Bounded Context |Responsibilities |Implementation Status
+   389→
+   390→|*link:../bounded_context/profile.adoc[ProfileService]*
+   391→|JIT Contact reconciliation with Salesforce (upsert by email), return Salesforce Contact ID to digital channels, foundation for future Flybuys partner linking
+   392→|**NEW** - First bounded context implementation
+   393→
+   394→|*link:../bounded_context/engagement.adoc[EngagementService]*
+   395→|Customer feedback submission facade, Anti-Corruption Layer for Salesforce Case creation, Braze integration for push notifications, async Case processing, webhook receiver for Case updates
+   396→|**NEW** - First bounded context implementation
+   397→
+   398→|===
+   399→
+   400→==== Missing Integration Patterns
+   401→
+   402→[width="100%",cols="30%,70%",options="header",]
+   403→|===
+   404→|Integration Pattern |Description
+   405→
+   406→|*Anti-Corruption Layer (ACL)*
+   407→|EngagementService → Salesforce Service Cloud - protects digital channels from Salesforce API changes, translates between OTR domain language and Salesforce
+   408→
+   409→|*Conformist*
+   410→|ProfileService/EngagementService → Salesforce - conform to existing Salesforce configuration and API contracts (shared Viva Energy instance)
+   411→
+   412→|*Event-Driven Architecture (OHS+PL)*
+   413→|Event Bus publishing domain events (`SupportCaseCreated`, `SupportCaseUpdated`, `CustomerFeedbackSubmitted`) for loose coupling between bounded contexts
+   414→
+   415→|*Just-In-Time (JIT) Integration*
+   416→|ProfileService → Salesforce Contact reconciliation on-demand (no pre-sync)
+   417→
+   418→|*Async Processing*
+   419→|EngagementService Case creation via Event Bus with retry, exponential backoff, dead letter queue
+   420→
+   421→|===
+   422→
+   423→=== Target State Architecture
+   424→
+   425→==== Architectural Building Blocks (ABB)
+   426→
+   427→[width="100%",cols="20%,25%,30%,25%",options="header",]
+   428→|===
+   429→|ABB ID |Bounded Context |Responsibilities |Technology (TBD in Solution Architecture)
+   430→
+   431→|ABB-CS-001
+   432→|*link:../bounded_context/profile.adoc[ProfileService]*
+   433→|JIT Contact reconciliation with Salesforce (upsert by email), return Salesforce Contact ID, foundation for Flybuys partner linking
+   434→|Microservice (.NET/Node.js), REST API, Salesforce REST API client
+   435→
+   436→|ABB-CS-002
+   437→|*link:../bounded_context/engagement.adoc[EngagementService]*
+   438→|Customer feedback submission facade, ACL for Salesforce Case creation, Braze integration, async processing, webhook receiver
+   439→|Microservice (.NET/Node.js), REST API, Event Bus publisher/subscriber, Salesforce webhook receiver
+   440→
+   441→|ABB-CS-003
+   442→|*Event Bus*
+   443→|Domain event publishing infrastructure (`SupportCaseCreated`, `SupportCaseUpdated`, `CustomerFeedbackSubmitted`)
+   444→|AWS SNS+SQS / EventBridge / Kinesis
+   445→
+   446→|ABB-CS-004
+   447→|*Salesforce Service Cloud*
+   448→|System of Record for Contact and Case data (shared Viva Energy instance)
+   449→|Salesforce Service Cloud (external SaaS)
+   450→
+   451→|ABB-CS-005
+   452→|*Braze*
+   453→|Marketing automation platform for push notifications
+   454→|Braze (external SaaS) - existing integration
+   455→
+   456→|ABB-CS-006
+   457→|*Mobile App*
+   458→|iOS/Android native apps with enhanced feedback form (Category, Store Name, Time of Visit, Contact Phone Number, Free Text Message)
+   459→|Kotlin Multiplatform, SwiftUI, Jetpack Compose
+   460→
+   461→|ABB-CS-007
+   462→|*Contact Migration Tool*
+   463→|One-time migration app database → Salesforce with upsert logic (match by email/phone/VCI)
+   464→|Script/tool (.NET/Python/Node.js)
+   465→
+   466→|===
+   467→
+   468→==== Integration Architecture
+   469→
+   470→===== Integration Flows
+   471→
+   472→*Customer Feedback Submission (Async):*
+   473→
+   474→1. *Mobile App* → ProfileService: Authenticate user, get Salesforce Contact ID (JIT reconciliation)
+   475→2. *Mobile App* → EngagementService: Submit feedback (POST /feedback with Contact ID, Category, Store Name, Time of Visit, Phone, Message)
+   476→3. *EngagementService* → Mobile App: Immediate acknowledgment ("Feedback submitted")
+   477→4. *EngagementService* → Event Bus: Publish work item for async Case creation
+   478→5. *Background Worker* (EngagementService) → Salesforce: Create Case via REST API
+   479→6. *Success*: EngagementService → Event Bus: Publish `SupportCaseCreated` event
+   480→7. *EngagementService* → Braze: Trigger push notification campaign ("Your feedback has been received, Case #12345")
+   481→8. *Failure*: Retry with exponential backoff → Dead Letter Queue → Ops team alert
+   482→
+   483→*Case Update Notification (Bidirectional):*
+   484→
+   485→1. *Support Agent* updates/resolves Case in Salesforce
+   486→2. *Salesforce* → EngagementService: Webhook notification (Case updated)
+   487→3. *EngagementService* → Event Bus: Publish `SupportCaseUpdated` or `SupportCaseResolved` event
+   488→4. *EngagementService* → Braze: Trigger push notification campaign ("Your case has been resolved")
+   489→
+   490→*Contact Reconciliation (JIT):*
+   491→
+   492→1. *Mobile App user* authenticates
+   493→2. *Mobile App* → ProfileService: GET /profile/contact-id
+   494→3. *ProfileService* → Salesforce: Query Contact by email
+   495→4. *Match found*: Return existing Salesforce Contact ID
+   496→5. *No match*: Create new Contact in Salesforce, return new Contact ID
+   497→6. *ProfileService* → Mobile App: Return Salesforce Contact ID (cached by Mobile App)
+   498→
+   499→===== System of Record Boundaries
+   500→
+   501→[width="100%",cols="30%,35%,35%",options="header",]
+   502→|===
+   503→|Data Entity |System of Record |Rationale
+   504→
+   505→|*Contact*
+   506→|Salesforce Service Cloud
+   507→|Shared Viva Energy instance, unified customer profile across all channels (digital, wholesale, Shell Card, retail)
+   508→
+   509→|*Case*
+   510→|Salesforce Service Cloud
+   511→|Support agents manage Cases in Salesforce, digital channels submit via EngagementService ACL
+   512→
+   513→|*Feedback Submission (transient)*
+   514→|None (no persistence)
+   515→|EngagementService processes feedback and creates Case in Salesforce, no local storage
+   516→
+   517→|*Domain Events*
+   518→|Event Bus (ephemeral)
+   519→|Events published to Event Bus, consumed by subscribers, not persisted long-term (event sourcing not in scope)
+   520→
+   521→|===
+   522→
+   523→==== Data Architecture Principles
+   524→
+   525→===== Aggregate Persistence
+   526→
+   527→*ProfileService:*
+   528→
+   529→* **No local aggregate persistence** - ProfileService is stateless, queries Salesforce on-demand
+   530→* Salesforce Contact is the aggregate root (owned by Salesforce)
+   531→* ProfileService acts as facade/translator, not system of record
+   532→
+   533→*EngagementService:*
+   534→
+   535→* **No local aggregate persistence** - EngagementService is stateless, creates Cases in Salesforce via ACL
+   536→* Salesforce Case is the aggregate root (owned by Salesforce)
+   537→* EngagementService maintains no local Case state (Conformist pattern - trust Salesforce as source of truth)
+   538→* Async processing state managed via Event Bus (work items in queue, not database)
+   539→
+   540→===== Event Store
+   541→
+   542→* **Event Bus** (SNS+SQS/EventBridge/Kinesis) handles domain event publishing
+   543→* Events are **ephemeral** (consumed and discarded, not persisted for event sourcing)
+   544→* No Event Store implementation in this architecture (future enhancement if needed)
+   545→* Event schema versioning TBD in Solution Architecture
+   546→
+   547→=== Architecture Decisions
+   548→
+   549→==== ADR-CS-001: Consolidate onto Salesforce Service Cloud (not build custom solution)
+   550→
+   551→*Status*: Accepted
+   552→
+   553→*Context*:
+   554→
+   555→* D365 Customer Engagement not working well for digital customer support
+   556→* Viva Energy already uses Salesforce Service Cloud for fuel wholesale, Shell Card, other retail channels
+   557→* Post-merger opportunity to consolidate onto single platform
+   558→* Alternative: Build custom support platform or use different SaaS
+   559→
+   560→*Decision*:
+   561→
+   562→Consolidate OTR digital customer support onto Salesforce Service Cloud (shared Viva Energy instance).
+   563→
+   564→*Rationale*:
+   565→
+   566→* **Unified customer view**: Support agents see all interactions across channels (digital, wholesale, Shell Card, retail)
+   567→* **Platform consolidation**: Single support platform reduces operational overhead and costs
+   568→* **Proven solution**: Salesforce Service Cloud is established, feature-rich, well-supported
+   569→* **Post-merger alignment**: Strategic decision to standardize on Viva Energy platforms
+   570→* **Avoid custom development**: Building custom support platform would be costly and high-risk
+   571→
+   572→*Consequences*:
+   573→
+   574→* ✅ Unified customer support across Viva Energy Group
+   575→* ✅ Reduced operational complexity (single platform vs two)
+   576→* ✅ Leverage Salesforce capabilities (case routing, knowledge base, AI, omnichannel)
+   577→* ⚠️ Conformist pattern required (shared instance, conform to existing configuration)
+   578→* ⚠️ Multi-tenant governance needed (data isolation, security, queues)
+   579→* ❌ Less control over platform evolution (SaaS vendor, shared instance)
+   580→
+   581→==== ADR-CS-002: Implement ProfileService and EngagementService as first DDD bounded contexts
+   582→
+   583→*Status*: Accepted
+   584→
+   585→*Context*:
+   586→
+   587→* OTR target architecture uses Domain-Driven Design with bounded contexts
+   588→* This migration is opportunity to establish first implementation
+   589→* Alternative: Direct Mobile App → Salesforce integration (no bounded contexts)
+   590→* Alternative: Single monolithic service for all customer-facing APIs
+   591→
+   592→*Decision*:
+   593→
+   594→Implement ProfileService and EngagementService as separate bounded contexts following DDD strategic patterns.
+   595→
+   596→*Rationale*:
+   597→
+   598→* **Foundation for target architecture**: First implementation of DDD pattern for future bounded contexts (Flybuys, LocationService, PaymentService)
+   599→* **Separation of concerns**: ProfileService handles identity/Contact reconciliation, EngagementService handles support/feedback (different responsibilities, different change rates)
+   600→* **Anti-Corruption Layer**: EngagementService protects digital channels from Salesforce API changes
+   601→* **Reusability**: ProfileService Contact reconciliation reused for Flybuys integration
+   602→* **Event-driven architecture**: Establishes pattern for loose coupling between bounded contexts
+   603→
+   604→*Consequences*:
+   605→
+   606→* ✅ Establishes DDD architecture foundation for OTR
+   607→* ✅ Reusable ProfileService for Flybuys and future integrations
+   608→* ✅ Digital channels protected from Salesforce API changes (ACL)
+   609→* ✅ Clear bounded context boundaries and responsibilities
+   610→* ⚠️ Increased initial complexity (two new microservices vs direct integration)
+   611→* ⚠️ Requires Event Bus infrastructure implementation
+   612→* ⚠️ Team must learn DDD patterns and bounded context design
+   613→
+   614→==== ADR-CS-003: Async Case creation via Event Bus (not synchronous)
+   615→
+   616→*Status*: Accepted
+   617→
+   618→*Context*:
+   619→
+   620→* Current D365 CE integration is synchronous (user waits for Case creation)
+   621→* Alternative: Keep synchronous integration (Mobile App → EngagementService → Salesforce synchronously)
+   622→* Salesforce API may experience downtime or latency
+   623→
+   624→*Decision*:
+   625→
+   626→Implement async Case creation via Event Bus with immediate user acknowledgment, retry logic, exponential backoff, and dead letter queue.
+   627→
+   628→*Rationale*:
+   629→
+   630→* **Non-blocking user experience**: User gets immediate "Feedback submitted" confirmation, not waiting for Salesforce API
+   631→* **Resilience**: If Salesforce is down, feedback still accepted, Case created when Salesforce recovers
+   632→* **Retry logic**: Automatic retry with exponential backoff handles transient failures
+   633→* **Operational visibility**: Dead letter queue alerts ops team to persistent failures
+   634→* **Scalability**: Queue buffering handles traffic spikes
+   635→
+   636→*Consequences*:
+   637→
+   638→* ✅ Better user experience (no waiting for Salesforce API)
+   639→* ✅ Resilient to Salesforce downtime (queue buffers work)
+   640→* ✅ Automatic retry reduces manual intervention
+   641→* ✅ Queue depth monitoring provides operational visibility
+   642→* ⚠️ Eventual consistency (user gets success notification after Case created, not immediately)
+   643→* ⚠️ Increased complexity (Event Bus, background workers, retry logic, DLQ)
+   644→* ⚠️ Requires monitoring and alerting for DLQ
+   645→
+   646→==== ADR-CS-004: ProfileService uses email as primary matching key (not VCI)
+   647→
+   648→*Status*: Accepted
+   649→
+   650→*Context*:
+   651→
+   652→* ProfileService needs to reconcile Mobile App users as Salesforce Contacts
+   653→* Alternative matching keys: VCI (Viva Consumer ID), email, phone, Salesforce External ID
+   654→* Email changes are rare but possible
+   655→
+   656→*Decision*:
+   657→
+   658→Use email address as primary matching key for Contact reconciliation (JIT upsert by email).
+   659→
+   660→*Rationale*:
+   661→
+   662→* **Availability**: Email always available for authenticated users
+   663→* **Uniqueness**: Email is unique identifier in Salesforce and Mobile App
+   664→* **Salesforce standard**: Salesforce Contact uses email as standard lookup field
+   665→* **Simplicity**: Single matching key simplifies upsert logic
+   666→* **Edge case acceptable**: Email changes are rare, manual cleanup acceptable
+   667→
+   668→*Consequences*:
+   669→
+   670→* ✅ Simple upsert logic (query by email, create if not found)
+   671→* ✅ Leverages Salesforce standard email field
+   672→* ✅ Email always available from authentication
+   673→* ⚠️ Email changes create duplicate Contacts (rare edge case, manual cleanup)
+   674→* ⚠️ Future enhancement: Add VCI as Salesforce External ID for stable matching
+   675→
+   676→==== ADR-CS-005: No Case migration from D365 CE (fresh start)
+   677→
+   678→*Status*: Accepted
+   679→
+   680→*Context*:
+   681→
+   682→* D365 CE contains historical customer support Cases
+   683→* Alternative: Migrate historical Cases to Salesforce (preserve support history)
+   684→* Alternative: Archive D365 CE Cases separately (read-only access)
+   685→
+   686→*Decision*:
+   687→
+   688→Do not migrate historical Cases from D365 CE to Salesforce. Start fresh in Salesforce.
+   689→
+   690→*Rationale*:
+   691→
+   692→* **Limited value**: Historical D365 CE Cases not critical for future support
+   693→* **Data quality**: D365 CE Case data may be inconsistent or incomplete
+   694→* **Complexity**: Case migration requires mapping D365 CE schema to Salesforce, data transformation, validation
+   695→* **Cost-benefit**: Migration effort outweighs value of historical data
+   696→* **Archive option**: D365 CE Cases can be archived separately if needed (read-only access for auditing)
+   697→
+   698→*Consequences*:
+   699→
+   700→* ✅ Simpler migration (Contacts only, no Case migration)
+   701→* ✅ Faster time to value (no Case migration delay)
+   702→* ✅ Clean start in Salesforce (no legacy data quality issues)
+   703→* ⚠️ Historical Cases not visible in Salesforce (support agents can't see old Cases)
+   704→* ⚠️ D365 CE must remain accessible temporarily for historical Case lookups (if needed)
+   705→* ❌ Loss of historical Case insights (reporting, analytics on old Cases)
+   706→
+   707→==== ADR-CS-006: Big bang cutover (not phased rollout)
+   708→
+   709→*Status*: Accepted
+   710→
+   711→*Context*:
+   712→
+   713→* Alternative: Phased rollout with feature flags (pilot users first, gradual enablement)
+   714→* Alternative: Parallel run (submit to both D365 CE and Salesforce temporarily)
+   715→* Flybuys integration uses phased rollout (AS-1, AS-2, AS-3 architecture states)
+   716→
+   717→*Decision*:
+   718→
+   719→Big bang cutover - migrate Contacts, deploy ProfileService and EngagementService, switch Mobile App, retire D365 CE.
+   720→
+   721→*Rationale*:
+   722→
+   723→* **Simplicity**: No parallel run complexity, no feature flag management
+   724→* **Faster D365 CE retirement**: No extended transition period maintaining two systems
+   725→* **Limited risk**: Customer support not mission-critical (not payment processing), rollback possible
+   726→* **User base manageable**: OTR digital customers smaller than Flybuys integration scope
+   727→* **Different use case**: Flybuys phased rollout manages points accrual complexity, support feedback is simpler
+   728→
+   729→*Consequences*:
+   730→
+   731→* ✅ Simpler deployment (single cutover, no AS-1/AS-2/AS-3 states)
+   732→* ✅ Faster D365 CE retirement (no extended parallel run)
+   733→* ✅ No feature flag complexity or pilot user management
+   734→* ⚠️ Higher cutover risk (all users switch at once)
+   735→* ⚠️ Requires comprehensive testing before cutover
+   736→* ⚠️ Rollback plan required (revert to D365 CE if critical issues)
+   737→
+   738→==== ADR-CS-007: EngagementService receives Salesforce webhooks for Case updates
+   739→
+   740→*Status*: Accepted
+   741→
+   742→*Context*:
+   743→
+   744→* Support agents update/resolve Cases in Salesforce
+   745→* Need to notify customers of Case status changes via push notifications
+   746→* Alternative: Poll Salesforce API for Case updates (inefficient)
+   747→* Alternative: No customer notifications (agents contact customers directly)
+   748→
+   749→*Decision*:
+   750→
+   751→Salesforce sends webhook notifications to EngagementService when Cases are updated/resolved. EngagementService triggers Braze push notifications.
+   752→
+   753→*Rationale*:
+   754→
+   755→* **Real-time notifications**: Customer notified immediately when agent resolves Case
+   756→* **Efficient**: Webhook push model (not polling)
+   757→* **Event-driven**: Aligns with event-driven architecture pattern
+   758→* **Better customer experience**: Proactive notification vs waiting for agent contact
+   759→
+   760→*Consequences*:
+   761→
+   762→* ✅ Real-time customer notifications for Case updates
+   763→* ✅ Efficient push model (no polling overhead)
+   764→* ✅ Bidirectional integration (Mobile App → Salesforce → Mobile App)
+   765→* ⚠️ Salesforce webhook mechanism TBD (Outbound Messages vs Platform Events vs Process Builder)
+   766→* ⚠️ Webhook authentication and security required
+   767→* ⚠️ EngagementService must handle webhook retries and failures
+   768→
+   769→=== Migration Strategy
+   770→
+   771→==== Migration Phases
+   772→
+   773→*Phase 1: Build & Test (Weeks 1-8)*
+   774→
+   775→* Build ProfileService microservice (JIT Contact reconciliation API)
+   776→* Build EngagementService microservice (feedback submission API, ACL for Salesforce Case creation, Braze integration, webhook receiver)
+   777→* Implement Event Bus infrastructure (SNS+SQS/EventBridge/Kinesis)
+   778→* Develop Contact migration tool (app database → Salesforce upsert by email/phone/VCI)
+   779→* Update Mobile App feedback form (add Category, Store Name, Time of Visit, Contact Phone Number fields)
+   780→* Integration testing (ProfileService ↔ Salesforce, EngagementService ↔ Salesforce, EngagementService ↔ Braze)
+   781→* UAT with test Salesforce sandbox environment
+   782→
+   783→*Phase 2: Contact Migration (Week 9)*
+   784→
+   785→* Execute Contact migration (app database → Salesforce production)
+   786→* Validation: 100% data integrity check (email/phone/VCI matching)
+   787→* Reconciliation report: New Contacts created vs existing Contacts updated
+   788→* Freeze app database Contact updates during migration window
+   789→* ProfileService smoke testing (verify Contact lookups work in Salesforce production)
+   790→
+   791→*Phase 3: Cutover (Week 10)*
+   792→
+   793→* Deploy ProfileService to production
+   794→* Deploy EngagementService to production
+   795→* Deploy Mobile App updates (new feedback form, ProfileService + EngagementService API integration)
+   796→* Configure Salesforce webhook (Case update notifications → EngagementService)
+   797→* Smoke testing: End-to-end feedback submission (Mobile App → EngagementService → Salesforce → Braze notification)
+   798→* Monitor Event Bus queue depth, dead letter queue, Salesforce API rate limits
+   799→* **Go/No-Go decision**: Validate success criteria before final cutover
+   800→
+   801→*Phase 4: D365 CE Retirement (Weeks 11-22)*
+   802→
+   803→* Monitor production for 30 days (validate success criteria: >99.5% feedback submission rate, no data loss)
+   804→* D365 CE read-only access (historical Case lookups if needed)
+   805→* Decommission D365 CE after 90 days (ADR-CS-006 big bang cutover timeline)
+   806→* Archive D365 CE data for compliance/auditing
+   807→
+   808→==== Migration Dependencies
+   809→
+   810→[width="100%",cols="40%,60%",options="header",]
+   811→|===
+   812→|Dependency |Owner/Status
+   813→
+   814→|*Salesforce production access*
+   815→|Viva Energy Salesforce admin team - TBD
+   816→
+   817→|*Salesforce Case field mapping*
+   818→|Viva Energy Salesforce admin team - TBD (map OTR feedback categories to Salesforce fields)
+   819→
+   820→|*Salesforce data isolation strategy*
+   821→|Viva Energy Salesforce admin team - TBD (Record Types, queues, custom fields)
+   822→
+   823→|*Salesforce webhook configuration*
+   824→|Viva Energy Salesforce admin team - TBD (Outbound Messages vs Platform Events)
+   825→
+   826→|*Event Bus infrastructure*
+   827→|OTR Platform team - Existing AWS infrastructure (SNS+SQS/EventBridge/Kinesis)
+   828→
+   829→|*Braze integration*
+   830→|OTR Marketing team - Existing Braze account, EngagementService creates new campaigns
+   831→
+   832→|*Mobile App release window*
+   833→|OTR Mobile team - Coordinate cutover timing with app release schedule
+   834→
+   835→|*App database access*
+   836→|OTR Platform team - Read access for Contact migration
+   837→
+   838→|===
+   839→
+   840→==== Migration Validation Criteria
+   841→
+   842→*Contact Migration Validation:*
+   843→
+   844→* ✅ 100% of app database Contacts migrated to Salesforce (zero data loss)
+   845→* ✅ Email/phone/VCI matching accuracy > 95% (minimize duplicate Contacts)
+   846→* ✅ ProfileService JIT lookups return correct Salesforce Contact IDs (smoke test sample)
+   847→* ✅ Reconciliation report shows: X new Contacts created, Y existing Contacts updated
+   848→
+   849→*Cutover Validation:*
+   850→
+   851→* ✅ Mobile App feedback submission success rate > 99.5% (including async Case creation)
+   852→* ✅ End-to-end flow validated: Mobile App → ProfileService → EngagementService → Salesforce Case created
+   853→* ✅ Braze push notifications delivered for Case creation and Case resolution
+   854→* ✅ Event Bus queue depth within normal range (no backlog)
+   855→* ✅ Dead letter queue empty (no failed Case creations)
+   856→* ✅ Salesforce API rate limits not exceeded
+   857→
+   858→*Production Monitoring (30 days):*
+   859→
+   860→* ✅ Customer satisfaction score improves by 15% (compared to D365 CE baseline)
+   861→* ✅ Average case resolution time decreases by 20% (Salesforce vs D365 CE)
+   862→* ✅ Support agents confirm unified customer view across all channels
+   863→* ✅ Zero critical incidents (P1 outages, data loss)
+   864→
+   865→==== Rollback Plan
+   866→
+   867→*Rollback Trigger:*
+   868→
+   869→* Feedback submission success rate < 95% (below acceptable threshold)
+   870→* Data loss or corruption detected in Salesforce
+   871→* Salesforce API rate limits exceeded (Cases not created within SLA)
+   872→* Critical bug blocking customer feedback submission
+   873→
+   874→*Rollback Procedure:*
+   875→
+   876→1. **Revert Mobile App** to previous version (remove ProfileService/EngagementService integration, restore D365 CE integration)
+   877→2. **Stop EngagementService** Case creation (prevent duplicate Cases in Salesforce)
+   878→3. **Re-enable D365 CE** for customer feedback submission
+   879→4. **Investigate root cause** (EngagementService logs, Salesforce API errors, Event Bus queue issues)
+   880→5. **Fix and re-test** in sandbox environment
+   881→6. **Retry cutover** when issues resolved
+   882→
+   883→*Rollback Limitations:*
+   884→
+   885→* Cases created in Salesforce during cutover period remain in Salesforce (no reverse migration)
+   886→* Contacts migrated to Salesforce remain (no rollback to app database)
+   887→* Rollback only affects Mobile App integration (not data migration)
+   888→
+   889→=== Architectural Scope Boundaries
+   890→
+   891→==== Capabilities Included
+   892→
+   893→==== Capabilities Excluded
+   894→
+   895→==== Architectural Dependencies on Future Initiatives
+   896→
+   897→=== Technical Risks and Mitigation
+   898→
+   899→[width="100%",cols="5%,20%,25%,25%,25%",options="header",]
+   900→|===
+   901→|ID |Risk |Impact |Likelihood |Mitigation
+   902→
+   903→|RISK-CS-001
+   904→|*Salesforce API rate limits exceeded*: High feedback volume exceeds Salesforce API limits, Cases not created
+   905→|HIGH (customers don't receive Case confirmation, support tickets lost)
+   906→|MEDIUM (volume unknown, rate limits TBD)
+   907→|• Gather expected feedback volume data before cutover +
+   908→• Implement Event Bus queue throttling/rate limiting +
+   909→• Monitor queue depth and API usage +
+   910→• Scale background workers based on queue depth +
+   911→• Alert ops team when approaching rate limits
+   912→
+   913→|RISK-CS-002
+   914→|*Salesforce downtime*: Salesforce Service Cloud outage prevents Case creation
+   915→|MEDIUM (Cases delayed but queued, customers wait for confirmation)
+   916→|LOW (Salesforce SLA 99.9% uptime)
+   917→|• Async Case creation with retry logic +
+   918→• Event Bus queues buffer work during outage +
+   919→• Customers get immediate "Feedback submitted" (not blocked) +
+   920→• Monitor Salesforce status page, alert ops team +
+   921→• Automatic retry when Salesforce recovers
+   922→
+   923→|RISK-CS-003
+   924→|*Contact migration data quality issues*: App database Contact data incomplete or invalid
+   925→|HIGH (migration fails validation, cutover delayed)
+   926→|MEDIUM (legacy data quality unknown)
+   927→|• Pre-migration data quality assessment +
+   928→• Flexible upsert logic (match by email/phone/VCI) +
+   929→• Validation report identifies data issues before production migration +
+   930→• Manual cleanup for invalid records +
+   931→• Dry-run migration in sandbox environment
+   932→
+   933→|RISK-CS-004
+   934→|*Duplicate Contacts created*: Email matching fails, ProfileService creates duplicate Contacts
+   935→|MEDIUM (support agents see multiple profiles for same customer)
+   936→|MEDIUM (email changes, data quality issues)
+   937→|• Salesforce duplicate detection rules (if available) +
+   938→• ProfileService logs Contact creation for audit trail +
+   939→• Manual duplicate cleanup process (support team) +
+   940→• Future enhancement: VCI as Salesforce External ID for stable matching
+   941→
+   942→|RISK-CS-005
+   943→|*Dead letter queue accumulation*: Failed Case creations not processed, queue grows
+   944→|HIGH (customers don't receive Case confirmation, feedback lost)
+   945→|LOW (retry logic handles most failures)
+   946→|• Dead letter queue monitoring and alerting +
+   947→• Ops team dashboard showing DLQ depth +
+   948→• Manual intervention process (investigate and reprocess) +
+   949→• Automated alerts when DLQ depth exceeds threshold +
+   950→• Root cause analysis for recurring failures
+   951→
+   952→|RISK-CS-006
+   953→|*Salesforce webhook failures*: Salesforce can't deliver Case update notifications to EngagementService
+   954→|MEDIUM (customers don't get push notifications for Case resolution)
+   955→|LOW (webhook mechanism reliable)
+   956→|• Webhook retry logic and exponential backoff +
+   957→• EngagementService logs webhook deliveries +
+   958→• Monitor webhook delivery success rate +
+   959→• Fallback: Poll Salesforce API for Case updates (if webhook fails persistently) +
+   960→• Alert ops team when webhook delivery rate drops
+   961→
+   962→|RISK-CS-007
+   963→|*Multi-tenant data isolation breach*: OTR digital Cases visible to other Viva Energy support teams
+   964→|HIGH (privacy violation, compliance risk)
+   965→|LOW (Salesforce governance controls)
+   966→|• Work with Viva Energy Salesforce admin team on data isolation strategy +
+   967→• Test data visibility in Salesforce sandbox (UAT with different user roles) +
+   968→• Validate Record Types, queues, field-level security before production +
+   969→• Audit Salesforce user permissions and sharing rules
+   970→
+   971→|RISK-CS-008
+   972→|*Mobile App release coordination*: App release delayed, cutover window missed
+   973→|MEDIUM (cutover delayed, D365 CE retirement delayed)
+   974→|MEDIUM (release schedule conflicts)
+   975→|• Coordinate cutover timing with Mobile team early +
+   976→• Buffer time in migration plan (2-week contingency) +
+   977→• Decouple backend deployment from Mobile App release (backend deployed first, app follows) +
+   978→• Feature flag for feedback submission (enable when ready)
+   979→
+   980→|RISK-CS-009
+   981→|*Event Bus infrastructure issues*: SNS/SQS/EventBridge downtime or misconfiguration
+   982→|HIGH (Case creation blocked, domain events not published)
+   983→|LOW (AWS SLA 99.99% uptime)
+   984→|• Leverage existing AWS infrastructure (proven, reliable) +
+   985→• Infrastructure as Code (IaC) for Event Bus configuration +
+   986→• Integration testing in non-production environment +
+   987→• Monitor Event Bus metrics (queue depth, throughput, errors) +
+   988→• Alert ops team on Event Bus failures
+   989→
+   990→|RISK-CS-010
+   991→|*Team DDD knowledge gap*: Team unfamiliar with DDD patterns, bounded contexts, event-driven architecture
+   992→|MEDIUM (implementation delays, architectural inconsistencies)
+   993→|HIGH (first DDD implementation)
+   994→|• DDD training for development team (workshops, documentation) +
+   995→• Architecture review sessions (validate bounded context design) +
+   996→• Pair programming with experienced DDD practitioners +
+   997→• Incremental implementation (start small, iterate) +
+   998→• Document architectural patterns in CLAUDE.md
+   999→
+  1000→|===
+  1001→
+  1002→== Assumptions and Constraints
+  1003→
+  1004→=== Assumptions
+  1005→
+  1006→[width="100%",cols="8%,92%",options="header",]
+  1007→|===
+  1008→|ID |Assumption
+  1009→
+  1010→|ASM-CS-001
+  1011→|Viva Energy Salesforce admin team will provide Salesforce production access, sandbox environment, and support for Case field mapping and data isolation configuration
+  1012→
+  1013→|ASM-CS-002
+  1014→|App database Contact data is sufficiently complete for migration (email/phone/VCI available for matching)
+  1015→
+  1016→|ASM-CS-003
+  1017→|Expected customer feedback volume is within Salesforce API rate limits (to be validated with feedback volume data)
+  1018→
+  1019→|ASM-CS-004
+  1020→|Existing AWS infrastructure (SNS+SQS/EventBridge/Kinesis) is sufficient for Event Bus implementation (no additional infrastructure provisioning required)
+  1021→
+  1022→|ASM-CS-005
+  1023→|Braze integration already exists and can be extended for Case-related push notifications (no new Braze account or major configuration changes)
+  1024→
+  1025→|ASM-CS-006
+  1026→|Mobile App users have email addresses associated with their accounts (required for ProfileService Contact reconciliation)
+  1027→
+  1028→|ASM-CS-007
+  1029→|D365 Customer Engagement historical Cases have limited business value and do not require migration to Salesforce
+  1030→
+  1031→|ASM-CS-008
+  1032→|Support agents are trained on Salesforce Service Cloud and require minimal additional training for OTR digital customer Cases
+  1033→
+  1034→|ASM-CS-009
+  1035→|Salesforce Service Cloud shared instance has capacity for OTR digital customer Contacts and Cases (no additional licensing or storage costs)
+  1036→
+  1037→|ASM-CS-010
+  1038→|Mobile App release schedule can accommodate cutover timing (Week 10 in migration plan)
+  1039→
+  1040→|===
+  1041→
+  1042→=== Constraints
+  1043→
+  1044→[width="100%",cols="8%,92%",options="header",]
+  1045→|===
+  1046→|ID |Constraint
+  1047→
+  1048→|CON-CS-001
+  1049→|Must use shared Viva Energy Salesforce Service Cloud instance (cannot deploy separate OTR-specific instance)
+  1050→
+  1051→|CON-CS-002
+  1052→|Must conform to existing Salesforce configuration and governance (Record Types, custom fields, queues, data isolation strategy defined by Viva Energy admin team)
+  1053→
+  1054→|CON-CS-003
+  1055→|Contact migration must complete before Mobile App cutover (no parallel run of D365 CE and Salesforce)
+  1056→
+  1057→|CON-CS-004
+  1058→|Big bang cutover only (no phased rollout with feature flags or pilot users)
+  1059→
+  1060→|CON-CS-005
+  1061→|Salesforce API rate limits and authentication method constrained by Viva Energy Salesforce configuration (TBD)
+  1062→
+  1063→|CON-CS-006
+  1064→|Event Bus implementation must use existing AWS infrastructure (SNS+SQS/EventBridge/Kinesis - cannot introduce new infrastructure components)
+  1065→
+  1066→|CON-CS-007
+  1067→|Mobile App feedback form must include specific fields: Category, Store Name, Time of Visit, Contact Phone Number, Free Text Message (no attachments)
+  1068→
+  1069→|CON-CS-008
+  1070→|D365 Customer Engagement must be decommissioned within 90 days post-cutover (ADR-CS-006)
+  1071→
+  1072→|CON-CS-009
+  1073→|ProfileService and EngagementService must be stateless (no local aggregate persistence, Salesforce is System of Record)
+  1074→
+  1075→|CON-CS-010
+  1076→|First DDD bounded context implementation (team learning curve, architectural patterns must be documented for future bounded contexts)
+  1077→
+  1078→|===
+  1079→
+  1080→== Non-Functional Requirements
+  1081→
+  1082→== Monitoring and Observability
+  1083→
+  1084→=== Key Metrics
+  1085→
+  1086→[width="100%",cols="25%,40%,35%",options="header",]
+  1087→|===
+  1088→|Metric Category |Metric |Target/Threshold
+  1089→
+  1090→|*Feedback Submission*
+  1091→|Feedback submission success rate (Mobile App → EngagementService)
+  1092→|> 99.5%
+  1093→
+  1094→|*Async Case Creation*
+  1095→|Case creation success rate (EngagementService → Salesforce)
+  1096→|> 99%
+  1097→
+  1098→|*Async Case Creation*
+  1099→|Case creation latency (time from feedback submission to Case created in Salesforce)
+  1100→|p95 < 5 minutes
+  1101→
+  1102→|*Event Bus*
+  1103→|Event Bus queue depth (pending Case creations)
+  1104→|< 100 messages
+  1105→
+  1106→|*Event Bus*
+  1107→|Dead letter queue depth (failed Case creations)
+  1108→|= 0 (alert on any failures)
+  1109→
+  1110→|*Salesforce API*
+  1111→|Salesforce API error rate
+  1112→|< 1%
+  1113→
+  1114→|*Salesforce API*
+  1115→|Salesforce API latency (Case creation)
+  1116→|p95 < 2 seconds
+  1117→
+  1118→|*Salesforce API*
+  1119→|Salesforce API rate limit utilization
+  1120→|< 80% of limit
+  1121→
+  1122→|*ProfileService*
+  1123→|Contact reconciliation success rate (JIT lookups)
+  1124→|> 99.5%
+  1125→
+  1126→|*ProfileService*
+  1127→|Contact reconciliation latency
+  1128→|p95 < 500ms
+  1129→
+  1130→|*Braze Notifications*
+  1131→|Push notification delivery rate (Case created/updated)
+  1132→|> 95%
+  1133→
+  1134→|*Salesforce Webhook*
+  1135→|Webhook delivery success rate (Salesforce → EngagementService)
+  1136→|> 99%
+  1137→
+  1138→|*Customer Satisfaction*
+  1139→|Customer satisfaction score (CSAT)
+  1140→|> 4.0/5.0 (improve by 15% from D365 CE baseline)
+  1141→
+  1142→|*Support Operations*
+  1143→|Average case resolution time
+  1144→|Decrease by 20% from D365 CE baseline
+  1145→
+  1146→|===
+  1147→
+  1148→=== Alerting Thresholds
+  1149→
+  1150→[width="100%",cols="25%,50%,25%",options="header",]
+  1151→|===
+  1152→|Alert |Condition |Severity
+  1153→
+  1154→|*Feedback submission failures*
+  1155→|Feedback submission success rate < 95% over 5-minute window
+  1156→|P1 - Critical
+  1157→
+  1158→|*Dead letter queue accumulation*
+  1159→|Dead letter queue depth > 0 (any failed Case creations)
+  1160→|P2 - High
+  1161→
+  1162→|*Event Bus queue backlog*
+  1163→|Event Bus queue depth > 100 messages for > 15 minutes
+  1164→|P2 - High
+  1165→
+  1166→|*Salesforce API errors*
+  1167→|Salesforce API error rate > 5% over 5-minute window
+  1168→|P1 - Critical
+  1169→
+  1170→|*Salesforce API rate limits*
+  1171→|Salesforce API rate limit utilization > 90%
+  1172→|P2 - High
+  1173→
+  1174→|*Contact reconciliation failures*
+  1175→|ProfileService Contact reconciliation failure rate > 5% over 5-minute window
+  1176→|P2 - High
+  1177→
+  1178→|*Braze notification failures*
+  1179→|Braze push notification delivery rate < 80% over 15-minute window
+  1180→|P3 - Medium
+  1181→
+  1182→|*Salesforce webhook failures*
+  1183→|Salesforce webhook delivery success rate < 90% over 15-minute window
+  1184→|P2 - High
+  1185→
+  1186→|*Case creation latency*
+  1187→|Case creation latency p95 > 10 minutes
+  1188→|P3 - Medium
+  1189→
+  1190→|===
+  1191→
+  1192→=== Dashboards
+  1193→
+  1194→*ProfileService Dashboard:*
+  1195→
+  1196→* Contact reconciliation success rate (JIT lookups)
+  1197→* Contact reconciliation latency (p50, p95, p99)
+  1198→* Contact creation vs update ratio (new Contacts created vs existing Contacts updated)
+  1199→* Salesforce API error rate (Contact queries and creates)
+  1200→* Request rate and throughput
+  1201→
+  1202→*EngagementService Dashboard:*
+  1203→
+  1204→* Feedback submission success rate
+  1205→* Case creation success rate (async workflow)
+  1206→* Case creation latency (p50, p95, p99)
+  1207→* Event Bus queue depth (pending Case creations)
+  1208→* Dead letter queue depth (failed Case creations)
+  1209→* Salesforce API error rate (Case creation)
+  1210→* Salesforce API latency
+  1211→* Salesforce API rate limit utilization
+  1212→* Braze push notification delivery rate
+  1213→* Salesforce webhook delivery success rate
+  1214→
+  1215→*Event Bus Dashboard:*
+  1216→
+  1217→* Queue depth (pending messages)
+  1218→* Throughput (messages published/consumed per minute)
+  1219→* Dead letter queue depth (failed messages)
+  1220→* Consumer lag (time between publish and consume)
+  1221→
+  1222→*Customer Support Dashboard (Business Metrics):*
+  1223→
+  1224→* Total feedback submissions per day/week/month
+  1225→* Feedback category breakdown (App, Service, Order, Rewards, Refund, Delete Account)
+  1226→* Customer satisfaction score (CSAT) trend
+  1227→* Average case resolution time trend
+  1228→* Case volume by support team/queue
+  1229→* Unified customer view adoption (support agent feedback)
+
+<system-reminder>
+Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+</system-reminder>

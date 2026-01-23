@@ -1,0 +1,104 @@
+     1→/*
+     2→ * LoyaltyService - Bounded Context Definition
+     3→ * ============================================
+     4→ *
+     5→ * Core BFF service for loyalty programme management across all VER brands.
+     6→ *
+     7→ * See loyalty.adoc for comprehensive architecture documentation, decision log, and patterns.
+     8→ */
+     9→
+    10→import "../domains/loyalty.cml"
+    11→import "profile.cml"
+    12→
+    13→BoundedContext LoyaltyService implements LoyaltyDomain {
+    14→
+    15→    type = APPLICATION
+    16→
+    17→    // Strategic DDD Classification: CORE_DOMAIN | SUPPORTING_DOMAIN | GENERIC_DOMAIN
+    18→    // CORE_DOMAIN: Primary competitive differentiator - loyalty programmes are critical for customer retention
+    19→    // and lifetime value in convenience retail
+    20→    strategicClassification = "CORE_DOMAIN"
+    21→
+    22→    domainVisionStatement = "Manages loyalty programmes, reward calculations, and partner integrations across all VER brands (OTR, REXP, SMGB). Abstracts loyalty engine capabilities and handles transaction adjudication."
+    23→
+    24→    responsibilities = "Transaction adjudication recording",
+    25→                      "Partner link status tracking",
+    26→                      "Orchestration of loyalty operations across EagleEye, CRM, and partner systems",
+    27→                      "Event translation from EagleEye webhooks to OTR domain events",
+    28→                      "Backend-for-Frontend (BFF) facade for mobile app loyalty features"
+    29→
+    30→    implementationTechnology = "Azure Functions, .NET Core, Eagle Eye API, Azure Key Vault, Event Bus"
+    31→
+    32→    // ========================================================================
+    33→    // SECTION 1: CORE AGGREGATES
+    34→    // ========================================================================
+    35→    // Aggregates represent transactional consistency boundaries.
+    36→    // Each aggregate root controls access to entities within its boundary.
+    37→    // ========================================================================
+    38→
+    39→    // 1.1 RewardTransaction Aggregate
+    40→    // ---------------------------------
+    41→    // Records the result of transaction adjudication and rewards awarded.
+    42→    // Stores minimal transaction context for customer reward history display.
+    43→    // Full basket details are NOT stored (owned by POS/Transaction context).
+    44→    //
+    45→    // Two-Phase Adjudication:
+    46→    // - Created ONLY in Phase 2 (Redemption) after payment captured
+    47→    // - Phase 1 (Validation) returns provisional rewards but does NOT create aggregate
+    48→    // - Stores payment method used to enable audit trail and reconciliation
+    49→    //
+    50→    // Invariants:
+    51→    // - Must reference a source transaction ID
+    52→    // - Transaction amount must be positive
+    53→    // - Payment method must be present (required for validation)
+    54→    // - If eligible, must have a reward grant
+    55→    //
+    56→    // Bounded Context Note:
+    57→    // - Basket line items are passed to EagleEye but NOT persisted
+    58→    // - Only summary (itemCount, itemSummary) stored for guest history display
+    59→    // - Source transaction ID references POS system for full basket details
+    60→    // - Payment method stored for eligibility audit (e.g., grant exclusions, co-brand bonuses)
+    61→    Aggregate RewardTransaction {
+    62→        Entity RewardTransactionRecord {
+    63→            aggregateRoot
+    64→
+    65→            - RewardTransactionId id
+    66→            - TransactionId sourceTransactionId  // Reference to POS transaction
+    67→            - String VivaConsumerId              // Salesforce guest identifier
+    68→            - Money transactionAmount
+    69→            - int itemCount                      // e.g., "2 items"
+    70→            - String itemSummary                 // e.g., "Fuel, Coffee" (for display)
+    71→            - DateTime transactionDate
+    72→            - StoreId storeId
+    73→            - PaymentMethod paymentMethod        // Payment method used (affects eligibility)
+    74→            - RewardPreference preferenceUsed
+    75→            - Set<LoyaltyScheme> schemesParticipated  // Schemes posted to (FLYBUYS, INTERNAL_OTR)
+    76→            - EligibilityStatus eligibility
+    77→            - RewardGrant grant
+    78→            - AdjudicationStatus status          // SUCCESS, NOT_ELIGIBLE, SERVICE_UNAVAILABLE
+    79→            - DateTime adjudicatedAt
+    80→        }
+    81→
+    82→        ValueObject RewardPreference {
+    83→            - PreferenceType type  // FLYBUYS_POINTS, SPS_FUEL_DISCOUNT, OTR_REWARDS
+    84→        }
+    85→
+    86→        ValueObject EligibilityStatus {
+    87→            - boolean isEligible
+    88→            - List<String> exclusionReasons
+    89→        }
+    90→
+    91→        ValueObject RewardGrant {
+    92→            - ProfileService.PartnerType partner
+    93→            - Money amount
+    94→            - int points
+    95→            - GrantType type  // BASE, BONUS, PROMOTIONAL
+    96→        }
+    97→
+    98→        ValueObject AdjudicationStatus {
+    99→            - StatusType status  // SUCCESS, NOT_ELIGIBLE, SERVICE_UNAVAILABLE, VALIDATION_FAILED
+   100→        }
+
+<system-reminder>
+Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+</system-reminder>

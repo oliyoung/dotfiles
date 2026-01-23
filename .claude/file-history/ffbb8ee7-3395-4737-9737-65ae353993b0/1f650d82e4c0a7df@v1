@@ -1,0 +1,602 @@
+/*
+ * OTR Digital Platform - Context Map
+ * ===================================
+ *
+ * This Context Map defines the TO-BE architecture for OTR's digital platform
+ * across multiple domains (Loyalty, Payment, Engagement, Location, Recommendation)
+ * using Domain-Driven Design (DDD) strategic patterns to manage complexity and
+ * enable independent evolution of bounded contexts.
+ *
+ * Architecture Overview:
+ * ----------------------
+ * - Core BFF Services: LoyaltyService, EngagementService, RecommendationService, LocationService, PaymentService
+ * - External Systems: EagleEye (loyalty SaaS), Braze (marketing), D365 Commerce, Flybuys, Salesforce, Microsoft Entra External ID
+ * - Presentation Layer: MobileApp
+ *
+ * Key Architectural Decisions:
+ * ----------------------------
+ * 1. Anti-Corruption Layers (ACL) protect core services from external system changes
+ * 2. Event-driven integration between internal BFF services for loose coupling
+ * 3. Customer-Supplier pattern with external systems where we don't control the API
+ * 4. Open Host Services (OHS) with Published Language for stable public APIs
+ * 5. Conformist pattern in presentation layer to simplify client implementation
+ *
+ * DDD Pattern Legend:
+ * ------------------
+ * U = Upstream (influences downstream)
+ * D = Downstream (depends on upstream)
+ * ACL = Anti-Corruption Layer (translates/protects from external models)
+ * OHS = Open Host Service (stable, well-documented API)
+ * PL = Published Language (canonical event format)
+ * S = Supplier (provides data/services)
+ * C = Customer/Consumer (uses data/services)
+ * CF = Conformist (accepts upstream model without translation)
+ */
+
+// ============================================================================
+// BOUNDED CONTEXT IMPORTS
+// ============================================================================
+// Core business capability services
+import "../bounded_context/engagement.cml"
+import "../bounded_context/location.cml"
+import "../bounded_context/loyalty.cml"
+import "../bounded_context/payment.cml"
+import "../bounded_context/profile.cml"
+import "../bounded_context/recommendation.cml"
+
+// External system integrations
+import "../bounded_context/external/braze.cml"
+import "../bounded_context/external/d365-commerce.cml"
+import "../bounded_context/external/eagleeye.cml"
+import "../bounded_context/external/flybuys.cml"
+import "../bounded_context/external/microsoft-entra-external-id.cml"  // Microsoft Entra External ID (CIAM)
+import "../bounded_context/external/salesforce.cml"  // Salesforce CRM
+import "../bounded_context/external/salesforce-service-cloud.cml"  // Salesforce Service Cloud (Customer Support)
+import "../bounded_context/external/recommendation.cml"
+
+// Presentation layer interfaces
+import "../bounded_context/interfaces/mobile.cml"
+
+// ============================================================================
+// CONTEXT MAP DEFINITION
+// ============================================================================
+
+ContextMap DigitalPlatform {
+    type = SYSTEM_LANDSCAPE  // Complete system view across all contexts
+    state = TO_BE            // Target architecture (not current state)
+
+    // Core Backend-for-Frontend (BFF) Services
+    // These services encapsulate business logic and orchestrate external systems
+    contains LoyaltyService         // Loyalty programme management and reward adjudication
+    contains ProfileService         // Customer profile management and risk assessment
+    contains EngagementService      // Customer engagement, campaigns, and communications
+    contains RecommendationService  // Personalised recommendations and next-best offers
+    contains LocationService        // Store location, proximity, and geofencing
+    contains PaymentService         // Payment processing and subscription billing
+
+    // External Third-Party Systems
+    // Systems we integrate with but don't control
+    contains EagleEye                      // SaaS loyalty engine (points, offers)
+    contains Braze                         // Marketing automation platform
+    contains D365Commerce                  // Unified commerce platform (POS CSU + cloud commerce)
+    contains Flybuys                       // Coalition loyalty partner
+    contains Salesforce                    // Customer profile and master data (CRM)
+    contains SalesforceServiceCloud        // Customer support and case management
+    contains MicrosoftEntraExternalID      // Customer Identity and Access Management (CIAM)
+    contains RecommendationExternalService // External AI/ML recommendation engine
+
+    // Presentation Layer
+    // Client application that consumes BFF services
+    contains MobileApp  // iOS & Android native apps
+
+    // ========================================================================
+    // SECTION 1: EXTERNAL SYSTEM INTEGRATIONS WITH ACL
+    // ========================================================================
+    // These relationships use Anti-Corruption Layers to protect our core domain
+    // models from external system changes. Both sides maintain independence.
+    //
+    // Pattern: Bidirectional ACL + OHS
+    // Why: Both systems need to call each other but maintain model independence
+    // ========================================================================
+    // 1.1 LoyaltyService <-> EagleEye (Real-time Loyalty SaaS)
+    // -----------------------------------------------------------
+    // EagleEye is the system of record for points, offers, and promotions.
+    // Bidirectional ACL ensures both systems can evolve independently while
+    // maintaining real-time synchronization.
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // EagleEye is the core engine of the loyalty domain - without this integration,
+    // customers cannot earn points, redeem rewards, or access offers. This is the
+    // foundational relationship that enables all loyalty functionality.
+    //
+    // Inbound: LoyaltyService calls EagleEye for points balance, offer activation
+    // LoyaltyService queries EagleEye to retrieve customer points balances and activate offers, enabling the mobile app to display real-time loyalty information.
+    LoyaltyService [D,ACL] <- [U,OHS] EagleEye {
+        implementationTechnology = "REST API, Webhooks"
+    }
+    // Outbound: EagleEye calls LoyaltyService for member validation, transaction sync
+    // EagleEye validates member eligibility and synchronises transaction data with LoyaltyService to ensure accurate reward adjudication.
+    EagleEye [D,ACL] <- [U,OHS] LoyaltyService {
+        implementationTechnology = "REST API, Webhooks"
+    }
+
+    // 1.2 EngagementService <-> Braze (Marketing Automation)
+    // --------------------------------------------------------
+    // Braze handles multi-channel campaign delivery (email, push, SMS).
+    // ACL prevents Braze's marketing-centric data model from leaking into
+    // our engagement domain logic.
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // Marketing campaigns drive loyalty programme adoption, retention, and engagement.
+    // Without targeted communications, customers won't know about loyalty benefits,
+    // tier upgrades, or available rewards, reducing programme effectiveness.
+    //
+    // Inbound: EngagementService triggers campaigns and segments in Braze
+    // EngagementService sends campaign triggers and customer segments to Braze for multi-channel marketing delivery across email, push notifications, and SMS.
+    EngagementService [D,ACL] <- [U,OHS] Braze {
+        implementationTechnology = "REST API, Webhooks"
+    }
+    // Outbound: Braze sends engagement events back (opens, clicks, conversions)
+    // Braze reports customer engagement metrics back to EngagementService to track campaign performance and optimise future targeting.
+    Braze [D,ACL] <- [U,OHS] EngagementService {
+        implementationTechnology = "REST API, Webhooks"
+    }
+
+    // 1.2b EngagementService <-> Salesforce Service Cloud (Customer Support)
+    // ------------------------------------------------------------------------
+    // Salesforce Service Cloud manages customer support cases and resolutions.
+    // ACL protects EngagementService from Salesforce's case management model.
+    //
+    // Pattern: Bidirectional ACL
+    // Why: EngagementService creates cases but also needs case status updates
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // Customer support is essential for resolving loyalty issues (missing points, failed
+    // redemptions, tier disputes). Quick issue resolution directly impacts customer
+    // satisfaction and loyalty programme retention rates.
+    //
+    // Inbound: EngagementService creates cases for customer support requests
+    // EngagementService creates support cases in Salesforce Service Cloud when customers report issues through the mobile app or other channels.
+    EngagementService [D,ACL] <- [U,OHS] SalesforceServiceCloud {
+        implementationTechnology = "REST API, Salesforce Platform Events"
+    }
+    // Outbound: Salesforce sends case status updates back via Platform Events
+    // Salesforce Service Cloud notifies EngagementService of case status changes so customers can receive updates about their support requests.
+    SalesforceServiceCloud [D,ACL] <- [U,OHS] EngagementService {
+        implementationTechnology = "Salesforce Platform Events, Webhooks"
+    }
+
+    // 1.3 RecommendationService <-> RecommendationExternalService (AI/ML Engine)
+    // ---------------------------------------------------------------------------
+    // External AI/ML service provides real-time personalized recommendations.
+    // ACL isolates our recommendation domain from the ML platform's data science models.
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // Personalised recommendations increase customer engagement with the loyalty programme
+    // by suggesting relevant products and offers that align with individual preferences,
+    // driving higher transaction frequency and average basket value.
+    //
+    // Inbound: RecommendationService requests product/offer recommendations
+    // RecommendationService requests personalised product and offer recommendations from the AI/ML engine based on customer purchase history and preferences.
+    RecommendationService [D,ACL] <- [U,OHS] RecommendationExternalService {
+       implementationTechnology = "REST API, Real-time events"
+    }
+    // Outbound: External service requests customer context and feedback
+    // The AI/ML recommendation engine requests customer context and feedback from RecommendationService to improve its machine learning models.
+    RecommendationExternalService [D,ACL] <- [U,OHS] RecommendationService {
+       implementationTechnology = "REST API, Real-time events"
+    }
+
+    // 1.4 LoyaltyService <-> PaymentService
+    // ---------------------------------------
+    // PaymentService handles all payment processing, subscriptions, and refunds.
+    // ACL prevents payment gateway complexity from polluting loyalty domain.
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // Many loyalty features require payment processing (premium tier subscriptions, paid
+    // redemptions). Payment success/failure directly impacts tier benefits activation,
+    // making this relationship essential for monetised loyalty programmes.
+    //
+    // Inbound: LoyaltyService initiates payments for membership fees, purchases
+    // LoyaltyService requests payment processing for loyalty subscription fees and reward redemptions that require payment.
+    LoyaltyService [D,ACL] <- [U,OHS] PaymentService {
+        implementationTechnology = "REST API, Webhooks"
+    }
+    // Outbound: PaymentService notifies LoyaltyService of payment status changes
+    // PaymentService notifies LoyaltyService when subscription payments succeed or fail, enabling loyalty tier benefits to be activated or suspended.
+    PaymentService [D,ACL] <- [U,OHS] LoyaltyService {
+        implementationTechnology = "REST API, Webhooks"
+    }
+
+    // ========================================================================
+    // SECTION 2: FLYBUYS STRATEGIC INTEGRATION (Multi-Channel)
+    // ========================================================================
+    // Pattern: Customer-Supplier with Conformist (NO ACL)
+    //
+    // Flybuys is a coalition loyalty partner with established, stable APIs.
+    // LoyaltyService conforms to Flybuys API specifications to simplify integration.
+    //
+    // RATIONALE FOR NO ACL (Trade-off Decision):
+    // - Flybuys provides stable, mature APIs with predictable changes
+    // - OAuth 2.0 integration via Auth0 (industry standard)
+    // - Conformist pattern reduces integration complexity
+    // - Trade-off accepted: Coupling to Flybuys API model vs. ACL overhead
+    //
+    // Strategic Context (CY26):
+    // - Flybuys is 2-3 year bridge to customer scale and transaction-linked identity
+    // - Critical for REXP (legacy DB not linked to transactions)
+    // - Goal: become "ambivalent" about renewal within 2-3 years
+    // - Conformist pattern acceptable given time-bound partnership
+    //
+    // Integration Channels:
+    // - Mobile App (OTR + SPS brands): OAuth linking, balance queries, digital dockets
+    // - POS (OTR stores): Transaction-linked earning, card scan integration
+    // - Dealer Terminals (Shell network): Payment terminal points, dealer-funded programs
+    // ========================================================================
+
+    // 2.1 Flybuys -> LoyaltyService (Coalition Loyalty Partner)
+    // -----------------------------------------------------------
+    // LoyaltyService calls Flybuys for member operations and balance queries.
+    // Conforms to Flybuys API model without translation layer.
+    //
+    // Operations:
+    // - OAuth member linking/unlinking (Auth0 OAuth 2.0 flow)
+    // - Points balance queries (real-time)
+    // - Digital fuel docket queries and redemption
+    // - Member account validation
+    // - Transaction posting for points earning
+    // - Dealer programme registration and management
+    // - Webhook handling for balance changes and digital dockets
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // Flybuys partnership provides access to a massive coalition loyalty base (8+ million members),
+    // offering transaction-linked customer identity that OTR lacks. This 2-3 year bridge enables
+    // rapid customer scale while OTR builds its own loyalty capabilities.
+    //
+    // LoyaltyService integrates with Flybuys to link customer accounts, check points balances, redeem fuel dockets, and post transactions for coalition loyalty benefits.
+    LoyaltyService [D,CF] <- [U] Flybuys {
+        implementationTechnology = "REST API, Auth0 OAuth 2.0, Webhooks"
+    }
+
+    // 2.2 Salesforce -> ProfileService (Customer Identity System of Record)
+    // -----------------------------------------------------------------------
+    // Pattern: Customer-Supplier with Conformist (NO ACL)
+    //
+    // Salesforce is the authoritative source for canonical customer data and Viva Consumer ID (VCI).
+    // ProfileService conforms to Salesforce's canonical customer model for identity and core contact details.
+    //
+    // RATIONALE FOR NO ACL (Conscious Exception to ACL Principle):
+    // - Salesforce is a stable, mature SaaS platform with predictable API changes
+    // - API version lock (v58.0) provides protection against breaking changes
+    // - Salesforce is System of Record for customer identity (stable domain)
+    // - ACL translation overhead not justified given Salesforce API stability
+    // - Change management: Salesforce upgrades are controlled and well-communicated
+    //
+    // TRADE-OFF ACCEPTED:
+    // - Coupled to Salesforce field names and data structures
+    // - Mitigated by: API versioning, Salesforce API stability, controlled upgrades
+    // - Benefit: Simpler integration, reduced maintenance overhead vs. ACL
+    //
+    // PATTERN DEVIATION APPROVED: This is an intentional exception to the
+    // "protect core services with ACL" principle due to Salesforce stability.
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // VCI (Viva Consumer ID) is the universal customer identifier across all OTR systems.
+    // ProfileService bridges Salesforce canonical data with OTR-specific enrichment (risk scores,
+    // partner links, behavioral data), enabling unified customer view for instant refunds and
+    // personalised experiences.
+    //
+    // ProfileService queries Salesforce for canonical customer data (VCI, name, email, phone) and enriches it with OTR-specific attributes.
+    ProfileService [D,CF] <- [U] Salesforce {
+        implementationTechnology = "REST API (Salesforce v58.0)"
+    }
+
+    // 2.3 Microsoft Entra External ID -> LoyaltyService (Authentication & authorisation)
+    // ------------------------------------------------------------------------------------
+    // Microsoft Entra External ID (formerly Azure AD B2C) provides OAuth 2.0 / OIDC authentication
+    // for customer-facing applications. LoyaltyService validates access tokens and retrieves user claims.
+    // Supports social identity providers (Google, Facebook, Apple) and MFA.
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // Secure authentication prevents loyalty fraud and ensures points are earned/redeemed
+    // by legitimate account owners, protecting programme integrity and customer trust.
+    //
+    // LoyaltyService validates customer identity tokens from Microsoft Entra External ID to authenticate mobile app users securely.
+    LoyaltyService [D,CF] <- [U] MicrosoftEntraExternalID {
+        implementationTechnology = "OAuth 2.0 / OpenID Connect"
+    }
+
+    // 2.4 D365 Commerce -> RecommendationService (Product Catalogue)
+    // -------------------------------------------------------------
+    // D365 Commerce is the master data source for products and catalogue.
+    // RecommendationService consumes product metadata for recommendation context.
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // Product recommendations must be based on current, available products to drive actual
+    // purchases that earn loyalty points, making accurate product data essential for
+    // effective loyalty-driven recommendations.
+    //
+    // RecommendationService queries D365 Commerce for product catalogue information to provide accurate and relevant product recommendations.
+    RecommendationService [D,CF] <- [U] D365Commerce {
+        implementationTechnology = "REST API"
+    }
+
+    // 2.5 D365 Commerce -> EngagementService (Transaction Data)
+    // -----------------------------------------------------------
+    // D365 Commerce provides transaction history for customer engagement insights.
+    // EngagementService uses this data to trigger campaigns and calculate RFM scores.
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // Transaction history enables behavioural segmentation (RFM analysis) to identify
+    // at-risk customers and high-value loyalty members, allowing targeted campaigns
+    // to retain and grow the most valuable customer segments.
+    //
+    // EngagementService queries D365 Commerce for customer transaction history to segment customers and calculate recency, frequency, and monetary value for targeted campaigns.
+    EngagementService [D,CF] <- [U] D365Commerce {
+        implementationTechnology = "REST API"
+    }
+
+    // 2.6 D365 Commerce -> LocationService (Store Master Data)
+    // ----------------------------------------------------------
+    // D365 Commerce is the master data source for store locations and attributes.
+    // LocationService consumes store master data (addresses, hours, amenities, fuel prices).
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // Accurate store locations and fuel prices enable customers to find nearby stores and
+    // make informed purchase decisions, increasing store visits and loyalty transactions.
+    //
+    // LocationService queries D365 Commerce for store master data including addresses, operating hours, amenities, and current fuel prices to support store finder functionality.
+    LocationService [D,CF] <- [U] D365Commerce {
+        implementationTechnology = "REST API"
+    }
+
+    // ========================================================================
+    // SECTION 3: EVENT-DRIVEN INTERNAL INTEGRATIONS
+    // ========================================================================
+    // Internal BFF services communicate asynchronously via Event Bus.
+    // LoyaltyService publishes domain events using Open Host Service (OHS) with
+    // Published Language (PL) - a stable, well-documented event schema.
+    //
+    // Pattern: OHS + Published Language (U,OHS,PL -> D,CF)
+    // Why: Loose coupling between services, easier to add new consumers
+    // Benefits: Temporal decoupling, scalability, event replay capability
+    // ========================================================================
+    // 3.1 ProfileService <-> EngagementService (Bidirectional Domain Events + Batch)
+    // -------------------------------------------------------------------------------
+    // Pattern: Bidirectional OHS + Published Language with Hybrid Event/Batch Sync
+    //
+    // ProfileService → EngagementService:
+    // - Events: ProfileCreated, ProfileUpdated, PartnerLinkChanged, RiskStatusChanged
+    // - Batch: Daily profile enrichment (risk scores, profile completeness)
+    // - Use case: Campaign segmentation, customer targeting, high-risk customer identification
+    //
+    // EngagementService → ProfileService:
+    // - Events: EngagementTierChanged (highly engaged → disengaged)
+    // - Batch: Daily engagement score rollup (click rates, campaign responses, app usage)
+    // - Use case: Risk assessment, profile completeness scoring
+    //
+    // System of Record Boundaries:
+    // - ProfileService owns: Customer attributes, risk scores, partner links, refund history
+    // - EngagementService owns: Campaign interactions, notification preferences, delivery status
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // Unified customer view combining profile data and engagement metrics enables risk-based
+    // business processes (instant refunds) and highly targeted marketing campaigns, driving
+    // both operational efficiency and customer satisfaction.
+    //
+    // ProfileService publishes profile events to EngagementService for campaign targeting; EngagementService sends engagement metrics back for risk assessment.
+    EngagementService [D,CF] <- [U,OHS,PL] ProfileService {
+        implementationTechnology = "Event Bus (async events), Batch API (daily sync)"
+    }
+    ProfileService [D,CF] <- [U,OHS,PL] EngagementService {
+        implementationTechnology = "Event Bus (async events), Batch API (daily sync)"
+    }
+
+    // 3.2 LoyaltyService -> ProfileService (Synchronous Queries)
+    // ------------------------------------------------------------
+    // Pattern: Customer-Supplier (Synchronous REST API)
+    //
+    // Operations:
+    // - Query partner link status for transaction adjudication
+    // - Query reward preference (Flybuys, Shell, OTR Rewards)
+    // - Validate partner account linking
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // Transaction adjudication requires current partner linking status to determine
+    // reward routing (Flybuys points vs Shell discount vs OTR points), making this
+    // real-time query essential for correct reward allocation.
+    //
+    // LoyaltyService queries ProfileService synchronously for partner link status during transaction adjudication to route rewards correctly.
+    LoyaltyService [D,CF] <- [U,OHS] ProfileService {
+        implementationTechnology = "REST API (synchronous queries)"
+    }
+
+    // 3.3 LoyaltyService -> EngagementService (Domain Events)
+    // ---------------------------------------------------------
+    // Events published: MemberEnrolled, PointsEarned, PointsRedeemed, GrantIssued
+    // Use case: Trigger welcome campaigns, reward notifications, promotional offers
+    // Pattern: Fire-and-forget, at-least-once delivery via Event Hub consumer groups
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // Automated life-cycle campaigns (welcome, promotional offers, points expiry) drive ongoing
+    // engagement with the loyalty programme, increasing customer lifetime value through
+    // timely, relevant communications.
+    //
+    // LoyaltyService publishes loyalty events to EngagementService to trigger automated campaigns like welcome emails for new members and congratulations messages for tier upgrades.
+    EngagementService [D,CF] <- [U,OHS,PL] LoyaltyService {
+        implementationTechnology = "Event Bus (async events)"
+    }
+
+    // 3.4 LoyaltyService -> RecommendationService (Domain Events)
+    // -------------------------------------------------------------
+    // Events published: MemberEnrolled, TransactionCompleted, PreferencesUpdated
+    // Use case: Personalize recommendations based on loyalty behaviour and preferences
+    // Pattern: Event-carried state transfer - each event contains full context
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // Loyalty preferences and purchase patterns enable hyper-personalised recommendations
+    // that align with customer interests, increasing conversion rates and loyalty
+    // programme satisfaction.
+    //
+    // LoyaltyService publishes loyalty behaviour events to RecommendationService to personalise product recommendations based on customer preferences and purchase patterns.
+    RecommendationService [D,CF] <- [U,OHS,PL] LoyaltyService {
+        implementationTechnology = "Event Bus (async events)"
+    }
+
+    // 3.5 LocationService -> EngagementService (Proximity Events)
+    // -------------------------------------------------------------
+    // Events published: CustomerEnteredGeofence, CustomerExitedGeofence, CustomerNearStore
+    // Use case: Trigger location-based offers and proximity notifications
+    // Pattern: Real-time geofencing events for contextual customer engagement
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // Location-based offers delivered at the right time and place drive impulse purchases
+    // and store visits, increasing loyalty transaction frequency and programme engagement.
+    //
+    // LocationService publishes proximity events to EngagementService to trigger location-based offers when customers enter geofenced areas around stores.
+    EngagementService [D,CF] <- [U,OHS,PL] LocationService {
+        implementationTechnology = "Event Bus (async events)"
+    }
+
+    // 3.6 D365Commerce -> LoyaltyService (Transaction Events - All Channels)
+    // -----------------------------------------------------------------------
+    // Events published: TransactionCompleted, TransactionRefunded, TransactionVoided
+    // Channels: POS CSU (in-store/forecourt), web (cloud commerce), mobile (via mobile backend)
+    // Use case: Trigger reward adjudication when customer completes purchase
+    // Pattern: Published Language - D365 publishes canonical transaction events
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // Transactions are the core trigger for the entire loyalty loop (earn and burn). Without
+    // transaction events, customers cannot earn points, making this the most critical
+    // integration in the loyalty ecosystem.
+    //
+    // D365 Commerce publishes transaction events to LoyaltyService to trigger reward adjudication and points earning whenever customers complete purchases across any channel.
+    LoyaltyService [D,CF] <- [U,OHS,PL] D365Commerce {
+        implementationTechnology = "Event Bus (async events)"
+    }
+
+    // 3.7 D365Commerce -> EngagementService (Transaction Events - All Channels)
+    // ---------------------------------------------------------------------------
+    // Events published: TransactionCompleted
+    // Channels: POS CSU (in-store/forecourt), web (cloud commerce), mobile (via mobile backend)
+    // Use case: Trigger post-transaction marketing campaigns in real-time
+    // Pattern: Real-time event streaming for immediate customer engagement
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // Post-purchase engagement (digital receipts, points confirmation, review requests) closes
+    // the loyalty loop and reinforces the value proposition, driving repeat purchases and
+    // programme stickiness.
+    //
+    // D365 Commerce publishes transaction events to EngagementService to trigger post-purchase campaigns like digital receipts and product review requests.
+    EngagementService [D,CF] <- [U,OHS,PL] D365Commerce {
+        implementationTechnology = "Event Bus (async events)"
+    }
+
+    // 3.8 D365Commerce -> RecommendationService (Transaction Events - All Channels)
+    // -------------------------------------------------------------------------------
+    // Events published: TransactionCompleted
+    // Channels: POS CSU (in-store/forecourt), web (cloud commerce), mobile (via mobile backend)
+    // Use case: Update purchase history for personalized recommendations
+    // Pattern: Event-carried state transfer with full transaction basket
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // Real-time purchase history enables increasingly accurate product recommendations
+    // that drive cross-sell and upsell opportunities, increasing average transaction
+    // value and loyalty programme ROI.
+    //
+    // D365 Commerce publishes transaction events to RecommendationService to update customer purchase history and improve future product recommendations.
+    RecommendationService [D,CF] <- [U,OHS,PL] D365Commerce {
+        implementationTechnology = "Event Bus (async events)"
+    }
+
+    // ========================================================================
+    // SECTION 4: PRESENTATION LAYER INTEGRATION
+    // ========================================================================
+    // Mobile application consumes BFF services via REST APIs.
+    // We use the Conformist pattern here to keep client code simple - client
+    // directly uses the DTOs exposed by backend services without translation.
+    //
+    // Pattern: Open Host Service (U,OHS -> D,CF)
+    // Why: Simplifies client implementation, backend owns the API contract
+    // Trade-off: Client is coupled to backend API changes (mitigated by versioning)
+    // ========================================================================
+    // --- Mobile Application (iOS & Android) ---
+
+    // 4.1 MobileApp -> ProfileService
+    // --------------------------------
+    // Profile management features: view profile, update preferences, partner linking,
+    // account verification, profile completeness
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // Customer profile management enables personalization and partner linking (Flybuys, Shell).
+    // Profile completeness and verification directly impact eligibility for rewards and
+    // instant refunds, making this essential for customer experience and fraud prevention.
+    //
+    // MobileApp calls ProfileService to display customer profile, manage partner links (Flybuys, Shell), and update app preferences.
+    MobileApp [D,CF] <- [U,OHS] ProfileService {
+        implementationTechnology = "REST API"
+    }
+
+    // 4.2 MobileApp -> LoyaltyService
+    // --------------------------------
+    // Core loyalty features: points balance, transaction history, tier status,
+    // reward redemption, membership management
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // The mobile app is the primary customer touchpoint for loyalty programme interaction.
+    // Without this interface, customers cannot check points, redeem rewards, or engage
+    // with the programme, making it essential for loyalty adoption and usage.
+    //
+    // MobileApp calls LoyaltyService to display customer points balances, transaction history, and tier status, enabling customers to manage their loyalty membership.
+    MobileApp [D,CF] <- [U,OHS] LoyaltyService {
+        implementationTechnology = "REST API"
+    }
+
+    // 4.3 MobileApp -> EngagementService
+    // ------------------------------------
+    // Engagement features: campaigns, offers, notifications, customer feedback
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // In-app offers and notifications are the most effective channel for driving immediate
+    // action (store visits, purchases), significantly outperforming email in conversion
+    // rates for loyalty programme engagement.
+    //
+    // MobileApp calls EngagementService to retrieve personalised campaigns, display notifications, and submit customer feedback.
+    MobileApp [D,CF] <- [U,OHS] EngagementService {
+        implementationTechnology = "REST API"
+    }
+
+    // 4.4 MobileApp -> RecommendationService
+    // ----------------------------------------
+    // Personalization features: product recommendations, next-best offers,
+    // personalized content on home screen
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // Personalised home screen content and product recommendations create a tailored
+    // experience that increases app engagement time and purchase intent, driving
+    // higher loyalty programme participation.
+    //
+    // MobileApp calls RecommendationService to display personalised product recommendations and next-best offers on the home screen and product pages.
+    MobileApp [D,CF] <- [U,OHS] RecommendationService {
+        implementationTechnology = "REST API"
+    }
+
+    // 4.5 MobileApp -> LocationService
+    // ----------------------------------
+    // Location features: store finder, fuel price lookup, proximity notifications,
+    // geofencing for in-store offers
+    //
+    // WHY THIS RELATIONSHIP IS CRITICAL:
+    // Store finder and fuel price lookup drive physical store visits where most loyalty
+    // transactions occur, directly connecting digital engagement to real-world revenue
+    // and points earning opportunities.
+    //
+    // MobileApp calls LocationService to help customers find nearby stores, check current fuel prices, and receive proximity-based notifications.
+    MobileApp [D,CF] <- [U,OHS] LocationService {
+        implementationTechnology = "REST API"
+    }
+}
+
+// ============================================================================
+// END OF CONTEXT MAP
+// ============================================================================

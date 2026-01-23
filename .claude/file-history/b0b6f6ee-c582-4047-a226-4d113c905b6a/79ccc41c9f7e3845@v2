@@ -1,0 +1,475 @@
+= Engagement Bounded Context
+O.Young@otr.com.au
+v0.1, 2025-12-19
+:project-name: OTRG Apps & Ecommerce Architecture
+:togaf-adm-phase: Phase C: Information Systems Architectures
+:document-type: Bounded Context
+:status: Draft
+:version: 0.1
+:domain: Engagement
+:bounded-context-type: APPLICATION
+:domain-architect: O.Young@otr.com.au
+:doctype: article
+:toc: left
+:toclevels: 4
+:sectanchors:
+:sectlinks:
+:sectnums:
+:icons: font
+:source-highlighter: highlightjs
+:experimental:
+:description: Bounded Context for the Engagement Domain
+:keywords: engagement, braze, bounded context, togaf, ddd
+
+
+BIDIRECTIONAL customer engagement service for outbound marketing and
+inbound customer communications.
+
+== Business Context
+
+The `EngagementService` is a stateless orchestration and translation layer that enables bidirectional customer engagement across OTR Group brands. It routes behavioural events to marketing automation platforms (Braze) for campaign execution while managing inbound customer communications, support requests, and multi-channel feedback.
+
+The service acts as an Anti-Corruption Layer (ACL) protecting OTR's domain model from external engagement platform changes and provides intelligent routing for customer-initiated communications to appropriate support channels.
+
+== Architectural Pattern
+
+The `EngagementService` is a FULLY STATELESS service acting as an event router and translator, NOT a system of record.
+
+It protects OTR's domain model from external engagement platforms (Braze, Salesforce Service Cloud, Survey platforms) through Anti-Corruption Layers and publishes domain events in OTR's ubiquitous language.
+
+**Architecture**: Follows xref:patterns:clean_architecture.adoc[Clean Architecture] principles with a pure Application layer (use cases for event routing and translation) and Infrastructure layer (adapters for Braze, Salesforce, survey platforms). As a stateless service, it has no Domain layer aggregates - all state is owned by external systems.
+
+**Key Patterns Applied**:
+
+* **xref:patterns:anti_corruption_layer.adoc[Anti-Corruption Layer]**: Braze adapter, Salesforce Service Cloud adapter, Survey platform adapters
+* **Event-Driven Integration**: Consumes domain events from other bounded contexts, publishes translated events to engagement platforms
+* **Stateless Orchestration**: Pure translation and routing without local state
+
+== Strategic Value
+
+=== Customer Lifetime Value
+
+Effective engagement drives customer retention and lifetime value through:
+
+- Real-time behavioural triggers for immediate campaign activation
+- Personalised communications based on customer actions and preferences
+- Multi-channel engagement (email, push, SMS, in-app) managed through single platform
+
+=== Operational Efficiency
+
+Stateless architecture enables:
+
+- Horizontal scaling for high-volume event processing
+- Platform vendor independence through ACL pattern
+- Marketing team self-service campaign management without code deployments
+
+=== Customer Satisfaction
+
+Intelligent communication routing improves customer experience:
+
+- Automated triage of customer inquiries to appropriate channels
+- Context-enriched support requests for faster resolution
+- Multi-source feedback consolidation for comprehensive customer insights
+
+=== Platform Independence
+
+ACL pattern provides vendor flexibility:
+
+- Braze is swappable without rewriting mobile app or domain logic
+- Survey platforms interchangeable through standardised webhook translation
+- Single orchestration layer shields business from platform migrations
+
+== Aggregates
+
+EngagementService is a *FULLY STATELESS SERVICE* providing bidirectional
+integration between OTR and external engagement platforms.
+
+*EngagementService owns ZERO aggregates* - it is a pure routing and
+translation layer.
+
+All state owned by specialised systems:
+
+* Campaign content and execution → Braze
+* Customer inquiries and case resolution → Salesforce Service Cloud
+* Customer profiles → Salesforce (Profile)
+* Aggregated analytics → EDP
+
+== Services
+
+=== BrazeEventTranslator
+
+*BIDIRECTIONAL* translation service between OTR and Braze:
+
+*Outbound (OTR → Braze):*
+
+* translateTransactionCompleted
+* translatePointsEarned
+* translateTierChanged
+* translatePartnerLinked
+* enrichWithCustomerContext
+
+*Inbound (Braze → OTR):*
+
+* translateCommunicationSent
+* translateCommunicationDelivered
+* translateCommunicationOpened
+* translateCommunicationClicked
+* translateCommunicationBounced
+* translateUnsubscribe
+* validateBrazeWebhookSignature
+
+=== SurveyPlatformAdapter
+
+* Translate survey platform webhooks to OTR domain events
+* Validate webhook signatures
+* Handle survey platform-specific payload formats
+
+=== EventEnrichmentService
+
+Add contextual data to events before sending to Braze:
+
+* addStoreContext
+* addTransactionContext
+* addLoyaltyContext
+
+=== Inbound Services (Customer Communications Management)
+
+==== InquiryRoutingService
+
+* triageInquiry: Triage incoming customer inquiries and determine routing
+* routeInquiry: Route inquiry to appropriate destination
+* generateAutomatedResponse: Generate automated response for common inquiries
+* canHandleWithChatbot: Determine if inquiry can be handled by chatbot
+
+==== SupportRequestOrchestrator
+
+* enrichSupportRequest: Enrich support request with customer context before creating Salesforce case
+* createSalesforceCase: Create Salesforce case from support request
+* synchroniseCaseStatus: Synchronise Salesforce case status back to support request
+* getCustomerTransactionContext: Query customer transaction history for context
+
+==== FeedbackProcessor
+
+* processFeedback: Process feedback submission
+* requiresFollowup: Determine if feedback requires human followup based on rating
+* sendAcknowledgement: Send acknowledgement to customer
+* escalateToSupport: Escalate low-rated feedback to support case (manual review)
+
+==== SalesforceServiceCloudAdapter
+
+ACL for Salesforce Service Cloud integration:
+
+* createCase: Create case in Salesforce
+* updateCaseStatus: Update case status
+* getCaseDetails: Get case details
+* addCaseComment: Add comment to case
+* getCasesForCustomer: Query cases for customer
+
+==== ProfileServiceIntegration
+
+Bidirectional integration with ProfileService:
+
+* sendEngagementSummary: Send engagement summary to ProfileService (daily batch)
+* publishEngagementTierChanged: Publish EngagementTierChanged event when tier changes
+* calculateEngagementTier: Calculate engagement tier from metrics
+
+== NOT in this Context (Owned by Other Systems)
+
+=== Outbound (Marketing)
+
+* Campaign definitions and content → Braze
+* Customer segments → Braze
+* Communication preferences → Braze
+* Marketing communication history → Braze
+* Message delivery tracking (opens, clicks, conversions) → Braze
+
+=== Inbound (Customer Communications)
+
+* Customer inquiries and case life-cycle → Salesforce Service Cloud
+* Case management and resolution → Salesforce Service Cloud
+* Knowledge base content → Salesforce Service Cloud
+
+=== Shared
+
+* Customer master data → Salesforce (ProfileService)
+* Aggregated feedback analytics → EDP (Enterprise Data Platform)
+
+== Events
+
+=== Customer Inquiry Events (Inbound Communications)
+
+* *InquiryReceived*: Customer submitted an inquiry via app/web
+* *InquiryRouted*: Inquiry routed to appropriate support channel
+
+=== Support Request Events (Support Case Management)
+
+* *SupportRequestCreated*: Support request created in EngagementService
+* *SalesforceCaseCreated*: Case created in Salesforce Service Cloud
+
+=== Engagement Tier Events (ProfileService Integration)
+
+* *EngagementTierChanged*: Customer engagement tier changed based on
+activity (HIGHLY_ENGAGED, ENGAGED, DISENGAGED)
+
+=== Marketing Engagement Events (Braze Webhooks Inbound)
+
+Events received from Braze webhooks tracking customer engagement with
+marketing communications:
+
+* *CommunicationSent*: Marketing communication sent to customer
+* *CommunicationDelivered*: Communication successfully delivered
+* *CommunicationOpened*: Customer opened communication
+* *CommunicationClicked*: Customer clicked link in communication
+* *CommunicationBounced*: Communication delivery failed (hard/soft
+bounce)
+* *UnsubscribeRequested*: Customer unsubscribed from communications
+
+=== Feedback Events (Multi-Source Feedback)
+
+* *FeedbackSubmitted*: Feedback submitted from any source (survey,
+review, direct message, app rating)
+* *FeedbackReceived* (DEPRECATED): Legacy survey feedback event - use
+FeedbackSubmitted instead
+* *FeedbackResponseFailed*: Failed to record feedback response
+
+== Integrations
+
+=== Upstream
+
+* *Outbound*: D365 Commerce (transactions), LoyaltyService (loyalty events), ProfileService (profile events)
+* *Inbound*: MobileApp (customer messages), Survey Platform (feedback)
+
+=== Downstream
+
+* *Outbound*: Braze (campaign triggers), ProfileService (engagement summaries)
+* *Inbound*: Salesforce Service Cloud (cases), EDP (feedback analytics)
+
+== Repositories
+
+*EngagementService has NO repositories* - it is fully stateless.
+
+*No repositories because:*
+
+* All outbound state (campaigns, segments, message history) → Owned by Braze
+* All inbound state (cases, inquiries, resolution) → Owned by Salesforce Service Cloud
+* Aggregated analytics → Owned by EDP
+* Customer master data → Owned by Salesforce (ProfileService)
+
+== Architecture Decisions
+
+=== Fully Stateless Architecture - Event Router and ACL for Both Directions
+
+==== Decision
+
+EngagementService is FULLY STATELESS for both outbound
+(marketing) and inbound (customer communications). It provides pure
+routing, enrichment, and ACL translation without persisting any
+aggregates.
+
+==== Rationale
+
+*Outbound (Marketing):*
+
+* Marketing campaign data and execution owned by Braze
+* No business logic beyond event translation and routing
+* Stateless design enables horizontal scaling
+* Pure transformation layer
+
+*Inbound (Customer Communications):*
+
+* Customer inquiry and case life-cycle owned by Salesforce Service Cloud
+* EngagementService provides routing intelligence and context enrichment
+only
+* No local persistence - routes directly to Salesforce
+* Salesforce is the system of record for all customer communications
+
+=== Bidirectional Braze Integration
+
+==== Decision
+
+Campaign definitions, content, and execution logic are owned by Braze. EngagementService handles bidirectional integration: outbound behavioural events trigger campaigns, inbound webhooks track communication engagement.
+
+==== Rationale
+
+*Outbound (OTR → Braze):*
+
+* Braze is specialised marketing automation platform
+* Marketing team manages campaigns in Braze Canvas/Journey Builder
+* Self-service campaign management without code deployments
+* Braze provides multi-channel delivery (email, push, SMS, in-app)
+
+*Inbound (Braze → OTR):*
+
+* Communication engagement metrics (sent, delivered, opened, clicked) owned by Braze
+* Braze sends webhooks for engagement events in real-time
+* EngagementService translates Braze webhooks to OTR domain events
+* EDP consumes events for campaign performance analytics
+* No local storage of engagement metrics (Braze is source of truth)
+
+=== Customer Segments Owned by Braze
+
+==== Decision
+
+Customer segmentation is performed by Braze, not
+EngagementService.
+
+==== Rationale
+
+* Segmentation is marketing function, not technical integration
+* Braze has rich segmentation engine with marketing-friendly UI
+* Marketing team creates and manages segments in Braze
+* EngagementService provides customer attributes to enable segmentation
+
+=== Communication Preferences Owned by Braze
+
+==== Decision
+
+Customer communication preferences (email opt-in, push
+preferences, channel preferences) are owned by Braze.
+
+==== Rationale
+
+* Preferences directly control Braze campaign delivery
+* Braze provides preference centre UI for customers
+* Regulatory compliance (CAN-SPAM, GDPR) handled by Braze
+* No need to duplicate preference management
+
+=== Multi-Source Feedback Consolidation
+
+==== Decision
+
+EngagementService consolidates feedback from all sources (surveys, reviews, direct messages, app ratings) into unified FeedbackSubmitted events.
+
+==== Rationale
+
+* Customers provide feedback through multiple channels
+* Survey platform is just one source among many
+* Unified feedback collection and routing logic across all feedback types
+* Low-rated feedback flagged for potential escalation
+* Aggregated analytics owned by EDP (EngagementService publishes events)
+
+*Feedback Sources:*
+
+* Survey platforms (post-transaction, NPS, CSAT)
+* Product reviews (D365 Commerce)
+* Direct customer messages (mobile app, web)
+* App store ratings (iOS, Android)
+* Email replies to marketing campaigns
+
+=== Real-Time Event Streaming for Immediate Triggers
+
+==== Decision
+
+Behavioural events flow through EngagementService in real-time (<seconds) to enable immediate campaign triggers.
+
+==== Rationale
+
+* Customer engagement most effective when immediate
+* Strike while customer is on forecourt/in-store
+* Real-time personalisation improves customer experience
+* Batch processing would miss time-sensitive opportunities
+
+=== Batch Customer Attributes via ADF, Real-Time Behaviours via EngagementService
+
+==== Decision
+
+Customer master data synced via ADF pipeline (Salesforce → Braze), behavioural events streamed via EngagementService.
+
+==== Rationale
+
+* Master data (name, email, phone) changes infrequently - batch is sufficient
+* Behavioural events (purchases, points earned) need immediate routing
+* Separation of concerns: ADF for data sync, EngagementService for event routing
+* Reduces complexity in EngagementService
+
+=== Marketing Team Owns Trigger Logic in Braze
+
+==== Decision
+
+Event-to-campaign trigger mappings are configured by marketing team in Braze Canvas/Journey Builder, not coded in EngagementService.
+
+==== Rationale
+
+* Marketing team needs self-service campaign management
+* Changing triggers shouldn't require code deployment
+* Braze Canvas provides visual journey builder
+* A/B testing and optimisation handled in Braze
+
+=== EngagementService as Event Publisher for Survey Platform
+
+==== Decision
+
+EngagementService translates survey platform webhooks into OTR domain events.
+
+==== Rationale
+
+* Third-party survey platforms don’t publish to OTR’s Event Hub
+* EngagementService receives survey webhooks → ACL translates → publishes events
+* Provides clean domain events in OTR’s ubiquitous language
+* Other bounded contexts consume events without knowing about survey vendor
+
+=== Inbound Communications Routed Immediately to Salesforce
+
+==== Decision
+
+EngagementService routes customer communications (inquiries, messages, feedback) immediately to Salesforce Service Cloud without local persistence. Salesforce is the system of record for all customer communications.
+
+==== Rationale
+
+* Customers initiate communications through multiple channels (app, web, email, SMS)
+* EngagementService provides channel abstraction and routing intelligence
+* Intelligent triage determines routing destination (case, automated response, etc.)
+* Salesforce owns entire case life-cycle (received → triaged → resolved → closed)
+* Customer visibility provided by querying Salesforce API
+* No local persistence reduces complexity and eliminates sync issues
+
+=== Bidirectional Integration with ProfileService
+
+==== Decision
+
+EngagementService and ProfileService have bidirectional
+integration with hybrid event/batch synchronization pattern.
+
+==== Rationale
+
+* Both services benefit from each other’s data
+* ProfileService uses engagement metrics for risk assessment and profile completeness
+* EngagementService uses profile data for campaign segmentation and targeting
+* Eventual consistency acceptable (not real-time)
+* Each service maintains system of record for its domain
+
+== Patterns
+
+=== Anti-Corruption Layer (ACL)
+
+*Outbound ACLs:*
+
+* BrazeEventTranslator: Translates OTR events to Braze track events
+* Protects domain from Braze’s marketing-centric model
+
+*Inbound ACLs:*
+
+* SalesforceServiceCloudAdapter: Translates SupportRequest → Salesforce Cases
+* SurveyPlatformAdapter: Translates survey webhooks to FeedbackSubmitted events
+* Protects domain from external API changes
+
+=== Stateless Architecture Pattern
+
+* No database or persistent storage
+* All state in external systems (Braze, Salesforce)
+* Horizontally scalable Azure Functions
+* Pure event transformation and routing
+
+=== Event-Driven Integration
+
+* EngagementService consumes events from Event Bus (outbound triggers)
+* Publishes domain events for inbound communications
+* Processes events asynchronously with at-least-once delivery
+* Loose coupling, temporal decoupling, scalability
+
+=== Intelligent Routing Pattern
+
+* InquiryRoutingService: Triage logic determines destination
+* Routes to: Automated response, Salesforce case, Support team
+* Priority-based routing decisions
+* Machine learning can enhance routing decisions over time

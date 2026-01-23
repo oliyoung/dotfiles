@@ -1,0 +1,247 @@
+     1→= Loyalty Domain
+     2→:canonical: Loyalty
+     3→:domain-architect: O.Young@otr.com.au
+     4→:version: 0.1.0
+     5→:domain: Loyalty
+     6→:doctype: article
+     7→:toc: left
+     8→:toclevels: 4
+     9→:sectanchors:
+    10→:sectlinks:
+    11→:sectnums:
+    12→:icons: font
+    13→:source-highlighter: highlightjs
+    14→:experimental:
+    15→
+    16→== Domain Vision
+    17→
+    18→Enable customer retention and engagement through rewards programmes, partner integrations, and personalised loyalty experiences across all VER brands.
+    19→
+    20→== What is the Loyalty Domain?
+    21→
+    22→The Loyalty Domain encompasses all aspects of customer reward and retention programmes across OTR, Reddy Express, and other VER brands. It handles everything from calculating what rewards customers earn, to managing their points and wallet contents, to integrating with external loyalty partners like Flybuys.
+    23→
+    24→== Domain Structure
+    25→
+    26→This domain is divided into several subdomains, each handling a specific aspect of the loyalty system:
+    27→
+    28→=== Core Subdomains
+    29→
+    30→Core subdomains represent the unique competitive advantage and primary business value of the Loyalty Domain. These are the capabilities that differentiate OTR's loyalty programme.
+    31→
+    32→==== Reward Calculation
+    33→
+    34→===== Purpose
+    35→
+    36→Calculate reward eligibility and amounts based on customer transactions, applying business rules and promotional logic.
+    37→
+    38→===== Plain English
+    39→
+    40→This is the "brain" of the loyalty system. When a customer makes a purchase, this subdomain figures out:
+    41→
+    42→- Are they eligible for rewards?
+    43→- How many points should they earn?
+    44→- Do any special promotions apply?
+    45→- Should grants or discounts be excluded from point calculations?
+    46→
+    47→This is core because the specific business logic makes OTR's loyalty programme unique - the rules about fuel vs retail points, payment method exclusions, and promotional multipliers.
+    48→
+    49→=== Supporting Subdomains
+    50→
+    51→Supporting subdomains are necessary for the domain to function but don't provide competitive differentiation. These could potentially be replaced by third-party solutions or standard platforms.
+    52→
+    53→==== Wallet Management
+    54→
+    55→===== Purpose
+    56→
+    57→Manage member wallet contents including grants, entitlements, fuel discounts, and product offers.
+    58→
+    59→===== Plain English
+    60→
+    61→Think of this as the customer's loyalty "wallet" where all their rewards live:
+    62→
+    63→- Fuel discount vouchers
+    64→- Product offers ("Buy 2 coffees, get 1 free")
+    65→- Promotional grants
+    66→- Entitlements
+    67→
+    68→This is similar to a digital wallet app - it stores and tracks what the customer has available to use.
+    69→
+    70→===== Note
+    71→
+    72→In the current architecture, this is owned by EagleEye (the loyalty platform provider). LoyaltyService queries EagleEye for wallet contents but doesn't store this data locally.
+    73→
+    74→==== Points Ledger
+    75→
+    76→===== Purpose
+    77→
+    78→Track member points balances, accrual, redemption, and expiry across all earning and burning channels.
+    79→
+    80→===== Plain English
+    81→
+    82→This is the points "bank account" for customers:
+    83→
+    84→- Current points balance
+    85→- History of points earned (from purchases, bonuses, promotions)
+    86→- History of points redeemed (for fuel discounts, products, partner rewards)
+    87→- Upcoming points expiry dates
+    88→
+    89→===== Note
+    90→
+    91→Like Wallet Management, this is currently owned by EagleEye. LoyaltyService queries the points balance in real-time rather than maintaining a local copy.
+    92→
+    93→==== Partner Integration
+    94→
+    95→===== Purpose
+    96→
+    97→Integrate with third-party loyalty partners (Flybuys, Shell) to extend loyalty ecosystem.
+    98→
+    99→===== Plain English
+   100→
+   101→This connects OTR's loyalty system to external partners:
+   102→
+   103→- Flybuys: Coalition loyalty programme with 8M+ members
+   104→- Shell: Co-branded fuel card programme
+   105→
+   106→When customers link their Flybuys account, this subdomain handles:
+   107→
+   108→- OAuth account linking
+   109→- Transaction posting (daily batches to Flybuys)
+   110→- Points balance queries
+   111→- Digital fuel docket integration
+   112→
+   113→===== Note
+   114→
+   115→PartnerLink aggregate (the customer-partner relationship) is owned by ProfileService. LoyaltyService orchestrates the partner API interactions.
+   116→
+   117→==== Preference Management
+   118→
+   119→===== Purpose
+   120→
+   121→Manage customer reward preferences and partner selections.
+   122→
+   123→===== Plain English
+   124→
+   125→This tracks what rewards customers want:
+   126→
+   127→- "I want Flybuys points" vs "I want Shell Price Save fuel discounts"
+   128→- Reward preference drives transaction adjudication
+   129→- Unlinking a partner resets preference to OTR_REWARDS (default fallback)
+   130→
+   131→===== Note
+   132→
+   133→Reward preferences are stored in ProfileService's PartnerLink aggregate. LoyaltyService queries ProfileService for preference during transaction adjudication.
+   134→
+   135→==== Promotions Management
+   136→
+   137→===== Purpose
+   138→
+   139→Create, manage, and execute promotional offers and campaigns for loyalty members.
+   140→
+   141→===== Plain English
+   142→
+   143→This handles special promotions and campaigns:
+   144→
+   145→- "Earn 2X points on fuel purchases this weekend"
+   146→- "Buy 4 coffees this week, get one free"
+   147→- Flybuys bonus campaigns ("Fill up every week for 4 weeks, earn 500 bonus points")
+   148→
+   149→===== Note
+   150→
+   151→Campaign configuration and execution is managed by EagleEye. LoyaltyService queries EagleEye to check active campaigns during transaction adjudication.
+   152→
+   153→==== Membership Management
+   154→
+   155→===== Purpose
+   156→
+   157→Manage member enrolment, tier progression, and membership lifecycle.
+   158→
+   159→===== Plain English
+   160→
+   161→This tracks the customer's journey through the loyalty programme:
+   162→
+   163→- Initial enrolment (creating a loyalty account)
+   164→- Tier levels (Bronze, Silver, Gold, Platinum)
+   165→- Tier progression (moving up based on spending or points)
+   166→- Tier benefits (what perks do you get at each level?)
+   167→- Membership status (active, suspended, closed)
+   168→
+   169→===== Note
+   170→
+   171→Membership and tier data is owned by EagleEye. LoyaltyService queries EagleEye for tier information.
+   172→
+   173→==== Subscription Management
+   174→
+   175→===== Purpose
+   176→
+   177→Handle subscription-based loyalty programmes, including billing, renewals, and cancellations.
+   178→
+   179→===== Plain English
+   180→
+   181→This manages paid loyalty memberships:
+   182→
+   183→- Premium membership plans (e.g., "OTR Plus" with extra benefits)
+   184→- Recurring billing (monthly or annual payments)
+   185→- Payment retry logic (when a card expires)
+   186→- Cancellations and pauses
+   187→- Subscription-specific benefits
+   188→
+   189→===== Note
+   190→
+   191→This would be a separate SubscriptionService bounded context if implemented. It integrates with PaymentService for recurring billing and LoyaltyService for subscription-specific grants.
+   192→
+   193→== Domain Type Classifications
+   194→
+   195→=== Core Domain
+   196→
+   197→These are the unique, differentiating capabilities that provide competitive advantage. We build these in-house because they embody our specific business rules and strategy.
+   198→
+   199→- *Reward Calculation*: OTR's specific rules for fuel/retail points, payment method exclusions, and promotional multipliers
+   200→
+   201→=== Supporting Domain
+   202→
+   203→These are necessary but not differentiating. They could be bought or replaced with third-party platforms.
+   204→
+   205→- *Wallet Management*: Standard loyalty wallet capabilities (could use EagleEye, SessionM, or similar)
+   206→- *Points Ledger*: Standard points tracking (could use EagleEye or similar)
+   207→- *Partner Integration*: Integration patterns that follow OAuth/API standards
+   208→- *Preference Management*: Simple customer preference storage
+   209→- *Promotions Management*: Campaign management capabilities (could use EagleEye or similar)
+   210→- *Membership Management*: Standard tier/membership tracking (could use EagleEye or similar)
+   211→- *Subscription Management*: Recurring billing patterns (could use Stripe, ChargeBee, or similar)
+   212→
+   213→== Relationship to Bounded Contexts
+   214→
+   215→The Loyalty Domain is implemented primarily through the *LoyaltyService* bounded context, which:
+   216→
+   217→- *Owns:* RewardTransaction aggregate (transaction adjudication audit trail)
+   218→- *Orchestrates:* Queries to EagleEye (wallet, points, tiers, campaigns), ProfileService (partner links, preferences), and partner APIs (Flybuys)
+   219→- *Publishes:* Domain events from transaction adjudication and partner webhooks
+   220→
+   221→*ProfileService* also participates in this domain:
+   222→
+   223→- *Owns:* PartnerLink aggregate (customer-partner relationships)
+   224→- *Publishes:* Partner linking and preference change events
+   225→
+   226→== Key Architectural Patterns
+   227→
+   228→=== Backend-for-Frontend (BFF)
+   229→
+   230→LoyaltyService acts as a BFF that orchestrates multiple systems (EagleEye, ProfileService, Flybuys) to provide a unified loyalty API for mobile and POS clients.
+   231→
+   232→=== Real-Time Orchestration
+   233→
+   234→Rather than caching data from EagleEye, LoyaltyService queries in real-time. This simplifies consistency but requires resilience patterns (circuit breakers, fallbacks).
+   235→
+   236→=== Event-Driven Integration
+   237→
+   238→LoyaltyService translates EagleEye webhooks and Flybuys notifications into OTR domain events, decoupling downstream consumers from external system changes.
+   239→
+   240→=== Conformist Pattern
+   241→
+   242→For partner integrations like Flybuys, LoyaltyService uses generic partner service interfaces but infrastructure implementations conform directly to partner APIs (no ACL translation layer for stable, well-documented APIs).
+   243→
+
+<system-reminder>
+Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+</system-reminder>

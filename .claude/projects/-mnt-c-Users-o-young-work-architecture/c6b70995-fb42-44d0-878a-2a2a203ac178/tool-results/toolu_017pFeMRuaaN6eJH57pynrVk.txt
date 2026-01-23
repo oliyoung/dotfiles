@@ -1,0 +1,119 @@
+The file /mnt/c/Users/o.young/work/architecture/solution_architectures/salesforce_customer_support.adoc has been updated. Here's the result of running `cat -n` on a snippet of the edited file:
+   536→* Backend service feature flags configured via environment variables / configuration service
+   537→* Feature flag changes logged and audited (who changed, when, reason)
+   538→* Post-cutover monitoring: Gradual removal of feature flags once system stability confirmed (30-60 days)
+   539→
+   540→==== Data Entity Catalogue
+   541→
+   542→[width="100%",cols="20%,15%,35%,30%",options="header",]
+   543→|===
+   544→|Data Entity |System of Record |Key Attributes |Lifecycle
+   545→
+   546→|*Contact*
+   547→|Salesforce Service Cloud
+   548→|• Contact ID (Salesforce 15/18-char ID) +
+   549→• Email (primary matching key) +
+   550→• First Name, Last Name +
+   551→• Phone Number +
+   552→• Viva Consumer ID (VCI) +
+   553→• Account (Viva Energy customer account) +
+   554→• Record Type (OTR Digital vs other channels)
+   555→|Created: ProfileService JIT reconciliation or Contact Migration Tool +
+   556→Updated: ProfileService JIT upsert (email changes), Salesforce (manual updates by support agents) +
+   557→Deleted: Salesforce retention policy (GDPR/compliance)
+   558→
+   559→|*Case*
+   560→|Salesforce Service Cloud
+   561→|• Case Number (Salesforce auto-generated) +
+   562→• Contact ID (reference to Contact) +
+   563→• Subject (derived from Category) +
+   564→• Description (Free Text Message) +
+   565→• Category (App, Service, Order, Rewards, Refund, Delete Account) +
+   566→• Store Name (OTR location) +
+   567→• Time of Visit +
+   568→• Status (New, In Progress, Resolved, Closed) +
+   569→• Priority, Origin (Mobile App) +
+   570→• Owner (support agent/queue)
+   571→|Created: EngagementService async Case creation +
+   572→Updated: Support agents (Salesforce UI), EngagementService (webhook processing) +
+   573→Deleted: Salesforce retention policy (archive after X years)
+   574→
+   575→|*Feedback Submission (transient)*
+   576→|None (not persisted)
+   577→|• Salesforce Contact ID +
+   578→• Category +
+   579→• Store Name +
+   580→• Time of Visit +
+   581→• Contact Phone Number +
+   582→• Free Text Message
+   583→|Created: Mobile App user submission +
+   584→Processed: EngagementService publishes to Event Bus, Case created in Salesforce +
+   585→Not persisted in ProfileService/EngagementService (stateless)
+   586→
+   587→|*Domain Events*
+   588→|Event Bus (ephemeral)
+   589→|**SupportCaseCreated**: +
+   590→• Case Number, Contact ID, Category, Timestamp +
+   591→**SupportCaseUpdated**: +
+   592→• Case Number, Status, Updated By, Timestamp +
+   593→**SupportCaseResolved**: +
+   594→• Case Number, Resolution, Resolved By, Timestamp +
+   595→**CustomerFeedbackSubmitted**: +
+   596→• Contact ID, Category, Timestamp
+   597→|Published: EngagementService +
+   598→Consumed: Other bounded contexts (future), Braze notification triggers +
+   599→Retention: Short-lived (minutes to hours), not persisted for event sourcing
+   600→
+   601→|*Braze Customer Profile*
+   602→|Braze
+   603→|• External User ID (VCI or Email) +
+   604→• Push Notification Tokens (iOS/Android) +
+   605→• Notification Preferences +
+   606→• Campaign Engagement History
+   607→|Created/Updated: EngagementService on Case creation/update +
+   608→Managed: Braze (external SaaS)
+   609→
+   610→|===
+   611→
+   612→*Data Migration Entities*:
+   613→
+   614→[width="100%",cols="25%,35%,40%",options="header",]
+   615→|===
+   616→|Source Entity |Target Entity |Migration Strategy
+   617→
+   618→|*App Database Contact*
+   619→|Salesforce Contact
+   620→|One-time migration via Contact Migration Tool: +
+   621→• Upsert by email (primary), phone (secondary), VCI (tertiary) +
+   622→• Map: Email → Email, Name → First/Last Name, Phone → Phone, VCI → External ID +
+   623→• Validation: 100% data integrity check, reconciliation report
+   624→
+   625→|*D365 CE Case*
+   626→|Not migrated
+   627→|ADR-CS-005: No Case migration (fresh start in Salesforce) +
+   628→D365 CE Cases archived separately for compliance if needed
+   629→
+   630→|===
+   631→
+   632→==== Data Quality & Validation
+   633→
+   634→*Contact Migration Validation Rules*:
+   635→
+   636→* Email format validation (RFC 5322 compliance)
+   637→* Phone number format validation (E.164 international format)
+   638→* VCI format validation (alphanumeric, length constraints)
+   639→* Duplicate detection: Flag potential duplicates for manual review (same email/phone combination)
+   640→* Mandatory fields: Email (required), First Name, Last Name (required for Salesforce Contact)
+   641→
+   642→*Case Creation Validation Rules*:
+   643→
+   644→* Contact ID must exist in Salesforce (validated by EngagementService before Case creation)
+   645→* Category must be one of: App, Service, Order, Rewards, Refund, Delete Account
+   646→* Free Text Message maximum length: 32,000 characters (Salesforce Case Description limit)
+   647→* Store Name validated against OTR location master data (optional - warn if not found)
+   648→
+   649→=== Baseline Architecture
+   650→
+   651→==== Existing System Components
+   652→
+   653→[width="100%",cols="25%,35%,40%",options="header",]

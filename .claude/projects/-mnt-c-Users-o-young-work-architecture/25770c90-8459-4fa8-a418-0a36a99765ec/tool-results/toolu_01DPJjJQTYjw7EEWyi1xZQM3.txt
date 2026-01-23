@@ -1,0 +1,481 @@
+     1→= ProductCatalog Bounded Context
+     2→O.Young@otr.com.au
+     3→v0.1, 2025-01-13
+     4→:project-name: OTRG Apps & Ecommerce Architecture
+     5→:togaf-adm-phase: Phase C: Information Systems Architectures
+     6→:document-type: Bounded Context
+     7→:status: Draft
+     8→:version: 0.1
+     9→:domain: Product
+    10→:bounded-context-type: APPLICATION
+    11→:domain-architect: O.Young@otr.com.au
+    12→:doctype: article
+    13→:toc: left
+    14→:toclevels: 4
+    15→:sectanchors:
+    16→:sectlinks:
+    17→:sectnums:
+    18→:icons: font
+    19→:source-highlighter: highlightjs
+    20→:experimental:
+    21→:description: Bounded Context for the Product Domain - Product catalog and pricing facade
+    22→:keywords: product, catalog, pricing, bounded context, togaf, ddd, facade, acl
+    23→
+    24→Product catalog and pricing facade service that translates D365 Commerce product and pricing data into AWS-native APIs for customer-facing applications and external integrations.
+    25→
+    26→This service acts as an Anti-Corruption Layer (ACL) between back-office systems (Azure) and ecommerce domain (AWS), providing a stable, domain-aligned API contract for digital menu boards, mobile apps, and ecommerce platforms.
+    27→
+    28→== Business Context
+    29→
+    30→The `ProductCatalogService` is a facade and translation layer that bridges OTR's back-office product and pricing systems (D365 Commerce on Azure) with customer-facing digital experiences (AWS).
+    31→
+    32→It enables external systems (Amped Digital DMB, OTR Mobile App, SMGB Online) to consume product catalog and pricing data through a standardised REST API without coupling to D365's domain model or Azure infrastructure.
+    33→
+    34→Initial use case: Subway Digital Menu Board pricing integration with Amped Digital vendor.
+    35→
+    36→== Architectural Pattern
+    37→
+    38→The `ProductCatalogService` acts as a **Facade and Anti-Corruption Layer**, NOT a system of record.
+    39→
+    40→It protects the ecommerce domain from D365 Commerce's data model and provides a stable API contract in OTR's ubiquitous language, enabling back-office systems to evolve independently.
+    41→
+    42→=== Key Characteristics
+    43→
+    44→* **Facade Layer:** Simplifies access to complex back-office pricing data
+    45→* **Anti-Corruption Layer:** Translates D365 terminology into domain language
+    46→* **Caching Layer:** Stores pricing data locally for fast query performance
+    47→* **Event Publisher:** Publishes domain events when pricing changes (future-proofing)
+    48→
+    49→== Strategic Value
+    50→
+    51→=== Vendor Independence
+    52→
+    53→* ACL pattern protects ecommerce domain from D365 Commerce data model changes
+    54→* D365 can be replaced with alternative ERP/product systems without rewriting consumers
+    55→* Single translation layer shields digital experiences from back-office migrations
+    56→
+    57→=== Platform Consistency
+    58→
+    59→* All customer-facing pricing APIs hosted on AWS (ecommerce team's platform)
+    60→* Consistent with OTR Mobile App, SMGB Online, and digital experiences architecture
+    61→* Leverages existing AWS expertise, tooling, and operational processes
+    62→
+    63→=== Operational Efficiency
+    64→
+    65→* Single API serves multiple consumers (DMB, mobile, web, future integrations)
+    66→* Reduces point-to-point integrations between D365 and customer-facing systems
+    67→* Centralised caching reduces load on D365 Commerce API
+    68→
+    69→=== Future Extensibility
+    70→
+    71→* Event-driven integration enables reactive pricing updates across ecosystem
+    72→* Foundation for advanced features: price testing, dynamic pricing, promotional rules
+    73→* Scalable pattern for additional product catalog capabilities (inventory, categories)
+    74→
+    75→== Long-Term Vision
+    76→
+    77→The ProductCatalogService is a **Supporting Domain** microservice that forms part of OTRG's ecommerce platform:
+    78→
+    79→* **Cross-cloud integration pattern:** Clean data contract between Azure (back-office) and AWS (ecommerce)
+    80→* **Multi-brand support:** Single service supports OTR, Subway, SMGB, and future brands
+    81→* **API-first design:** RESTful API with OpenAPI specification for external vendors
+    82→* **Event-driven future:** Enables real-time price change notifications to mobile apps, DMBs, and web platforms
+    83→* **2026 roadmap capabilities:** Dynamic pricing, A/B price testing, promotional pricing engine integration
+    84→
+    85→== Future State Benefits
+    86→
+    87→* **Vendor independence:** Swap D365 Commerce for alternative product/pricing systems without domain changes
+    88→* **Single pricing API** for all customer-facing channels (DMB, mobile, web, kiosks)
+    89→* **Advanced features:** Real-time price updates via events, promotional pricing integration, inventory visibility
+    90→* **Unified product catalog** across all OTR brands and channels
+    91→* **Scalable architecture:** Supporting 2026 Digital Roadmap growth and multi-brand expansion
+    92→
+    93→== Aggregates
+    94→
+    95→[width="100%",cols="15%,85%",options="header",]
+    96→|===
+    97→|Aggregate Name |Description
+    98→
+    99→|`ProductPrice`
+   100→|Cached representation of product pricing from D365 Commerce. Contains product details (ID, name, category), price groups, regional pricing, and store assignments. Updated hourly via ETL pipeline. **Not** a system of record - D365 Commerce owns authoritative pricing data.
+   101→
+   102→|===
+   103→
+   104→=== Aggregate: ProductPrice
+   105→
+   106→The `ProductPrice` aggregate represents a cached view of pricing data for external API consumption.
+   107→
+   108→*Aggregate Root:* `ProductPrice`
+   109→
+   110→*Entities:*
+   111→
+   112→* `Product` - Product identifier, name, category
+   113→* `Price` - Price amount, price group, effective dates
+   114→* `PriceGroup` - Price group identifier, region code, store assignments
+   115→
+   116→*Invariants:*
+   117→
+   118→* Price amount must be greater than zero
+   119→* Each product must have at least one price group
+   120→* Effective date ranges cannot overlap for the same product/price group combination
+   121→* Store IDs must exist in the store master data
+   122→
+   123→*Lifecycle:*
+   124→
+   125→. Created/updated via hourly ETL pipeline from D365 Commerce export
+   126→. Validated against data contract schema
+   127→. Stored in RDS PostgreSQL for fast query access
+   128→. Queried via REST API by external consumers
+   129→. Refreshed hourly - data is eventually consistent (max 1 hour lag)
+   130→
+   131→== Services
+   132→
+   133→[width="100%",cols="25%,75%",options="header",]
+   134→|===
+   135→|Service Name |Description
+   136→
+   137→|`PricingQueryService`
+   138→|Query pricing data by product ID, store ID, or price group. Returns pricing in API response format for external consumers.
+   139→
+   140→|`ProductCatalogETLService`
+   141→|ETL service that ingests D365 Commerce pricing exports from S3, validates data contract compliance, and loads into RDS PostgreSQL.
+   142→
+   143→|`DataValidationService`
+   144→|Validates incoming pricing data against schema and business rules. Alerts on validation failures.
+   145→
+   146→|`D365PricingTranslator`
+   147→|Anti-Corruption Layer that translates D365 Commerce terminology and data structures into ProductCatalog domain language.
+   148→
+   149→|`CacheInvalidationService`
+   150→|Manages API Gateway cache invalidation when new pricing data is loaded (future enhancement: ElastiCache integration).
+   151→
+   152→|===
+   153→
+   154→=== NOT in this Context (Owned by Other Systems)
+   155→
+   156→[width="100%",cols="25%,60%,15%",options="header",]
+   157→|===
+   158→|Action / Entity |Description |Relationship
+   159→
+   160→|Product Master Data
+   161→|Authoritative product catalog owned by link:external/microsoft_dynamics_365_commerce.adoc[D365 Commerce]
+   162→|S3 data export
+   163→
+   164→|Pricing Configuration
+   165→|Price rules, markups, discounts owned by link:external/microsoft_dynamics_365_commerce.adoc[D365 Commerce]
+   166→|S3 data export
+   167→
+   168→|Store Master Data
+   169→|Store locations, IDs, regions owned by link:external/microsoft_dynamics_365_commerce.adoc[D365 Commerce]
+   170→|S3 data export
+   171→
+   172→|Price Group Assignments
+   173→|Store-to-price-group mappings owned by link:external/microsoft_dynamics_365_commerce.adoc[D365 Commerce]
+   174→|S3 data export
+   175→
+   176→|Promotional Pricing
+   177→|Campaign-based pricing owned by link:external/eagle_eye.adoc[EagleEye] (future integration)
+   178→|TBD
+   179→
+   180→|Inventory Availability
+   181→|Real-time stock levels owned by link:external/microsoft_dynamics_365_commerce.adoc[D365 Commerce] (future integration)
+   182→|TBD
+   183→
+   184→|===
+   185→
+   186→== Events
+   187→
+   188→=== Events Published by ProductCatalogService
+   189→
+   190→*Note:* Event publishing is designed for future extensibility. Initial implementation (Subway DMB) does not require event consumers.
+   191→
+   192→==== Product Pricing Events
+   193→
+   194→[width="100%",cols="30%,50%,20%",options="header",]
+   195→|===
+   196→|Event Name |Description |Source
+   197→
+   198→|`ProductPriceUpdated`
+   199→|Product pricing changed (price amount, effective dates, store assignments)
+   200→|ETL pipeline
+   201→
+   202→|`ProductCatalogRefreshed`
+   203→|Hourly catalog refresh completed successfully
+   204→|ETL pipeline
+   205→
+   206→|`PriceGroupAssignmentChanged`
+   207→|Store-to-price-group mapping changed
+   208→|ETL pipeline
+   209→
+   210→|`ProductAdded`
+   211→|New product added to catalog
+   212→|ETL pipeline
+   213→
+   214→|`ProductRemoved`
+   215→|Product removed from catalog (discontinued)
+   216→|ETL pipeline
+   217→
+   218→|===
+   219→
+   220→==== Data Quality Events
+   221→
+   222→[width="100%",cols="30%,50%,20%",options="header",]
+   223→|===
+   224→|Event Name |Description |Source
+   225→
+   226→|`DataValidationFailed`
+   227→|Pricing data failed schema or business rule validation
+   228→|Data validation service
+   229→
+   230→|`ETLPipelineFailed`
+   231→|ETL job failed to process pricing export
+   232→|ETL pipeline
+   233→
+   234→|`MissingPricingData`
+   235→|Expected pricing export file not found in S3
+   236→|ETL pipeline
+   237→
+   238→|===
+   239→
+   240→=== Future Event Consumers
+   241→
+   242→Potential downstream consumers for pricing change events:
+   243→
+   244→* **link:location.adoc[LocationService]:** Update store-specific pricing for store finder
+   245→* **link:interfaces/mobile.adoc[MobileApp]:** Invalidate cached prices, show "price updated" notifications
+   246→* **link:engagement.adoc[EngagementService]:** Trigger "price drop" campaigns for customer engagement
+   247→* **Data Platform:** Analytics and reporting on pricing changes
+   248→
+   249→== Integration Patterns
+   250→
+   251→=== Upstream: D365 Commerce → ProductCatalogService
+   252→
+   253→**Pattern:** Customer-Supplier + Conformist
+   254→
+   255→* **D365 Commerce (Supplier):** Exports pricing data to S3 on hourly schedule
+   256→* **ProductCatalogService (Customer):** Conforms to D365's data contract and schema
+   257→* **Integration Technology:** S3 bucket with cross-account IAM access (Azure → AWS)
+   258→* **Data Format:** Apache Parquet files with defined schema
+   259→* **Update Frequency:** Hourly batch export
+   260→* **Anti-Corruption Layer:** D365PricingTranslator translates D365 terminology into domain language
+   261→
+   262→=== Downstream: ProductCatalogService → External Consumers
+   263→
+   264→**Pattern:** Open Host Service + Published Language
+   265→
+   266→* **ProductCatalogService (Open Host):** Publishes stable REST API contract
+   267→* **External Consumers (Amped Digital, future mobile/web):** Consume API without translation
+   268→* **Integration Technology:** REST API via API Gateway, OAuth 2.0 Client Credentials authentication
+   269→* **Data Format:** JSON with OpenAPI specification
+   270→* **Update Frequency:** Real-time queries (data eventually consistent, max 1 hour lag)
+   271→* **Published Language:** OTR domain terminology (product, price, store, price group)
+   272→
+   273→=== Cross-Cloud Integration
+   274→
+   275→**Pattern:** Domain Boundary via S3 Data Contract
+   276→
+   277→* **Back-Office Domain (Azure):** D365 Commerce, Azure Data Lake, Microsoft Fabric
+   278→* **Ecommerce Domain (AWS):** S3, Glue/Lambda, RDS, API Gateway, ECS
+   279→* **Domain Interface:** S3 bucket with data contract (schema, SLA, quality rules)
+   280→* **Rationale:** Clean separation between domains; each uses native cloud services
+   281→
+   282→== Technology Stack
+   283→
+   284→=== AWS Services
+   285→
+   286→* **S3:** Data handoff point (cross-cloud transfer from Azure)
+   287→* **AWS Glue / Lambda:** ETL pipeline for data ingestion and validation
+   288→* **RDS PostgreSQL:** Queryable pricing database
+   289→* **API Gateway:** REST API endpoint with OAuth 2.0 authentication
+   290→* **ECS Fargate:** API service containers
+   291→* **CloudWatch:** Monitoring, logging, alerting
+   292→* **Secrets Manager:** OAuth client credentials storage
+   293→* **WAF:** API security and rate limiting
+   294→
+   295→=== Database Schema
+   296→
+   297→[source,sql]
+   298→----
+   299→-- Products table
+   300→CREATE TABLE products (
+   301→    product_id VARCHAR(50) PRIMARY KEY,
+   302→    product_name VARCHAR(255) NOT NULL,
+   303→    product_category VARCHAR(100),
+   304→    last_updated TIMESTAMP NOT NULL
+   305→);
+   306→
+   307→-- Price groups table
+   308→CREATE TABLE price_groups (
+   309→    price_group_id VARCHAR(50) PRIMARY KEY,
+   310→    price_group_name VARCHAR(255),
+   311→    region_code VARCHAR(10),
+   312→    last_updated TIMESTAMP NOT NULL
+   313→);
+   314→
+   315→-- Product prices table
+   316→CREATE TABLE product_prices (
+   317→    id SERIAL PRIMARY KEY,
+   318→    product_id VARCHAR(50) REFERENCES products(product_id),
+   319→    price_group_id VARCHAR(50) REFERENCES price_groups(price_group_id),
+   320→    price_amount DECIMAL(10, 2) NOT NULL CHECK (price_amount > 0),
+   321→    effective_from DATE NOT NULL,
+   322→    effective_to DATE,
+   323→    last_updated TIMESTAMP NOT NULL,
+   324→    UNIQUE (product_id, price_group_id, effective_from)
+   325→);
+   326→
+   327→-- Store assignments table
+   328→CREATE TABLE store_assignments (
+   329→    id SERIAL PRIMARY KEY,
+   330→    store_id INTEGER NOT NULL,
+   331→    price_group_id VARCHAR(50) REFERENCES price_groups(price_group_id),
+   332→    effective_from DATE NOT NULL,
+   333→    last_updated TIMESTAMP NOT NULL,
+   334→    UNIQUE (store_id, price_group_id, effective_from)
+   335→);
+   336→
+   337→-- ETL job tracking
+   338→CREATE TABLE etl_runs (
+   339→    id SERIAL PRIMARY KEY,
+   340→    run_timestamp TIMESTAMP NOT NULL,
+   341→    status VARCHAR(20) NOT NULL, -- SUCCESS, FAILED, IN_PROGRESS
+   342→    records_processed INTEGER,
+   343→    error_message TEXT,
+   344→    source_file_path VARCHAR(500)
+   345→);
+   346→----
+   347→
+   348→== Architecture Decisions
+   349→
+   350→=== ADR-001: ProductCatalogService as Facade, Not System of Record
+   351→
+   352→* **Context:** Need to expose D365 Commerce pricing to external systems
+   353→* **Decision:** ProductCatalogService is a facade/ACL, not authoritative source
+   354→* **Rationale:** D365 Commerce owns pricing rules and configuration; duplicating logic would create consistency issues
+   355→* **Consequences:** Service is eventually consistent (max 1 hour lag); D365 remains source of truth
+   356→* **Status:** Approved
+   357→
+   358→=== ADR-002: Cross-Cloud Integration via S3 Data Contract
+   359→
+   360→* **Context:** D365 Commerce on Azure, ProductCatalogService on AWS
+   361→* **Decision:** S3 bucket with data contract as domain boundary
+   362→* **Rationale:** Clean separation; each domain uses native cloud services; loose coupling
+   363→* **Consequences:** Cross-cloud data transfer required; need cross-account IAM setup
+   364→* **Status:** Approved
+   365→
+   366→=== ADR-003: Hourly Batch ETL vs Real-Time Streaming
+   367→
+   368→* **Context:** Pricing data needs to flow from D365 to ProductCatalogService
+   369→* **Decision:** Hourly batch export, not real-time CDC (Change Data Capture)
+   370→* **Rationale:** Prices change infrequently; batch simpler than CDC; 1-hour lag acceptable per requirements
+   371→* **Consequences:** Data eventually consistent; not suitable for high-frequency price changes
+   372→* **Status:** Approved
+   373→
+   374→=== ADR-004: RDS PostgreSQL vs DynamoDB
+   375→
+   376→* **Context:** Need queryable store for pricing data
+   377→* **Decision:** RDS PostgreSQL over DynamoDB
+   378→* **Rationale:** Relational model fits pricing domain (products → prices → stores); team expertise; SQL queries
+   379→* **Consequences:** Need to manage schema migrations; vertical scaling limitations
+   380→* **Status:** Approved
+   381→
+   382→=== ADR-005: Event Publishing for Future Extensibility
+   383→
+   384→* **Context:** Future consumers may need real-time pricing change notifications
+   385→* **Decision:** Design event schema now, publish events, even if no initial consumers
+   386→* **Rationale:** Enables future event-driven architecture without service redesign; low implementation cost
+   387→* **Consequences:** Need to maintain event schema stability; unused events initially
+   388→* **Status:** Approved
+   389→
+   390→== API Contract
+   391→
+   392→=== REST API Endpoints
+   393→
+   394→**Base URL:** `https://api.otr.com.au/product-catalog/v1`
+   395→
+   396→**Authentication:** OAuth 2.0 Client Credentials flow
+   397→
+   398→==== GET /pricing
+   399→
+   400→Returns pricing data for all products or filtered by query parameters.
+   401→
+   402→**Query Parameters:**
+   403→
+   404→* `product_id` (optional) - Filter by specific product
+   405→* `store_id` (optional) - Filter by specific store
+   406→* `price_group` (optional) - Filter by price group
+   407→
+   408→**Response Format:**
+   409→
+   410→[source,json]
+   411→----
+   412→{
+   413→  "generated_at": "2025-01-13T10:30:00Z",
+   414→  "products": [
+   415→    {
+   416→      "product_number": "398602",
+   417→      "product_name": "Italian BMT Footlong",
+   418→      "category": "Subway Sandwiches",
+   419→      "prices": [
+   420→        {
+   421→          "price_group": "POS-AU-NAT",
+   422→          "amount": 14.40,
+   423→          "effective_from": "2025-01-01",
+   424→          "effective_to": null,
+   425→          "stores": [19598, 20260, 20334]
+   426→        }
+   427→      ]
+   428→    }
+   429→  ],
+   430→  "metadata": {
+   431→    "total_products": 150,
+   432→    "last_updated": "2025-01-13T10:15:00Z"
+   433→  }
+   434→}
+   435→----
+   436→
+   437→**Rate Limiting:** 100 requests per hour per client
+   438→
+   439→== Monitoring & Operations
+   440→
+   441→=== Key Metrics
+   442→
+   443→* **API Latency:** p50, p95, p99 response times (target: < 500ms p95)
+   444→* **API Error Rate:** 4xx and 5xx errors (target: < 1%)
+   445→* **ETL Success Rate:** Percentage of successful ETL runs (target: > 99%)
+   446→* **Data Freshness:** Time since last successful ETL run (alert: > 90 minutes)
+   447→* **Cache Hit Rate:** API Gateway cache effectiveness
+   448→* **RDS Performance:** CPU, memory, connections, slow queries
+   449→
+   450→=== Alerting
+   451→
+   452→* **P1 Alerts:** ETL pipeline failure, API error rate > 1%, no data for 90+ minutes
+   453→* **P2 Alerts:** API latency > 1s, RDS CPU > 80%, ETL validation failures
+   454→
+   455→=== Operational Runbooks
+   456→
+   457→See xref:solution-architectures:subway_dmb.adoc#_appendix_c_runbooks[Solution Architecture - Appendix C: Runbooks] for detailed operational procedures.
+   458→
+   459→== Related Documentation
+   460→
+   461→* **Architecture Definition:** xref:architecture-definitions:subway_dmb.adoc[Subway DMB Architecture Definition]
+   462→* **Solution Architecture:** xref:solution-architectures:subway_dmb.adoc[Subway DMB Solution Architecture]
+   463→* **Domain Definition:** Product Domain (TBD)
+   464→* **External Systems:** link:external/microsoft_dynamics_365_commerce.adoc[D365 Commerce]
+   465→
+   466→== Document Control
+   467→
+   468→[cols="1,2,2,4"]
+   469→|===
+   470→|Version |Date |Author |Changes
+   471→
+   472→|0.1
+   473→|2025-01-13
+   474→|O.Young (Domain Architect, Ecommerce)
+   475→|Initial draft - ProductCatalogService bounded context definition
+   476→|===
+   477→
+
+<system-reminder>
+Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+</system-reminder>

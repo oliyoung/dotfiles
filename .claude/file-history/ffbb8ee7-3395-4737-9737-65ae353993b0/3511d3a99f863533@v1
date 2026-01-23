@@ -1,0 +1,356 @@
+= Handover Bounded Context
+O.Young@otr.com.au
+v0.1, 2025-12-19
+:project-name: OTRG Apps & Ecommerce Architecture
+:togaf-adm-phase: Phase C: Information Systems Architectures
+:document-type: Bounded Context
+:status: Draft
+:version: 0.1
+:domain: Handover
+:bounded-context-type: FEATURE
+:domain-architect: O.Young@otr.com.au
+:doctype: article
+:toc: left
+:toclevels: 4
+:sectanchors:
+:sectlinks:
+:sectnums:
+:icons: font
+:source-highlighter: highlightjs
+:experimental:
+:description: Bounded Context for the Handover Domain
+:keywords: Handover, bounded context, togaf, ddd
+
+
+
+Manages order fulfilment for Click & Collect and Home Delivery via
+third-party delivery provider integration (vendor-agnostic with ACL).
+
+Enables OTR to expand digital retail footprint beyond physical stores.
+
+== Domain Vision Statement
+
+Manages Click & Collect and Home Delivery order fulfilment via white-label third-party delivery provider for OTR brand.
+
+Vendor-agnostic architecture with ACL enables provider flexibility while expanding digital retail footprint.
+
+=== Business Context (CY26 Strategy)
+
+Delivery capability is Q1-Q2 CY26 priority for OTR brand only:
+
+ - White-label third-party delivery integration (maintains OTR branding)
+ - Initial vendor: DoorDash (but architecture supports vendor replacement)
+ - Click & Collect (order ahead, pickup in-store)
+ - Home Delivery (food & convenience products)
+ - Loyalty integration (points earning on delivery orders)
+ - Expands OTR digital retail footprint
+ - Improves customer convenience and retention
+
+==== Vendor Independence Strategy
+ - ACL pattern protects domain from delivery provider changes
+ - Can switch providers (DoorDash → Uber Eats → Deliveroo) without domain changes
+ - Driver and fleet management abstracted behind delivery provider interface
+ - White-label integration maintains OTR branding regardless of provider
+
+== Responsibilities
+
+Order creation and management
+
+ - Click & Collect pickup scheduling
+ - Home delivery coordination
+ - Third-party driver dispatch coordination (via ACL)
+ - Delivery tracking and real-time updates
+ - Delivery fee calculation
+ - Order status updates and notifications
+ - Store fulfilment coordination
+ - Delivery address validation and geocoding
+ - Delivery provider abstraction and vendor independence
+
+== What HandoverService Owns
+
+HandoverService owns *2 aggregates*
+
+. *DeliveryOrder*
+ - Customer order for delivery or pickup
+. *DeliveryZone*
+ - Delivery coverage areas and fees per store
+
+== Domain Coverage
+
+* *Order Management*: Creation, modification, cancellation
+* *Delivery Tracking*: Real-time driver location and status
+* *Click & Collect*: Pickup scheduling and ready notifications
+* *Home Delivery*: Third-party driver coordination
+* *Fee Calculation*: Zone-based delivery fees
+* *Store Fulfillment*: Order preparation and ready status
+
+== NOT in this Context (Owned by Other Systems)
+
+* Product catalog → D365 Commerce
+* Inventory management → D365 Commerce (store-level stock)
+* Payment processing → PaymentService
+* Loyalty points calculation → LoyaltyService
+* Driver employment and onboarding → Third-party delivery provider
+* Driver routing and optimization → Third-party delivery provider
+
+== Integration Points
+
+* *Upstream*: Third-party Delivery Provider (driver dispatch, tracking),
+D365 Commerce (product catalog, inventory)
+* *Downstream*: PaymentService (order payment), LoyaltyService (points
+earning)
+* *Events*: OrderPlaced, OrderConfirmed, OrderPreparing, OrderReady,
+OrderDelivered
+
+== Core Aggregates
+
+=== DeliveryOrder Aggregate
+
+Represents a customer order for delivery or pickup. Manages order
+life-cycle from placement through completion.
+
+*Invariants:*
+
+* Order must have at least one item
+* Delivery address required for home delivery
+* Pickup time required for Click & Collect
+* Order cannot be modified after preparation starts
+* Cancellation only allowed before driver assignment
+
+*Key Entities:*
+
+* `Order` (aggregate root)
+** OrderId id
+** String VivaConsumerId
+** OrderType orderType (HOME_DELIVERY, CLICK_AND_COLLECT)
+** StoreId fulfilmentStoreId
+** OrderStatus status
+** List<OrderItem> items
+** Money subtotal
+** Money deliveryFee
+** Money totalAmount
+** DateTime orderedAt
+** DateTime requestedDeliveryTime (for home delivery)
+** DateTime requestedPickupTime (for Click & Collect)
+** DeliveryAddress deliveryAddress
+** PaymentMethodId paymentMethodId
+** String specialInstructions
+** FulfillmentDetails fulfilmentInfo
+** DeliveryTrackingInfo trackingInfo
+
+*Value Objects:*
+
+* OrderType: HOME_DELIVERY, CLICK_AND_COLLECT
+* OrderStatus: PLACED, CONFIRMED, PREPARING, READY, OUT_FOR_DELIVERY,
+DELIVERED, CANCELLED
+* OrderItem: Product details with quantity and pricing
+* DeliveryAddress: Full delivery address with geocoordinates
+* FulfillmentDetails: Store preparation status and timing
+* DeliveryTrackingInfo: Third-party provider delivery tracking
+
+=== DeliveryZone Aggregate
+
+Defines delivery coverage areas and fees per store. Used for delivery
+feasibility checks and fee calculation.
+
+*Invariants:*
+
+* Each store has defined delivery zones
+* Zones cannot overlap for the same store
+* Delivery fees must be non-negative
+
+*Key Entities:*
+
+* `Zone` (aggregate root)
+** ZoneId id
+** StoreId storeId
+** String zoneName
+** GeoFence geoBoundary (polygon defining delivery area)
+** Money deliveryFee
+** int estimatedDeliveryMinutes
+** Money minimumOrderValue (min order for free delivery)
+** boolean isActive
+** DateTime validFrom
+** DateTime validTo
+
+*Value Objects:*
+
+* GeoFence: Polygon coordinates or radius from store
+
+
+== Domain Events
+
+=== Order life-cycle Events
+
+* *OrderPlaced*: Customer placed delivery/pickup order
+* *OrderConfirmed*: Store confirmed order
+* *OrderPreparing*: Order preparation started
+* *OrderReady*: Order ready for pickup/delivery
+* *OrderDelivered*: Order delivered/picked up
+* *OrderCancelled*: Order cancelled
+
+=== Delivery Tracking Events
+
+* *DriverAssigned*: Driver assigned to delivery
+* *DriverEnRoute*: Driver en route to store/customer
+* *OrderPickedUpByDriver*: Driver picked up order from store
+* *DeliveryLocationUpdated*: Real-time driver location update
+
+== Key Services
+
+=== Order Management Services
+
+* *OrderManagementService*: Core order life-cycle management
+** createOrder: Create new delivery or pickup order
+** modifyOrder: Modify order (before preparation starts)
+** cancelOrder: Cancel order
+** confirmOrder: Store accepts order
+** markOrderReady: Mark ready for pickup/delivery
+
+=== Delivery Fee Services
+
+* *DeliveryFeeCalculator*: Fee calculation and delivery feasibility
+** calculateDeliveryFee: Calculate fee based on address and store
+** estimateDeliveryTime: Estimate delivery time
+** isDeliverable: Check if address is in delivery zone
+** findNearestStore: Find nearest store for delivery
+
+=== Delivery Provider Services
+
+* *DeliveryProviderService*: Third-party provider integration (ACL)
+** requestDriver: Request driver for delivery (white-label)
+** cancelDriverRequest: Cancel driver request
+** getDriverLocation: Get real-time driver location
+** getDeliveryStatus: Get delivery status from provider
+** getDeliveryQuote: Estimate delivery quote from provider
+
+=== Address Validation Services
+
+* *AddressValidationService*: Address validation and geocoding
+** validateAddress: Validate and geocode delivery address
+** suggestAddressCorrections: Suggest address corrections
+
+== Architecture Decisions
+=== Vendor-Agnostic ACL Pattern
+
+*Decision:* HandoverService uses ACL to abstract third-party delivery
+provider integration.
+
+*Rationale:*
+
+* Switch providers based on cost, service quality, coverage
+* A/B test multiple providers in same market
+* Negotiate better rates with leverage of multi-provider capability
+* Reduce single-vendor dependency risk
+* Support regional providers for specific markets
+
+*Implementation:*
+
+* DeliveryProviderAdapter translates between OTR domain and provider API
+* Supported providers: DoorDash, Uber Eats (Direct), Deliveroo, MenuLog
+* White-label configuration maintains OTR branding
+
+=== Click & Collect and Home Delivery
+
+*Decision:* Support both Click & Collect (pickup) and Home Delivery
+order types.
+
+*Rationale:*
+
+* Click & Collect reduces delivery costs while maintaining convenience
+* Home Delivery expands revenue beyond physical store hours
+* Customer choice improves overall experience
+* Different use cases (quick pickup vs. delivered to door)
+
+=== Zone-Based Delivery Fees
+
+*Decision:* Delivery fees calculated based on store-specific delivery
+zones.
+
+*Rationale:*
+
+* Different stores have different delivery coverage areas
+* Delivery costs vary by distance and location
+* Zone-based fees are transparent and predictable
+* Enables per-store fee optimization
+
+=== Real-Time Driver Tracking
+
+*Decision:* Provide real-time driver location updates via provider
+webhooks.
+
+*Rationale:*
+
+* Customer visibility improves experience
+* Reduces ``where is my order?'' support inquiries
+* Enables accurate ETAs
+* Competitive differentiator
+
+== Key Architectural Patterns
+
+=== Anti-Corruption Layer (ACL)
+
+* DeliveryProviderAdapter translates between OTR domain and provider API
+* Handles provider-specific authentication and rate limiting
+* Normalizes delivery status codes across providers
+* Abstracts provider-specific features behind common interface
+* Enables A/B testing of multiple providers
+
+=== White-Label Integration
+
+* Maintains OTR branding across all providers
+* Customer sees OTR experience, not provider branding
+* Single customer interface regardless of backend provider
+
+=== Event-Driven Integration
+
+* OrderDelivered event → LoyaltyService awards points
+* OrderPlaced event → PaymentService processes payment
+* Real-time status updates via events
+
+=== Geofencing
+
+* DeliveryZone aggregate defines coverage areas
+* Polygon or radius-based zone definitions
+* Real-time delivery feasibility checks
+
+== Implementation Notes
+
+* *Provider Integration*: Third-party delivery provider via ACL
+(vendor-agnostic)
+* *Initial Provider*: DoorDash Drive API (white-label, maintains OTR
+branding)
+* *Database*: Azure Cosmos DB for order storage (partitioned by
+VivaConsumerId)
+* *Tracking*: Real-time driver tracking via provider webhooks
+(translated by ACL)
+* *Notifications*: Azure Notification Hubs for order status push
+notifications
+* *D365 Integration*: Product catalog and inventory queries
+* *Payment*: PaymentService integration for order payment processing
+* *Loyalty*: LoyaltyService integration for points earning on delivery
+orders
+
+
+== Click & Collect Flow
+
+[arabic]
+. Customer places order in OTR App with pickup time
+. Order sent to PaymentService for authorisation
+. Order confirmed and sent to store for preparation
+. Store marks order as preparing
+. Store marks order as ready → customer notified
+. Customer arrives at store
+. Customer provides pickup code
+. Store staff verifies code and hands over order
+. OrderDelivered event (pickup) → LoyaltyService awards points
+
+== Strategic Considerations
+
+* OTR brand only (not REXP/SPS initially)
+* White-label maintains OTR brand experience across all providers
+* Delivery expands revenue beyond physical store hours
+* Click & Collect reduces delivery costs while maintaining convenience
+* Loyalty integration drives delivery adoption
+* Future: Expand to pharmacy, groceries, alcohol
+* Provider flexibility enables market-specific optimization

@@ -1,0 +1,474 @@
+/*
+ * RecommendationService - Bounded Context Definition
+ * ===================================================
+ *
+ * Backend-for-Frontend (BFF) service for personalised product recommendations via AI/ML platform integration.
+ *
+ * See recommendation.adoc for comprehensive architecture documentation, decision log, and patterns.
+ */
+
+import "../domains/recommendation.cml"
+
+BoundedContext RecommendationService implements RecommendationDomain {
+
+    type = APPLICATION
+
+    // Strategic DDD Classification: CORE_DOMAIN | SUPPORTING_DOMAIN | GENERIC_DOMAIN
+    // CORE_DOMAIN: Competitive differentiator - AI-driven personalization and intelligent merchandising
+    // drive basket size and customer satisfaction
+    strategicClassification = "CORE_DOMAIN"
+
+    domainVisionStatement = "Delivers personalised product suggestions, intelligent cross-sell/upsell, and AI-driven merchandising across app and in-store touchpoints."
+
+    responsibilities = "Real-time product recommendations",
+                      "Cross-sell/upsell logic",
+                      "AI-based offer targeting",
+                      "Personalised onboarding",
+                      "Recommendation feedback loop",
+                      "A/B testing framework"
+
+    implementationTechnology = "Azure Functions, Azure Cosmos DB, Azure Redis Cache, AI/ML Platform API, .NET"
+
+    // ========================================================================
+    // AGGREGATES
+    // ========================================================================
+    // RecommendationService owns 3 aggregates:
+    // 1. RecommendationRequest - Request life-cycle and customer context
+    // 2. RecommendationFeedback - Customer interaction tracking for ML feedback
+    // 3. CustomerRecommendationProfile - Cached preferences and recommendation history
+    // ========================================================================
+
+    // --- RecommendationRequest Aggregate ---
+    // Represents a customer recommendation request with context aggregation
+    // life-cycle: Requested → Context Aggregated → Scored → Served → Completed
+
+    Aggregate RecommendationRequest {
+        Entity Request {
+            aggregateRoot
+
+            - RequestId requestId
+            - String VivaConsumerId
+            - RecommendationPlacement placement           // HOME_SCREEN | CART | CHECKOUT | ONBOARDING
+            - RecommendationContext context               // Customer context (purchase history, loyalty, location)
+            - RequestStatus status                        // REQUESTED | CONTEXT_AGGREGATED | SCORED | SERVED | FAILED
+            - DateTime requestedAt
+            - DateTime servedAt
+            - List<RecommendationResult> recommendations  // Ranked list of recommendations
+            - String experimentId                         // A/B testing experiment identifier
+            - String algorithmVariant                     // Algorithm used (for A/B testing)
+            - Duration responseTime                       // Time to serve recommendations
+            - RecommendationSource source                 // AI_ML_PLATFORM | FALLBACK | CACHE
+
+            // Invariants:
+            // - Request must have valid VivaConsumerId
+            // - Placement must be valid enum value
+            // - At least one recommendation must be served (or fallback)
+            // - Response time must be < 1 second (SLA)
+        }
+
+        ValueObject RequestId {
+            - String id
+        }
+
+        ValueObject RecommendationContext {
+            - String VivaConsumerId
+            - LoyaltyTier loyaltyTier                     // BRONZE | SILVER | GOLD | PLATINUM
+            - RewardPreference rewardPreference           // FLYBUYS_POINTS | FUEL_DISCOUNT | OTR_REWARDS
+            - Location currentLocation                    // Lat/long or store ID
+            - List<PurchaseHistoryItem> recentPurchases   // Last 10 purchases
+            - TimeOfDay timeOfDay                         // MORNING | MIDDAY | AFTERNOON | EVENING | NIGHT
+            - SessionContext session                      // Current basket, viewed products, session duration
+        }
+
+        ValueObject RecommendationResult {
+            - String productSKU                           // Product identifier (D365 Commerce)
+            - String productName
+            - String productCategory
+            - float confidenceScore                       // 0.0 to 1.0
+            - RecommendationType type                     // CROSS_SELL | UPSELL | REPLENISHMENT | PROMOTIONAL
+            - String reasoning                            // "Frequently bought together", "Based on past purchases"
+        }
+
+        ValueObject PurchaseHistoryItem {
+            - String transactionId
+            - String productSKU
+            - String productCategory
+            - int quantity
+            - DateTime purchasedAt
+        }
+
+        ValueObject SessionContext {
+            - List<String> basketItems                    // Current cart products
+            - List<String> viewedProducts                 // Products viewed this session
+            - Duration sessionDuration
+            - String deviceType                           // MOBILE | TABLET | WEB
+        }
+
+        enum RecommendationPlacement {
+            HOME_SCREEN, CART, CHECKOUT, ONBOARDING, PRODUCT_DETAIL, SEARCH_RESULTS
+        }
+
+        enum RequestStatus {
+            REQUESTED, CONTEXT_AGGREGATED, SCORED, SERVED, FAILED
+        }
+
+        enum RecommendationSource {
+            AI_ML_PLATFORM, FALLBACK, CACHE
+        }
+
+        enum RecommendationType {
+            CROSS_SELL, UPSELL, REPLENISHMENT, PROMOTIONAL, TRENDING, PERSONALISED
+        }
+
+        enum LoyaltyTier {
+            BRONZE, SILVER, GOLD, PLATINUM, NONE
+        }
+
+        enum RewardPreference {
+            FLYBUYS_POINTS, FUEL_DISCOUNT, OTR_REWARDS
+        }
+
+        enum TimeOfDay {
+            MORNING, MIDDAY, AFTERNOON, EVENING, NIGHT
+        }
+    }
+
+    // --- RecommendationFeedback Aggregate ---
+    // Tracks customer interactions with recommendations for ML feedback loop
+    // life-cycle: Served → Viewed → (Clicked OR Dismissed) → (Purchased OR Abandoned)
+
+    Aggregate RecommendationFeedback {
+        Entity Feedback {
+            aggregateRoot
+
+            - FeedbackId feedbackId
+            - RequestId requestId                         // Link to original recommendation request
+            - String VivaConsumerId
+            - String productSKU                           // Product that was recommended
+            - InteractionType interactionType             // VIEWED | CLICKED | ADDED_TO_CART | PURCHASED | DISMISSED
+            - DateTime interactionAt
+            - RecommendationPlacement placement
+            - float confidenceScore                       // Confidence score of recommendation
+            - String experimentId                         // A/B testing experiment
+            - String algorithmVariant                     // Algorithm variant used
+
+            // Invariants:
+            // - Feedback must reference valid RecommendationRequest
+            // - InteractionType sequence must be logical (can't purchase before view)
+            // - Interaction timestamp must be after recommendation served time
+        }
+
+        ValueObject FeedbackId {
+            - String id
+        }
+
+        enum InteractionType {
+            VIEWED, CLICKED, ADDED_TO_CART, PURCHASED, DISMISSED, EXPIRED
+        }
+    }
+
+    // --- CustomerRecommendationProfile Aggregate ---
+    // Cached customer preferences and recommendation history for performance optimisation
+    // life-cycle: Created → Updated (on events) → Expired (TTL)
+
+    Aggregate CustomerRecommendationProfile {
+        Entity Profile {
+            aggregateRoot
+
+            - String VivaConsumerId
+            - ProfileStatus status                        // ACTIVE | COLD_START | INACTIVE
+            - LoyaltyTier loyaltyTier
+            - RewardPreference rewardPreference
+            - List<PreferredCategory> preferredCategories  // Inferred from purchase history
+            - List<String> recentRecommendations          // Product SKUs recommended recently
+            - DateTime lastPurchaseAt
+            - DateTime lastRecommendationAt
+            - DateTime profileUpdatedAt
+            - int totalPurchaseCount
+            - float averageBasketValue
+            - Location preferredStoreLocation
+
+            // Invariants:
+            // - Profile must have VivaConsumerId
+            // - Preferred categories ranked by frequency
+            // - Profile expires after 1 hour (cache TTL)
+            // - Cold-start status for customers with < 3 purchases
+        }
+
+        ValueObject PreferredCategory {
+            - String category
+            - int purchaseCount
+            - DateTime lastPurchasedAt
+        }
+
+        ValueObject Location {
+            - float latitude
+            - float longitude
+            - String storeId                              // Nearest store
+        }
+
+        enum ProfileStatus {
+            ACTIVE, COLD_START, INACTIVE
+        }
+    }
+
+    // ========================================================================
+    // DOMAIN EVENTS
+    // ========================================================================
+    // Events published by RecommendationService for downstream consumption
+    //
+    // Event Categories:
+    // 1. Recommendation request events (for analytics)
+    // 2. Recommendation feedback events (for ML training)
+    // 3. Onboarding completion events (for campaign triggers)
+    // ========================================================================
+
+    // --- Recommendation Request Events ---
+
+    DomainEvent RecommendationRequested {
+        - RequestId requestId
+        - String VivaConsumerId
+        - RecommendationPlacement placement
+        - TimeOfDay timeOfDay
+        - Location location
+        - DateTime requestedAt
+    }
+
+    DomainEvent RecommendationServed {
+        - RequestId requestId
+        - String VivaConsumerId
+        - RecommendationPlacement placement
+        - List<RecommendationResult> recommendations      // What was shown to customer
+        - RecommendationSource source                     // AI_ML_PLATFORM | FALLBACK | CACHE
+        - String experimentId                             // A/B testing
+        - String algorithmVariant
+        - Duration responseTime
+        - DateTime servedAt
+    }
+
+    DomainEvent RecommendationFailed {
+        - RequestId requestId
+        - String VivaConsumerId
+        - RecommendationPlacement placement
+        - String failureReason
+        - boolean fallbackUsed
+        - DateTime failedAt
+    }
+
+    // --- Recommendation Feedback Events ---
+
+    DomainEvent RecommendationInteracted {
+        - FeedbackId feedbackId
+        - RequestId requestId
+        - String VivaConsumerId
+        - String productSKU
+        - InteractionType interactionType                 // VIEWED | CLICKED | PURCHASED | DISMISSED
+        - RecommendationPlacement placement
+        - float confidenceScore
+        - String experimentId
+        - String algorithmVariant
+        - DateTime interactionAt
+    }
+
+    // --- Onboarding Events ---
+
+    DomainEvent OnboardingCompleted {
+        - String VivaConsumerId
+        - List<PreferredCategory> preferredCategories     // Inferred from onboarding
+        - RewardPreference rewardPreference
+        - Location preferredLocation
+        - DateTime completedAt
+    }
+
+    // ========================================================================
+    // DOMAIN SERVICES
+    // ========================================================================
+    // Services orchestrate recommendation logic and integrate with external
+    // AI/ML platform via ACL.
+    // ========================================================================
+
+    Service RecommendationOrchestrator {
+        // Orchestrate recommendation request life-cycle
+        getRecommendations(@RequestId requestId, @String VivaConsumerId, @RecommendationPlacement placement, @RecommendationContext context) : List<RecommendationResult>
+
+        // Aggregate customer context from multiple sources
+        aggregateCustomerContext(@String VivaConsumerId) : RecommendationContext
+
+        // Determine recommendation source (AI/ML platform, fallback, cache)
+        determineRecommendationSource(@String VivaConsumerId, @RecommendationPlacement placement) : RecommendationSource
+    }
+
+    Service AIMLPlatformAdapter {
+        // ACL for external AI/ML platform integration
+        // Translates OTR domain model to AI/ML platform API
+
+        // Score recommendations from AI/ML platform
+        scoreRecommendations(@RecommendationContext context, @RecommendationPlacement placement) : List<RecommendationResult>
+
+        // Translate OTR context to AI/ML platform format
+        translateContext(@RecommendationContext context) : AIMLScoringRequest
+
+        // Translate AI/ML platform response to OTR domain model
+        translateResponse(@AIMLScoringResponse response) : List<RecommendationResult>
+
+        // Handle AI/ML platform errors and circuit breaker
+        handlePlatformError(@Exception error) : void
+    }
+
+    Service FallbackRecommendationService {
+        // Rule-based fallback recommendations when AI/ML platform unavailable
+
+        // Popular products by category
+        getPopularProducts(@String category, @int limit) : List<RecommendationResult>
+
+        // Replenishment suggestions based on recent purchases
+        getReplenishmentSuggestions(@String VivaConsumerId) : List<RecommendationResult>
+
+        // Category-based recommendations (fuel → car care)
+        getCategoryRecommendations(@String category) : List<RecommendationResult>
+
+        // Generic promotional offers
+        getPromotionalOffers(@RecommendationPlacement placement) : List<RecommendationResult>
+    }
+
+    Service OnboardingRecommendationService {
+        // Cold-start recommendations for first-time users
+
+        // Infer preferences from registration data and first session
+        inferPreferences(@String VivaConsumerId, @Location location, @TimeOfDay timeOfDay) : List<PreferredCategory>
+
+        // Adaptive onboarding recommendations
+        getOnboardingRecommendations(@String VivaConsumerId) : List<RecommendationResult>
+    }
+
+    Service RecommendationFeedbackProcessor {
+        // Process customer interactions for ML feedback loop
+
+        // Track recommendation interaction
+        recordInteraction(@FeedbackId feedbackId, @InteractionType interactionType) : void
+
+        // Batch publish feedback to AI/ML platform (daily)
+        publishFeedbackBatch(@List<RecommendationFeedback> feedbackBatch) : void
+
+        // Calculate recommendation performance metrics
+        calculatePerformanceMetrics(@String experimentId) : Map<String, float>
+    }
+
+    Service ProfileCacheManager {
+        // Manage CustomerRecommendationProfile cache
+
+        // Get cached profile or create new
+        getProfile(@String VivaConsumerId) : CustomerRecommendationProfile
+
+        // Update profile on customer events
+        updateProfile(@String VivaConsumerId, @CustomerEvent event) : void
+
+        // Invalidate cache on significant events
+        invalidateProfile(@String VivaConsumerId) : void
+    }
+
+    // ========================================================================
+    // SHARED VALUE OBJECTS
+    // ========================================================================
+    // Reusable value objects for AI/ML platform integration
+    // ========================================================================
+
+    ValueObject AIMLScoringRequest {
+        - String customerId                               // Maps to VivaConsumerId
+        - Map<String, Object> features                    // Customer features for ML model
+        - String placement                                // Recommendation placement
+        - int numRecommendations                          // How many to return
+        - DateTime timestamp
+    }
+
+    ValueObject AIMLScoringResponse {
+        - List<ScoredProduct> products
+        - String modelVersion
+        - DateTime scoredAt
+        - Duration responseTime
+    }
+
+    ValueObject ScoredProduct {
+        - String productId                                // Maps to productSKU
+        - float score                                     // Confidence score (0.0 to 1.0)
+        - Map<String, Object> metadata                    // Additional ML model metadata
+    }
+
+    // ========================================================================
+    // EVENT SUBSCRIPTIONS
+    // ========================================================================
+    // Events that RecommendationService subscribes to from other bounded contexts
+    //
+    // From D365 Commerce (via Event Bus):
+    // - TransactionCompleted → update purchase history in CustomerRecommendationProfile
+    //
+    // From LoyaltyService (via Event Bus):
+    // - PointsEarned → update loyalty engagement
+    // - GrantIssued → update promotional offer context in CustomerRecommendationProfile
+    // - PartnerLinked → update reward preference (Flybuys vs fuel discount)
+    //
+    // From EngagementService (via Event Bus):
+    // - CommunicationClicked → update campaign engagement signals
+    //
+    // Event processing:
+    // 1. Receive event from Event Hub consumer group
+    // 2. Update CustomerRecommendationProfile cache
+    // 3. Invalidate cache if significant change (tier change, reward preference)
+    // ========================================================================
+
+    // ========================================================================
+    // ANTI-CORRUPTION LAYER (ACL) RESPONSIBILITIES
+    // ========================================================================
+    //
+    // AIMLPlatformAdapter ACL:
+    // - Translates RecommendationContext to AI/ML platform-specific format
+    // - Handles AI/ML platform authentication, rate limiting, retries
+    // - Maps OTR VivaConsumerId to AI/ML platform customer ID
+    // - Translates AI/ML scoring response to OTR RecommendationResult
+    // - Protects domain from AI/ML platform API changes
+    // - Circuit breaker pattern for platform unavailability
+    //
+    // Integration Notes:
+    // - AI/ML platform selected via RFP (vendor TBD)
+    // - ACL enables future platform migration
+    // - Fallback recommendations used when platform unavailable
+    // - Caching layer reduces AI/ML platform API calls
+    // ========================================================================
+}
+
+// ============================================================================
+// END OF BOUNDED CONTEXT
+// ============================================================================
+//
+// Implementation Notes:
+// ----------------------
+//
+// Data Storage:
+// - Azure Cosmos DB for RecommendationRequest and RecommendationFeedback
+// - Azure Redis Cache for CustomerRecommendationProfile (1-hour TTL)
+// - Event sourcing for audit trail via Event Bus
+//
+// API:
+// - REST API for mobile app recommendation requests
+// - Synchronous response with < 1 second SLA
+// - Asynchronous event processing for profile updates
+//
+// AI/ML Platform Integration:
+// - ACL pattern with AIMLPlatformAdapter
+// - Circuit breaker for platform unavailability
+// - Fallback recommendations maintain customer experience
+// - Batch feedback processing (daily) for model training
+//
+// Performance:
+// - Caching layer reduces latency and API costs
+// - Cache invalidation on significant customer events
+// - Redis cache for sub-millisecond profile lookups
+// - Cosmos DB for low-latency request history
+//
+// Scalability:
+// - Event-driven profile updates (eventual consistency)
+// - Azure Functions auto-scale based on request volume
+// - Cosmos DB partitioned by VivaConsumerId
+// - Redis Cache sharded by customer ID
+//
+// ============================================================================

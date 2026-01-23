@@ -1,0 +1,453 @@
+= Digital Menu Board Integration
+:domain: ProductCatalog
+:domain-architect: O.Young@otr.com.au
+:project: OTR-2026-03
+:doctype: article
+:toc: left
+:toclevels: 3
+:sectanchors:
+:sectlinks:
+:sectnums:
+:icons: font
+:source-highlighter: highlightjs
+:experimental:
+
+<<<
+== What We're Building
+
+A cross-cloud pricing integration that enables third-party digital menu boards (DMBs) operating in OTRG stores and QSRs to display accurate, current pricing from D365 Commerce via a new ProductCatalogService on AWS.
+
+[cols="1,3"]
+|===
+| Feature | Description
+
+| Current pricing API
+| RESTful API exposing product pricing from D365 Commerce to Menuzen DMB platform (managed by Amped Digital)
+
+| Automated data synchronisation
+| Configurable scheduled ingestion of pricing data from Azure (D365 Commerce) to AWS (ecommerce domain) - hourly or daily
+
+| Multi-store pricing support
+| Store-specific pricing with price group hierarchy (chain/region/store levels)
+
+| Product catalog queries
+| Structured product data with categories, descriptions, modifiers, and availability
+
+| Integration monitoring
+| Automated alerts for data pipeline failures, API degradation, and stale data detection
+
+| Scalable architecture
+| Foundation for future product catalog consumers
+
+| Decoupled from back-office system changes
+| ProductCatalogService abstracts D365 Commerce implementation details; back-office pricing system changes don't break DMB integration
+|===
+
+<<<
+== Architecture Approach
+
+This is a **cross-cloud domain integration** for OTR Group's digital platform, establishing the xref:bounded-contexts:product_catalog.adoc[ProductCatalogService] bounded context and cross-cloud data pipeline that bridges Azure-based back-office systems with AWS-based customer-facing channels.
+
+At its core, this architecture creates a clear separation between domains while maintaining a unified view of product and pricing data. The xref:bounded-contexts:product_catalog.adoc[ProductCatalogService] acts as a Backend-for-Frontend (BFF) and Anti-Corruption Layer, translating D365 Commerce pricing structures into AWS-native APIs optimised for digital consumer experiences.
+
+By implementing this pattern now, OTR establishes a repeatable approach for exposing back-office data to customer-facing channels without tight coupling between domains, reducing delivery risk and enabling both platforms to evolve independently as business priorities shift.
+
+=== Design Principles
+
+==== Keep it simple
+
+Start with scheduled sync (overnight). Add webhooks/real-time only if business requires it.
+
+==== Clear ownership boundaries
+
+Back-office owns export (Azure), ecommerce owns API (AWS). Clean handoff at S3 data contract.
+
+==== Pricing must match POS
+
+DMBs display what customers pay at checkout. No surprises.
+
+==== Loose coupling
+
+Back-office can change export mechanism (Data Lake, Dataverse, direct export) as long as S3 contract is met.
+
+==== Each team uses native tools
+
+Azure Data Factory for back-office, AWS services for ecommerce. No cross-cloud complexity within teams.
+
+=== New xref:bounded-contexts:product_catalog.adoc[ProductCatalogService]
+
+Product catalog and pricing facade
+
+- Ingests pricing data from D365 Commerce via S3 data export
+- Provides RESTful API for product and pricing queries
+- Manages store-specific pricing with hierarchy (chain/region/store)
+- Foundation for future catalog consumers (mobile app, online ordering)
+- AWS-native implementation (Lambda/ECS, RDS PostgreSQL, S3, API Gateway)
+
+=== Pricing Data Source
+
+*POS Pricing Context Required*
+
+This integration requires **POS channel pricing** from D365 Commerce, not simplified app pricing exports.
+
+[cols="1,2,2"]
+|===
+| Pricing Source | Characteristics | Suitability for DMB
+
+| *POS Channel Pricing*
+| Full price group hierarchy (POS-AU-NAT, POS-SA-R), regional variations, promotional rules, channel-specific pricing
+| *Required* - DMBs must display identical prices to in-store POS systems
+
+| *App Pricing Pathway*
+| Simplified export for OTR App, may lack complete price group mappings, potentially cached/stale
+| *Insufficient* - Missing price group context needed for multi-region pricing
+|===
+
+=== Cross-Cloud Data Pipeline
+
+Cross-cloud data synchronisation infrastructure
+
+==== Azure-Side Export (Back-Office Responsibility)
+
+The back-office teams own the Azure-side export mechanism:
+
+. *D365 Commerce* exports pricing data using Data Management Framework
+. *Azure Data Lake Storage Gen2* receives exported files (Parquet format expected)
+. *Azure Data Factory / Microsoft Fabric* orchestrates cross-cloud transfer to AWS S3
+
+*Implementation Flexibility:* The specific Azure-side mechanism (Data Lake export, Dataverse sync, or direct D365 export) is the back-office team's decision. ProductCatalogService only requires that data arrives in S3 conforming to the agreed data contract (schema, format, frequency).
+
+==== AWS-Side Ingestion (Ecommerce Team Responsibility)
+
+The ecommerce team owns the AWS-side ingestion and API:
+
+. *S3 Bucket* receives pricing exports (cross-account access from Azure)
+. *S3 Event Notification* triggers ingestion pipeline when new file arrives
+. *AWS Glue / Lambda* validates data quality, transforms to API schema, handles errors
+. *RDS PostgreSQL* stores validated pricing data optimised for API queries
+. *SNS Alerts* notify operations team of pipeline failures or data quality issues
+
+*Foundation Pattern:* This cross-cloud pipeline pattern is reusable for future back-office data integrations (inventory, promotions, loyalty data)
+
+=== Integration Points
+
+[cols="1,3"]
+|===
+| Integration | Description
+
+| D365 Commerce
+| System of Record for product catalog and pricing (back-office domain, Azure)
+
+| Amped Digital
+| DMB agency managing Menuzen platform integration and API consumption
+
+| Azure Data Factory
+| Orchestrates scheduled data export and cross-cloud transfer
+
+| AWS S3
+| Landing zone for pricing data exports (cross-account access from Azure)
+
+| AWS RDS PostgreSQL
+| Pricing data storage optimised for API queries
+|===
+
+<<<
+== Key Capabilities Delivered
+
+[cols="1,2,2"]
+|===
+| Capability | How It Works | Business Value
+
+| *Current Pricing Queries*
+| RESTful API with <200ms p95 response time
+| Digital menu boards display accurate, current pricing without manual updates
+
+| *Store-Specific Pricing*
+| Price group hierarchy with store/region/chain fallback logic
+| Supports franchise pricing variations and promotional pricing by location
+
+| *Automated Synchronisation*
+| Scheduled data pipeline (hourly/daily) with validation and error handling
+| Pricing updates flow automatically without manual intervention
+
+| *Multi-Consumer API*
+| Standardised product catalog interface
+| Future channels (mobile app, online ordering) reuse same data source
+
+| *Cross-Cloud Integration*
+| S3-based data contract between Azure and AWS domains
+| Back-office and ecommerce domains evolve independently without tight coupling
+
+| *Data Quality Monitoring*
+| Automated validation, staleness detection, and failure alerts
+| Operations team notified of pricing sync issues before business impact
+
+| *Scalable Foundation*
+| AWS-native architecture with auto-scaling and caching
+| Supports future catalog expansion beyond Subway (Oporto, Red Rooster, other brands)
+|===
+
+<<<
+== Customer Journey
+
+=== Digital Menu Board (Pricing Display)
+
+. Subway store opens for the day
+. Menuzen DMB platform queries xref:bounded-contexts:product_catalog.adoc[ProductCatalogService] API for store-specific pricing
+. API returns current product catalog with prices (from overnight D365 Commerce sync)
+. *Digital menu boards display accurate pricing* across all screens
+. *Pricing updates automatically* when D365 Commerce pricing changes (next sync cycle)
+
+[mermaid]
+----
+sequenceDiagram
+    participant DMB as Menuzen<br/>DMB Platform
+    participant API as ProductCatalog API<br/>(AWS)
+    participant RDS as RDS PostgreSQL<br/>(AWS)
+    participant S3 as S3 Bucket<br/>(AWS)
+    participant ADF as Azure Data Factory<br/>(Azure)
+    participant D365 as D365 Commerce<br/>(Azure)
+
+    Note over D365,DMB: Daily Pricing Sync (overnight)
+    D365 ->> ADF: Export pricing data (scheduled)
+    ADF ->> S3: Transfer to AWS S3 (cross-cloud)
+    S3 ->> RDS: Ingest & validate pricing data
+
+    Note over D365,DMB: Store Opening (daytime)
+    DMB ->> API: GET /stores/{storeId}/products/pricing
+    API ->> RDS: Query current pricing
+    RDS -->> API: Product catalog with prices
+    API -->> DMB: Return pricing (p95 <200ms)
+    DMB ->> DMB: Render menu boards with accurate pricing
+----
+
+=== Pricing Update (D365 Commerce to DMB)
+
+. Back-office team updates product pricing in D365 Commerce
+. Scheduled export runs (overnight)
+. Azure Data Factory transfers pricing file to AWS S3
+. AWS ingestion pipeline validates and loads to RDS PostgreSQL
+. *Next DMB API query returns updated pricing*
+. *Digital menu boards refresh* with new pricing automatically
+
+[mermaid]
+----
+sequenceDiagram
+    actor Admin as Back-Office Team
+    participant D365 as D365 Commerce
+    participant ADF as Azure Data Factory
+    participant S3 as AWS S3
+    participant Lambda as AWS Lambda<br/>(Ingestion)
+    participant RDS as RDS PostgreSQL
+    participant SNS as SNS Alerts
+    participant DMB as Menuzen DMB
+
+    Admin ->> D365: Update product pricing
+    Note over D365,DMB: Scheduled Sync Window (configurable: hourly or daily)
+    D365 ->> ADF: Scheduled pricing export
+    ADF ->> S3: Cross-cloud transfer (PGP encrypted)
+    S3 ->> Lambda: S3 event trigger
+    Lambda ->> Lambda: Validate pricing data
+    alt Validation Success
+        Lambda ->> RDS: Load new pricing
+        Lambda ->> SNS: Success notification
+    else Validation Failure
+        Lambda ->> SNS: Alert: Pricing sync failed
+    end
+
+    Note over D365,DMB: Next Day (store opening)
+    DMB ->> RDS: Query pricing (via API Gateway)
+    RDS -->> DMB: Return updated pricing
+    DMB ->> DMB: Display new menu board pricing
+----
+
+<<<
+== Implementation Phases
+
+Phased rollout with pilot store validation
+
+[cols="2,2,1,2"]
+|===
+| Phase | Capability Enabled | Users | Success Criteria
+
+| *TS-0: Foundation*
+| S3 data pipeline, RDS schema, data contract with D365 Commerce
+| Internal testing
+| Data contract agreed, S3 cross-account access validated, RDS schema approved
+
+| *TS-1: Data Pipeline Development*
+| ETL pipeline (Glue/Lambda), data validation, error handling, monitoring
+| Development team
+| ETL pipeline functional, data validation rules implemented, ingestion handles sample data
+
+| *TS-2: API Development*
+| xref:bounded-contexts:product_catalog.adoc[ProductCatalogService] API (GET products, pricing), OAuth 2.0 authentication, caching
+| Development team
+| API functional tests pass, <200ms p95 API response, OAuth 2.0 authentication working
+
+| *TS-3: Pilot Stores*
+| Menuzen DMB integration (via Amped Digital), production data pipeline
+| 2-3 pilot stores
+| DMBs display accurate pricing, scheduled sync completes within configured window (1 hour for daily, per-hour for hourly), zero pricing discrepancies
+
+| *TS-4: Full Rollout*
+| All Subway stores enabled
+| All Subway stores
+| >99% sync success rate, <5 manual pricing corrections per month, no P1/P2 incidents
+
+| *TS-5: Target State*
+| xref:bounded-contexts:product_catalog.adoc[ProductCatalogService] available for future consumers
+| All product catalog consumers
+| API ready for future product catalog consumers
+|===
+
+*Rollout Strategy*: Phased rollout with pilot store validation. Pilot stores can revert to manual DMB pricing updates if API unavailable. Full rollout only after 30-day pilot validation.
+
+<<<
+== Non-Functional Requirements Met
+
+[cols="1,2,2"]
+|===
+| Requirement | Target | How We Achieve It
+
+| *API Response Time*
+| p95 <200ms, p99 <500ms
+| Direct RDS queries, optional Redis caching, AWS region co-location (API + RDS)
+
+| *Data Freshness*
+| Pricing synced within 24 hours of D365 Commerce update
+| Configurable scheduled sync (hourly or daily), typical schedule: overnight (01:00-02:00 UTC) or hourly (:15 past each hour)
+
+| *System Uptime*
+| 99.9% (API availability)
+| AWS auto-scaling (ECS/Lambda), health checks, multi-AZ RDS deployment
+
+| *Data Accuracy*
+| >99.5% pricing match with D365 Commerce
+| Automated validation on ingestion, staleness detection, reconciliation reports
+
+| *Sync Success Rate*
+| >99% successful scheduled syncs
+| Retry logic with exponential backoff, automated alerts on failures, manual intervention playbook
+
+| *Scalability*
+| Support 100+ stores, 5000+ SKUs, 500 API requests/minute
+| AWS auto-scaling, RDS read replicas, Redis caching for high-traffic queries
+
+| *Cross-Cloud Transfer*
+| Secure, encrypted data transfer (Azure → AWS)
+| S3 cross-account access with IAM roles, PGP encryption, VPC endpoints
+
+| *Data Residency*
+| All pricing data in ap-southeast-2 region (AWS Sydney)
+| Region pinning, compliance validation
+|===
+
+<<<
+== Risks & Mitigation
+
+[cols="1,1,2"]
+|===
+| Risk | Impact | Mitigation
+
+| *D365 Commerce export failures*
+| Stale pricing data in DMBs
+| Staleness detection alerts, fallback to previous day's pricing, manual intervention playbook
+
+| *Cross-cloud transfer failures*
+| Pricing data not reaching AWS
+| Automated retry with exponential backoff, SNS alerts to operations team, S3 event logs for troubleshooting
+
+| *API performance degradation*
+| Slow DMB loading, poor customer experience
+| CloudWatch alarms on p95/p99 latency, auto-scaling, optional Redis caching, performance testing in pilot phase
+
+| *Pricing data accuracy issues*
+| DMBs display incorrect prices
+| Automated validation on ingestion (schema, data types, price ranges), reconciliation reports, manual spot checks in pilot
+
+| *Menuzen platform API changes*
+| Integration breaks without notice
+| API versioning, conformist pattern (we adapt to their contract), monitoring for 4xx/5xx errors, communication via Amped Digital (platform maintainer)
+
+| *Multi-store pricing complexity*
+| Wrong prices displayed at franchise locations
+| Price group hierarchy validation, store mapping verification, pilot stores include franchise locations
+
+| *Azure Data Factory downtime*
+| Scheduled sync fails
+| SNS alerts on missed sync window, manual retry via Azure portal, fallback to previous day's pricing
+
+| *RDS database failures*
+| API unavailable, DMBs can't load pricing
+| Multi-AZ RDS deployment, automated backups, failover testing, Redis cache serves stale data during outage
+|===
+
+<<<
+== Key Decisions Made
+
+[cols="1,2,2"]
+|===
+| Decision | Rationale | Trade-off Accepted
+
+| *AWS platform for ProductCatalogService* (not Azure)
+| Ecommerce team operates on AWS, existing commercial agreement, aligns with customer-facing workload strategy
+| Cross-cloud integration complexity (Azure → AWS data transfer)
+
+| *S3 data contract* (not REST API or database replication)
+| Loose coupling between domains, asynchronous processing, simplifies cross-cloud networking, resilient to downtime
+| Data freshness (scheduled sync 1-24 hours, not real-time)
+
+| *RDS PostgreSQL* (not DynamoDB)
+| Relational data model (products, prices, stores, price groups), supports complex queries, familiar technology for team
+| Additional operational overhead vs. managed NoSQL (acceptable for pilot scale)
+
+| *Configurable scheduled sync* (not event-driven)
+| Simpler implementation, meets DMB refresh requirements (hourly or daily pricing updates), reduces cross-cloud complexity
+| Data staleness (1-24 hours depending on schedule), not suitable for real-time use cases
+
+| *API Gateway + ECS/Lambda* (not direct RDS access)
+| Secure API exposure, authentication, abstraction layer, scalable architecture
+| Additional latency (~50ms), increased architecture complexity
+
+| *Conformist pattern with Menuzen* (not custom integration)
+| External platform (maintained by Amped Digital), we don't control their API, simpler to adapt to their contract than negotiate changes
+| Less control over API design, must accommodate their requirements
+
+| *Price group hierarchy* (not flat pricing)
+| Supports franchise pricing variations, regional promotions, chain-wide pricing
+| Additional complexity in price resolution logic, more data to synchronise
+
+| *Optional Redis caching* (not mandatory)
+| Start simple, add caching if API performance degrades during rollout
+| Potential cache staleness if implemented (acceptable trade-off for performance)
+|===
+
+<<<
+== Future Capacity Delivered
+
+[cols="1,3"]
+|===
+| Stream | Capacity
+
+| *Product Catalog Foundation*
+| Establishes standardised product catalog API for all OTR QSRs and home-brands
+
+| *Cross-Cloud Integration Pattern*
+| Repeatable approach for exposing back-office data (Azure) to customer-facing channels (AWS) without tight coupling
+
+| *Digital Menu Board Expansion*
+| Supports DMB rollout to other OTR brands beyond Subway
+
+| *Promotional Pricing*
+| Foundation for dynamic pricing, time-based promotions, and loyalty-driven discounts
+
+| *Inventory Visibility*
+| Extend ProductCatalogService to include real-time inventory for "out of stock" management
+
+| *Multi-Brand Catalog*
+| Single API serving product catalog for all OTR brands (reduces duplication, improves consistency)
+
+| *Analytics & Insights*
+| Product performance tracking, pricing effectiveness analysis, demand forecasting
+|===

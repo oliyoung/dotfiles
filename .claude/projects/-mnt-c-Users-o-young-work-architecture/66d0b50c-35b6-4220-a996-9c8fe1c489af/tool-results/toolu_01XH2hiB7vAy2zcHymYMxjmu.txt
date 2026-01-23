@@ -1,0 +1,504 @@
+     1→= Flybuys Integration - Architecture Definition
+     2→:project-name: OTR-002
+     3→:togaf-adm-phase: Phase C: Information Systems Architectures
+     4→:document-type: Architecture Definition Document
+     5→:status: Discovery
+     6→:version: 0.1
+     7→:domain: Loyalty
+     8→:programme-lead: Frankie.Mullaly@vivaenergy.com.au
+     9→:domain-architect: O.Young@otr.com.au
+    10→:business-owner: D.Peisley@otr.com.au
+    11→:business-analyst: Fiona.Cheung@vivaenergy.com.au
+    12→:solution-architecture: xref:solution-architectures:flybuys_integration.adoc[Solution Architectures/Flybuys Integration]
+    13→:doctype: article
+    14→:toc: left
+    15→:toclevels: 4
+    16→:sectanchors:
+    17→:sectlinks:
+    18→:sectnums:
+    19→:icons: font
+    20→:source-highlighter: highlightjs
+    21→:experimental:
+    22→:description: Architecture Definition Document for Flybuys Coalition Loyalty Integration
+    23→:keywords: loyalty, flybuys, integration, architecture-definition, togaf, ddd
+    24→
+    25→== Introduction & Vision
+    26→
+    27→=== Purpose
+    28→
+    29→OTR and Reddy Express customers experience fragmented loyalty programmes across the OTRG store network. While REXP stores use manual Flybuys batch processing based on legacy pre-TSA architectures, OTR stores offer a native rewards programme, with no digital coalition partner linking between OTRG and other potential coalition partners, including Flybuys.
+    30→
+    31→This architectural deficiency prevents OTRG from utilising standardised patterns for linking user accounts with coalition partners, inhibiting future partnership opportunities and platform extensibility.
+    32→
+    33→=== Vision
+    34→
+    35→> Enable Customers to seamlessly link coalition loyalty partners to their OTR Profile via our mobile app, select their reward preference, and earn partner points while maintaining architectural flexibility to evolve OTRG's native loyalty capability independently.
+    36→
+    37→=== Architectural Approach
+    38→
+    39→This architecture introduces three xref:ROOT:ubiquitous_language.adoc#bounded-context[bounded contexts]
+    40→
+    41→* xref:bounded-contexts:profile.adoc[Profile Service]: Partner account linking (OAuth 2.0), reward preference management, canonical customer identity
+    42→* xref:bounded-contexts:loyalty.adoc[Loyalty Service]: xref:ROOT:ubiquitous_language.adoc#transaction-adjudication[Transaction adjudication], xref:ROOT:ubiquitous_language.adoc#credential-resolution[Credential resolution], xref:ROOT:ubiquitous_language.adoc#partner-integration[Loyalty partner integration facade], automated batch posting
+    43→* xref:bounded-contexts:engagement.adoc[Engagement Service] : Customer Engagement campaigns, notification orchestration, Braze Anti-Corruption Layer
+    44→
+    45→implementing Domain-Driven Design patterns:
+    46→
+    47→* *Event-driven integration*: Loose coupling via Event Bus with published domain events
+    48→* *Anti-Corruption Layers*: Isolation from external systems (xref:bounded-contexts:external/braze.adoc[Braze], xref:bounded-contexts:external/eagle_eye.adoc[EagleEye], xref:bounded-contexts:external/flybuys.adoc[Flybuys], xref:bounded-contexts:external/microsoft_dynamics_365_commerce.adoc[D365 Commerce])
+    49→* *Phased rollout*: Parallel deployment alongside legacy xref:bounded-contexts:interfaces/otr_app_api.adoc[OTR App API] with feature flag-controlled gradual enablement (link:#AS-1_Foundation[AS-1 Foundation] → link:#AS-2_Linking[AS-2 Linking] → link:#AS-3_Grants[AS-3 Grants]) The xref:bounded-contexts:profile.adoc[Profile Service] also serves as a facade for xref:bounded-contexts:interfaces/otr_pos.adoc[OTR POS] integration to xref:bounded-contexts:external/salesforce_crm.adoc[Salesforce CRM] before the #Highlander programme.
+    50→
+    51→=== Architecture Overview
+    52→
+    53→The following diagram shows the target state architecture with three new bounded contexts (Profile Service, Loyalty Service, Engagement Service) integrating with existing systems:
+    54→
+    55→[mermaid]
+    56→----
+    57→---
+    58→layout: elk
+    59→---
+    60→flowchart LR
+    61→    Customer(["Customer"]) -- Uses --> MobileApp["Mobile App<br>iOS/Android"]
+    62→    Customer -- Shops at --> POS["OTR/OTR+ POS<br>D365 Commerce"]
+    63→    Customer -- Receives --> EngagementService["Engagement Service<br>Campaign Triggers<br>Customer Notifications<br>Braze Integration"]
+    64→    MobileApp -- Authenticate --> EntraID["Microsoft Entra<br>External ID<br>CIAM"]
+    65→    MobileApp -- "Link Partner Account<br>OAuth 2.0 + PKCE" --> ProfileService["Profile Service<br>Partner Account Linking<br>Reward Preferences"]
+    66→    MobileApp -- Get Partner Links<br>Update Preferences --> ProfileService
+    67→    MobileApp -- Query Flybuys Balance<br>via ACL --> LoyaltyService["Loyalty Service<br>Transaction Adjudication<br>Credential Resolution<br>Batch Processing"]
+    68→    POS -- Scan Loyalty Credential<br>Resolve to VCI --> LoyaltyService
+    69→    POS -- "Transaction Adjudication<br>Real-time &lt;500ms" --> LoyaltyService
+    70→    ProfileService -- "Store OAuth Tokens<br>AES-256 Encrypted" --> OAuthService["OAuth Service<br>Token Management"]
+    71→    ProfileService -- Query Customer Profile<br>Conformist --> Salesforce["Salesforce CRM<br>Customer Profile<br>System of Record"]
+    72→    ProfileService -- Publish Events<br>PartnerLinked<br>RewardPreferenceChanged --> EventBus[("Event Bus<br>Domain Events")]
+    73→    LoyaltyService -- Transaction Adjudication<br>via ACL --> EagleEye["EagleEye<br>Loyalty Engine<br>Points, Offers, Wallet"]
+    74→    LoyaltyService -- Query Wallet/Points/Tiers<br>via ACL --> EagleEye
+    75→    LoyaltyService -- Nightly Batch SFTP<br>PGP Encrypted --> Flybuys["Flybuys<br>Coalition Partner<br>OAuth, SFTP"]
+    76→    LoyaltyService -- OAuth Balance Query<br>via ACL --> Flybuys
+    77→    LoyaltyService -- Query Reward Preference<br>REST API --> ProfileService
+    78→    LoyaltyService -- Publish Events<br>TransactionAdjudicated<br>PointsEarned --> EventBus
+    79→    EngagementService -- Consume Events<br>PartnerLinked<br>TransactionAdjudicated<br>PointsEarned --> EventBus
+    80→    EngagementService -- Trigger Campaigns<br>Push Notifications<br>via ACL --> Braze["Braze<br>Marketing Automation<br>Webhooks"]
+    81→    EngagementService -- Query Customer Profile<br>Conformist --> Salesforce
+    82→    OAuthService -- OAuth Token Exchange<br>Authorization Code Flow --> Flybuys
+    83→
+    84→     Customer:::customer
+    85→     MobileApp:::presentation
+    86→     POS:::presentation
+    87→     EngagementService:::newService
+    88→     EntraID:::external
+    89→     ProfileService:::newService
+    90→     LoyaltyService:::newService
+    91→     OAuthService:::infrastructure
+    92→     Salesforce:::external
+    93→     EventBus:::infrastructure
+    94→     EagleEye:::external
+    95→     Flybuys:::external
+    96→     Braze:::external
+    97→    classDef newService fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    98→    classDef external fill:#FF9800,stroke:#E65100,stroke-width:2px,color:#fff
+    99→    classDef infrastructure fill:#2196F3,stroke:#0D47A1,stroke-width:2px,color:#fff
+   100→    classDef presentation fill:#9C27B0,stroke:#4A148C,stroke-width:2px,color:#fff
+   101→    classDef customer fill:#607D8B,stroke:#263238,stroke-width:2px,color:#fff
+   102→----
+   103→
+   104→==== Key Architectural Patterns
+   105→
+   106→[width="100%",cols="19%,34%,47%",options="header",]
+   107→|===
+   108→|Pattern | Application | Rationale
+   109→| xref:ROOT:ubiqutious_language.adoc#anti-corruption-layer-acl[Anti-Corruption Layer (ACL)] | LoyaltyService → EagleEye, FlybuysEngagementService → Braze | Isolates domain model from external system changes, translates between bounded contexts
+   110→|*Customer-Supplier + Conformist* | ProfileService → SalesforceEngagementService → Salesforce | We conform to Salesforce API (external system we don’t control)
+   111→|*Backend-for-Frontend (BFF)* | LoyaltyService | Orchestrates multiple backend systems (EagleEye, ProfileService) for POS/Mobile clients
+   112→|*Event-Driven Architecture* | Event Bus (OHS+PL) | Loose coupling between bounded contexts, asynchronous notification of domain events
+   113→|*Event Consumer* | EngagementService | Consumes domain events from Profile and Loyalty contexts to trigger customer campaigns
+   114→|*OAuth 2.0 + PKCE* | ProfileService → Flybuys | Secure partner account linking without storing passwords
+   115→|*Strangler Fig* | Parallel deployment with feature flags | Gradual migration to new bounded contexts
+   116→|===
+   117→
+   118→== Technical Requirements
+   119→
+   120→[width="100%",cols="10%,90%",options="header",]
+   121→|===
+   122→|ID | Description
+   123→|TR-001 | Every xref:bounded-contexts:interfaces/mobile.adoc[Mobile Application] user has a xref:ubiquitous_language.adoc#Salesforce%2520Contact[Salesforce Contact] record in xref:bounded-contexts:external/salesforce_crm.adoc[Salesforce CRM]
+   124→|TR-002 | Every xref:bounded-contexts:interfaces/mobile.adoc[Mobile Application] user has a xref:ubiquitous_language.adoc#Viva%2520Consumer%2520ID[VCI] part of their xref:ubiquitous_language.adoc#Loyalty%2520Credential[Loyalty Credentials]
+   125→|TR-003 | Every xref:bounded-contexts:interfaces/mobile.adoc[Mobile Application] user has a xref:ubiquitous_language.adoc#Wallet[Loyalty Wallet] part of their xref:ubiquitous_language.adoc#Loyalty%2520Credential[Loyalty Credentials]
+   126→|TR-004 | xref:ubiquitous_language.adoc#Customer[Customers] have a single set of xref:ubiquitous_language.adoc#Loyalty%2520Credential[Loyalty Credentials]
+   127→|TR-005 | xref:ubiquitous_language.adoc#Customer[Customers] are able to link and unlink their xref:ubiquitous_language.adoc#Flybuys%2520Digital%2520Identity[Flybuys Digital Identity] from any xref:bounded-contexts:interfaces/mobile.adoc[Mobile Application]
+   128→|TR-006 | xref:ubiquitous_language.adoc#Customer[Customers] can manage their xref:ubiquitous_language.adoc#Reward%2520Preference[Reward Preference] (select and retain preference)
+   129→|TR-007 | xref:bounded-contexts:external/flybuys.adoc[Flybuys] xref:ubiquitous_language.adoc#Partner[Partner] transactions are posted to xref:bounded-contexts:external/flybuys.adoc[Flybuys] for points allocation to xref:ubiquitous_language.adoc#Flybuys%2520Earning%2520Rules[Earning Rules]
+   130→|TR-008 | xref:bounded-contexts:interfaces/otr_pos.adoc[OTR POS] stores recognise all xref:ubiquitous_language.adoc#Loyalty%2520Credential[Loyalty Credentials] and grant Flybuys Points on fulfilled Transactions where a Customer has a linked Flybuys Digital Identity
+   131→|TR-009 | xref:bounded-contexts:interfaces/otr_plus_pos.adoc[OTR+ POS] stores recognise all xref:ubiquitous_language.adoc#Loyalty%2520Credential[Loyalty Credentials] and grant Flybuys Points on fulfilled Transactions where a Customer has a linked Flybuys Digital Identity
+   132→|TR-010 | xref:ubiquitous_language.adoc#Customer[Customers] can retrieve their xref:bounded-contexts:external/flybuys.adoc[Flybuys] points balance in real-time within any xref:bounded-contexts:interfaces/mobile.adoc[Mobile Application]
+   133→|[line-through]*TR-011* |[line-through]*xref:bounded-contexts:external/flybuys.adoc[Flybuys] xref:ubiquitous_language.adoc#Digital%2520Fuel%2520Dockets[Digital Fuel Dockets] are redeemable at xref:bounded-contexts:interfaces/otr_pos.adoc[OTR POS] and xref:bounded-contexts:interfaces/otr_plus_pos.adoc[OTR+ POS]*
+   134→|TR-012 | All transactions by xref:ubiquitous_language.adoc#Loyalty%2520Credential[Credentialed] xref:ubiquitous_language.adoc#Customer[Customers] through any channel are adjudicated by xref:bounded-contexts:external/eagle_eye.adoc[EagleEye]
+   135→|TR-013 | Web and Mobile Clients geographically show which Loyalty programmes are available at each store
+   136→|TR-014 | All changes are communicated using a decoupled event-based architecture
+   137→|TR-015 | ##Reporting##
+   138→|TR-016 | ##Customer Service##
+   139→|===
+   140→
+   141→=== Technical Requirements Mapping
+   142→
+   143→[cols=",",options="header",]
+   144→|===
+   145→|Business Requirement | Technical Requirement
+   146→|LNKHL_001 | TR-005
+   147→|LNKHL_002 | TR-005
+   148→|LNKHL_003 | TR-004
+   149→|LNKHL_004 | TR-005
+   150→|LNKHL_005 | TR-005
+   151→|LNKHL_006 | TR-014
+   152→|LNKHL_007 | TR-014
+   153→|LNKHL_008 | TR-014
+   154→|LNKHL_009 | TR-014
+   155→|NTWHL_001 | TR-012
+   156→|NTWHL_002 | TR-012
+   157→|NTWHL_003 | TR-013
+   158→|NTWHL_003 | TR-013
+   159→|PEHL_001 | TR-012
+   160→|PEHL_002 |
+   161→|PEHL_003 | TR-010
+   162→|PEHL_004 | TR-012
+   163→|INAHL_001 | TR-008 TR-009
+   164→|INAHL_002 | TR-008 TR-009
+   165→|INAHL_003 | TR-008 TR-009
+   166→|INAHL_004 | TR-008 TR-009
+   167→|INAHL_005 | TR-008 TR-009
+   168→|INAHL_006 | TR-008 TR-009
+   169→|INSHL_001 | TR-008 TR-009
+   170→|INSHL_002 | TR-014
+   171→|TCRHL_001 | TR-007
+   172→|TCRHL_002 | TR-015
+   173→|TCRHL_003 | TR-015
+   174→|TCRHL_004 | TR-015
+   175→|TCRHL_005 | TR-015
+   176→|TCRHL_006 | TR-015
+   177→|TCRHL_007 | TR-015
+   178→|CEHL_001 | TR-016
+   179→|CEHL_002 | TR-016
+   180→|CEHL_003 | TR-016
+   181→|===
+   182→
+   183→=== Stakeholder Analysis
+   184→
+   185→[width="100%",cols="20%,28%,10%,11%,31%",options="header",]
+   186→|===
+   187→|Stakeholder | Role | Interest Level | Influence Level | Engagement Strategy
+   188→|Darren Peisley | Business Owner | High | High | Steering, requirements sign-off
+   189→|Amin Joderyi | Mobile Application and Ecommerce Lead | High | High |Collaboration
+   190→|Frankie Mullaly | Programme Lead | High | Medium | Status updates, escalation point
+   191→|Oli Young | Domain Architect | High | High | Collaboration, architecture decisions
+   192→|Fiona Cheung | Business Analyst | Medium | Medium | Requirements gathering, documentation
+   193→|David Le Pham | Product Owner | High | High | Product decisions, prioritisation
+   194→|Paola Buchan | Marketing & Campaigns Lead | High | Medium | Campaign planning, promotional strategy
+   195→|Nick Cannizzo | Project Manager | High | Low | Programme coordination
+   196→|Mobile App Users | End Users | High | Low | Beta testing programme, feedback surveys
+   197→|xref:bounded-contexts:external/flybuys.adoc[Flybuys] | External Partner |Medium | Medium | Coordination, API support
+   198→|xref:bounded-contexts:external/eagle_eye.adoc[EagleEye] | SaaS Loyalty Platform Vendor | Medium | Medium | Business reviews, support tickets
+   199→|D365 Team | POS Operations | Medium | Medium | Training sessions, operational readiness
+   200→|Customer Support Team | Support & Troubleshooting | Medium | Low |Training, escalation procedures
+   201→|Fullstack Team | CRM Integration | Low | Low | Integration coordination
+   202→|Platform Infrastructure | Cloud Platform | Low | High | Deployment planning, capacity planning
+   203→|Data Team | Data Integration | Low | Medium | Data pipeline coordination
+   204→|===
+   205→
+   206→=== Baseline Architecture
+   207→
+   208→==== Current Business Capability
+   209→
+   210→[width="100%",cols="19%,7%,9%,4%,57%,4%",options="header",]
+   211→|===
+   212→|L1 Domain | L2 Subdomain | L3 Capability | Owned By | Supporting Systems |Maturity Level
+   213→|xref:domains:loyalty.adoc[Loyalty Domain] | Preference Management |Reward Preference Management | Loyalty Team
+   214→|xref:bounded-contexts:external/salesforce_crm.adoc[Salesforce CRM] (manual updates via xref:bounded-contexts:external/flybuys.adoc[Flybuys]) | Initial
+   215→|xref:domains:loyalty.adoc[Loyalty Domain] | Transaction Processing |Transaction Adjudication | Loyalty Team |xref:bounded-contexts:interfaces/otr_plus_pos.adoc[OTR+ POS], xref:bounded-contexts:external/coupon_scanner.adoc[Coupon Scanner], xref:bounded-contexts:external/eagle_eye.adoc[EagleEye] | Managed
+   216→|xref:domains:loyalty.adoc[Loyalty Domain] | Transaction Processing |Transaction Posting | Loyalty Team | CSV export, SFTP upload | Initial
+   217→|xref:domains:engagement.adoc[Engagement Domain] | Channel Recognition | Mobile Loyalty Credential | Mobile Team
+   218→|xref:bounded-contexts:interfaces/mobile.adoc[Mobile Application], xref:bounded-contexts:interfaces/otr_app_api.adoc[OTR App API] | Managed
+   219→|xref:domains:engagement.adoc[Engagement Domain] | Channel Recognition | POS Loyalty Credential | D365 Team |xref:bounded-contexts:interfaces/otr_pos.adoc[OTR POS], xref:bounded-contexts:interfaces/otr_plus_pos.adoc[OTR+ POS] | Managed
+   220→|xref:domains:engagement.adoc[Engagement Domain] | Personalised Offers | Digital Fuel Docket Redemption | Loyalty Team |xref:bounded-contexts:interfaces/otr_plus_pos.adoc[OTR+ POS], xref:bounded-contexts:external/coupon_scanner.adoc[Coupon Scanner], xref:bounded-contexts:external/eagle_eye.adoc[EagleEye] | Managed
+   221→|Infrastructure | Partner Integration | Directly Coupled | Platform Team |Direct coupling to external systems | Managed
+   222→|===
+   223→
+   224→==== Current Value Stream
+   225→
+   226→===== Customer Redeems Flybuys Fuel Discount
+   227→
+   228→[mermaid]
+   229→----
+   230→sequenceDiagram
+   231→    actor Customer
+   232→    participant Scanner as Coupon Scanner
+   233→    participant POS as OTR+ POS
+   234→    participant D365 as D365 Commerce
+   235→    participant DataTeam as Data Team
+   236→    participant SQL as SQL Database
+   237→    participant SFTP as SFTP Server
+   238→    participant Flybuys as Flybuys
+   239→    participant Support as Call Centre
+   240→
+   241→    Customer->>Scanner: Present Flybuys card
+   242→    Scanner-->>Customer: Scan fuel docket barcode
+   243→
+   244→    Customer->>POS: Make purchase (fuel/products)
+   245→    POS->>D365: Process transaction
+   246→    D365-->>POS: Transaction recorded
+   247→    POS-->>Customer: Receipt (no points confirmation)
+   248→
+   249→    Note over Customer,Flybuys: Manual Batch Process (Next Day)
+   250→
+   251→    DataTeam->>SQL: Run SQL query
+   252→    SQL-->>DataTeam: Transaction data
+   253→    DataTeam->>DataTeam: Generate CSV file manually
+   254→    DataTeam->>SFTP: Manual SFTP upload
+   255→
+   256→    Note over SFTP,Flybuys: 24+ Hour Delay
+   257→
+   258→    Flybuys->>SFTP: Retrieve batch file
+   259→    Flybuys->>Flybuys: Process transactions
+   260→    Flybuys->>Flybuys: Credit points to member account
+   261→
+   262→    alt Customer checks points before batch processing
+   263→        Customer->>Support: Call support (missing points)
+   264→        Support->>Support: Manual investigation (10-15 min)
+   265→        Support->>SQL: Query transaction status
+   266→        Support-->>Customer: "Points will appear in 24-48 hours"
+   267→    end
+   268→
+   269→    Note over Customer,Flybuys: Pain Points:<br/>- No real-time adjudication<br/>- Manual CSV export/upload<br/>- 24+ hour delay<br/>- No retry logic<br/>- High support burden
+   270→----
+   271→
+   272→[width="100%",cols="21%,30%,15%,4%,13%,17%",options="header",]
+   273→|===
+   274→|Actor | Activity | System | Duration | Value Added | Pain Points / Waste
+   275→|xref:ubiquitous_language.adoc#Customer[Customer] | Present xref:ubiquitous_language.adoc#Flybuys%2520Cardholder%2520Number[Flybuys Card] | xref:bounded-contexts:external/coupon_scanner.adoc[Coupon Scanner] | < 1 Sec | None | Significant delay, manual reconciliation
+   276→|xref:ubiquitous_language.adoc#Customer[Customer] | Makes purchase (fuel/products) | xref:bounded-contexts:interfaces/otr_plus_pos.adoc[OTR+ POS] | < 1 Sec | Complete transaction | No real-time points confirmation at POS
+   277→|xref:bounded-contexts:interfaces/otr_pos.adoc[OTR POS] | Process transaction
+   278→|xref:bounded-contexts:external/microsoft_dynamics_365_commerce.adoc[Microsoft Dynamics 365 Commerce] | < 1 sec | Record transaction | No immediate adjudication
+   279→|xref:bounded-contexts:external/flybuys.adoc[Flybuys] | Process batch file | xref:bounded-contexts:external/flybuys.adoc[Flybuys] | > 24 hours |Credit points to member account | Processing time outside OTR control
+   280→|Data Team | Export Flybuys transactions | Automated SQL query, CSV generation | Automated | Prepare Flybuys batch file |
+   281→|Data Team | Upload to Flybuys SFTP | AutomatedSFTP upload | Automated |Post transactions to Flybuys | Automated upload, no retry logic
+   282→|Customer | Call support if issue | Call centre | 10-15 min | Troubleshoot missing points | High support burden, manual investigation
+   283→|===
+   284→
+   285→==== Pain Points
+   286→
+   287→[width="100%",cols="16%,38%,46%",options="header",]
+   288→|===
+   289→|Category | Pain Point | Business Impact
+   290→|Customer Experience | No linking process | Low adoption, no communication permissions
+   291→|Customer Experience | No visibility of Flybuys balance in OTR app |Customer confusion, support calls
+   292→|Integration | Tight coupling to xref:bounded-contexts:external/eagle_eye.adoc[EagleEye] and xref:bounded-contexts:external/flybuys.adoc[Flybuys] APIs | Brittle integration, difficult to change partners
+   293→|Compliance | No just-in-time transaction adjudication | Loyalty is pushed to stores causing scaling and timing issues
+   294→|===
+   295→
+   296→=== Target State Architecture
+   297→
+   298→==== Business Capability
+   299→
+   300→[width="100%",cols="12%,15%,41%,7%,25%",options="header",]
+   301→|===
+   302→|L1 Domain | L2 Subdomain | L3 Capability | Owned By | Supporting Systems
+   303→|xref:domains:loyalty.adoc[Loyalty Domain] | Partner Integration |Partner Account Linking | OTR Digital IT |xref:bounded-contexts:profile.adoc[Profile Service], xref:bounded-contexts:interfaces/oauth.adoc[OAuth Service]
+   304→|xref:domains:loyalty.adoc[Loyalty Domain] | Points Ledger | Points Earning & Redemption | OTR Digital IT |xref:bounded-contexts:loyalty.adoc[Loyalty Service], xref:bounded-contexts:external/eagle_eye.adoc[EagleEye]
+   305→|xref:domains:loyalty.adoc[Loyalty Domain] | Partner Integration |Partner Points Reconciliation | OTR Digital IT |xref:bounded-contexts:loyalty.adoc[Loyalty Service], xref:bounded-contexts:external/flybuys.adoc[Flybuys]
+   306→|xref:domains:loyalty.adoc[Loyalty Domain] | Preference Management |Reward Preference Management | OTR Digital IT |xref:bounded-contexts:profile.adoc[Profile Service]
+   307→|xref:domains:loyalty.adoc[Loyalty Domain] | Transaction Processing |xref:ubiquitous_language.adoc#Transaction%2520Adjudication[Transaction Adjudication] | OTR Digital IT |xref:bounded-contexts:loyalty.adoc[Loyalty Service], xref:bounded-contexts:external/eagle_eye.adoc[EagleEye]
+   308→|xref:domains:loyalty.adoc[Loyalty Domain] | Transaction Processing |Transaction Posting | OTR Digital IT |xref:bounded-contexts:loyalty.adoc[Loyalty Service], xref:bounded-contexts:external/flybuys.adoc[Flybuys]
+   309→|xref:domains:loyalty.adoc[Loyalty Domain] | Partner Integration |Real-Time Balance Display | OTR Digital IT |xref:bounded-contexts:interfaces/mobile.adoc[Mobile Application], xref:bounded-contexts:loyalty.adoc[Loyalty Service]
+   310→|xref:domains:profile.adoc[Profile Domain] | Customer Profile Management | Mobile Loyalty Credential | OTR Digital IT |xref:bounded-contexts:interfaces/mobile.adoc[Mobile Application], xref:bounded-contexts:profile.adoc[Profile Service]
+   311→|xref:domains:profile.adoc[Profile Domain] | Customer Profile Management | POS Loyalty Credential | |xref:bounded-contexts:interfaces/otr_pos.adoc[OTR POS], xref:bounded-contexts:interfaces/otr_plus_pos.adoc[OTR+ POS], xref:bounded-contexts:loyalty.adoc[Loyalty Service]
+   312→|xref:domains:loyalty.adoc[Loyalty Domain] | Partner Integration |Digital Fuel Docket Redemption | |xref:bounded-contexts:interfaces/otr_pos.adoc[OTR POS], xref:bounded-contexts:interfaces/otr_plus_pos.adoc[OTR+ POS], xref:bounded-contexts:loyalty.adoc[Loyalty Service]
+   313→|Infrastructure | Integration | OAuth Token Management | |xref:bounded-contexts:interfaces/oauth.adoc[OAuth Service]
+   314→|Infrastructure | Integration | Anti-Corruption Layer | |xref:bounded-contexts:loyalty.adoc[Loyalty Service], xref:bounded-contexts:profile.adoc[Profile Service]
+   315→|Infrastructure | Event Bus | Event Publishing |  | Event Bus
+   316→|===
+   317→
+   318→==== Value Stream
+   319→
+   320→===== Customer Links Flybuys Digital Identity and earns Flybuys Points
+   321→
+   322→==== OAuth Partner Linking Flow
+   323→
+   324→[source,mermaid]
+   325→----
+   326→sequenceDiagram
+   327→    autonumber
+   328→    actor Customer
+   329→    participant Mobile as Mobile App
+   330→    participant Profile as Profile Service
+   331→    participant FlybuysOAuth as Flybuys OAuth Server
+   332→    participant KeyVault as Azure Key Vault
+   333→    participant DB as Profile Database
+   334→    participant EventBus as Event Bus
+   335→
+   336→    Note over Customer,EventBus: Customer initiates Flybuys account linking
+   337→
+   338→    Customer->>Mobile: Tap "Link Flybuys Account"
+   339→
+   340→    activate Mobile
+   341→    Mobile->>Mobile: Generate PKCE code verifier (128 bytes)
+   342→    Mobile->>Mobile: Hash verifier → code challenge (SHA256)
+   343→    Mobile->>FlybuysOAuth: Redirect to OAuth authorize endpoint<br/>?code_challenge=xxx&state=yyy
+   344→    deactivate Mobile
+   345→
+   346→    activate FlybuysOAuth
+   347→    FlybuysOAuth-->>Customer: Show Flybuys login page
+   348→    deactivate FlybuysOAuth
+   349→
+   350→    Customer->>FlybuysOAuth: Enter Flybuys credentials
+   351→    activate FlybuysOAuth
+   352→    FlybuysOAuth->>FlybuysOAuth: Authenticate user
+   353→    FlybuysOAuth-->>Customer: Show consent screen<br/>"OTR wants to access your account"
+   354→    deactivate FlybuysOAuth
+   355→
+   356→    Customer->>FlybuysOAuth: Approve consent
+   357→    activate FlybuysOAuth
+   358→    FlybuysOAuth->>FlybuysOAuth: Generate authorization code
+   359→    FlybuysOAuth-->>Mobile: Redirect callback<br/>?code=AUTH_CODE&state=yyy
+   360→    deactivate FlybuysOAuth
+   361→
+   362→    activate Mobile
+   363→    Mobile->>Mobile: Verify state parameter (CSRF protection)
+   364→    Mobile->>Profile: POST /partners<br/>{oauthCode, codeVerifier}
+   365→    deactivate Mobile
+   366→
+   367→    activate Profile
+   368→    Profile->>FlybuysOAuth: POST /token<br/>{code, code_verifier, client_id}
+   369→    activate FlybuysOAuth
+   370→    FlybuysOAuth->>FlybuysOAuth: Verify code_verifier matches challenge
+   371→    FlybuysOAuth-->>Profile: {access_token, refresh_token, expires_in: 3600}
+   372→    deactivate FlybuysOAuth
+   373→
+   374→    Profile->>FlybuysOAuth: GET /member/profile<br/>Authorization: Bearer {access_token}
+   375→    activate FlybuysOAuth
+   376→    FlybuysOAuth-->>Profile: {externalMemberId: "123456789012"}
+   377→    deactivate FlybuysOAuth
+   378→
+   379→    Profile->>KeyVault: Store tokens<br/>SecretName: flybuys-token-{vci}
+   380→    activate KeyVault
+   381→    KeyVault->>KeyVault: Encrypt with AES-256
+   382→    KeyVault-->>Profile: {secretReference}
+   383→    deactivate KeyVault
+   384→
+   385→    Profile->>DB: Create PartnerLink aggregate<br/>{status: "LINKED", oauthTokenRef}
+   386→    activate DB
+   387→    DB-->>Profile: PartnerLink persisted
+   388→    deactivate DB
+   389→
+   390→    Profile->>EventBus: Publish PartnerLinked event<br/>{vivaConsumerId, partner: "FLYBUYS"}
+   391→    activate EventBus
+   392→    EventBus-->>Profile: Event published
+   393→    deactivate EventBus
+   394→
+   395→    Profile-->>Mobile: 201 Created<br/>{partnerLinkId, status: "LINKED"}
+   396→    deactivate Profile
+   397→
+   398→    activate Mobile
+   399→    Mobile-->>Customer: "Flybuys account linked successfully!"
+   400→    deactivate Mobile
+   401→
+   402→    Note over Customer,EventBus: Total flow: 2-3 minutes (user interaction time)
+   403→----
+   404→
+   405→==== Transaction Adjudication Flow
+   406→
+   407→[source,mermaid]
+   408→----
+   409→sequenceDiagram
+   410→    autonumber
+   411→    actor Customer
+   412→    participant POS as POS Terminal<br/>(OTR/OTR+)
+   413→    participant Loyalty as Loyalty Service
+   414→    participant Profile as Profile Service
+   415→    participant EagleEye as EagleEye API
+   416→    participant DB as Loyalty Database
+   417→    participant EventBus as Event Bus
+   418→
+   419→    Note over Customer,EventBus: Customer has Flybuys linked, preference = FLYBUYS_POINTS
+   420→
+   421→    Customer->>POS: Scan Flybuys barcode
+   422→    POS->>Loyalty: POST /credentials/resolve<br/>{barcode: "EAN13"}
+   423→
+   424→    activate Loyalty
+   425→    Note over Loyalty: Credential Resolution
+   426→    Loyalty->>Loyalty: Decode barcode → externalMemberId
+   427→    Loyalty->>Profile: GET /partners?externalMemberId=xxx
+   428→    activate Profile
+   429→    Profile->>Profile: Query PartnerLink by externalMemberId
+   430→    Profile-->>Loyalty: {vivaConsumerId, rewardPreference: "FLYBUYS_POINTS"}
+   431→    deactivate Profile
+   432→    Loyalty-->>POS: {vivaConsumerId, walletId, rewardPreference}
+   433→    deactivate Loyalty
+   434→
+   435→    Note over Customer,EventBus: Resolution: <100ms p95
+   436→
+   437→    Customer->>POS: Complete purchase ($75.50)
+   438→    POS->>Loyalty: POST /transactions/adjudicate<br/>{vivaConsumerId, transaction}
+   439→
+   440→    activate Loyalty
+   441→    Note over Loyalty: Transaction Adjudication
+   442→    Loyalty->>EagleEye: POST /adjudication<br/>{walletId, transaction}
+   443→    activate EagleEye
+   444→    EagleEye->>EagleEye: Apply earning rules<br/>Base: 100 pts, Bonus: 50 pts
+   445→    EagleEye-->>Loyalty: {grants: [{partner: "FLYBUYS", points: 150}]}
+   446→    deactivate EagleEye
+   447→
+   448→    Note over Loyalty: Total adjudication: <300ms p95
+   449→
+   450→    Loyalty->>DB: Persist RewardTransaction<br/>{status: "PENDING"}
+   451→    activate DB
+   452→    DB-->>Loyalty: Transaction saved
+   453→    deactivate DB
+   454→
+   455→    Loyalty->>EventBus: Publish TransactionAdjudicated event
+   456→    activate EventBus
+   457→    EventBus-->>Loyalty: Event published
+   458→    deactivate EventBus
+   459→
+   460→    Loyalty-->>POS: {status: "SUCCESS", points: 150}
+   461→    deactivate Loyalty
+   462→
+   463→    Note over Loyalty,POS: Total response: <500ms p95
+   464→
+   465→    POS-->>Customer: Receipt: "150 Flybuys points pending"
+   466→
+   467→    Note over Customer,EventBus: Points post to Flybuys within 24 hours via batch
+   468→----
+   469→
+   470→===== Detailed Sequence Diagrams
+   471→
+   472→The diagrams above show happy path flows for business stakeholder understanding. For comprehensive implementation details including error scenarios, see xref:solution-architectures:flybuys_integration.adoc[sequence_diagrams/Flybuys Integration Flows].
+   473→
+   474→*Available detailed flows:*
+   475→
+   476→* *Transaction Adjudication* - Happy path + 3 error scenarios (Profile Service timeout, EagleEye circuit breaker, duplicate transaction handling)
+   477→* *OAuth Partner Linking* - Happy path + 3 error scenarios (authorization denied, token exchange failure, partner already linked)
+   478→* *Batch File Processing* - Happy path + 2 error scenarios (SFTP timeout with retry logic, partial batch rejection)
+   479→* *Circuit Breaker* - State transitions (CLOSED → OPEN → HALF_OPEN) with recovery logicL
+   480→* *Event Propagation* - Timeline showing eventual consistency window and out-of-order event handling
+   481→* *OAuth Token Refresh* - Proactive refresh (50-minute timer) + error scenarios (token expiry, API unavailable)
+   482→
+   483→[width="100%",cols="17%,31%,14%,3%,16%,19%",options="header",]
+   484→|===
+   485→|Actor | Activity | System | Duration | Value Added | Pain Points / Waste
+   486→|xref:ubiquitous_language.adoc#Customer[Customer] | Initiate
+   487→xref:ubiquitous_language.adoc#Flybuys%2520Digital%2520Identity[Flybuys
+   488→Digital Identity] linking
+   489→|xref:bounded-contexts:interfaces/mobile.adoc[Mobile
+   490→Application] | 2 min | Enables coalition loyalty | OAuth redirect
+   491→confusing, trust concerns
+   492→
+   493→|xref:ubiquitous_language.adoc#Customer[Customer] | Approve account
+   494→linking | xref:bounded-contexts:external/flybuys.adoc[Flybuys] OAuth | 30
+   495→sec | Authorise data sharing | External site navigation, security warnings
+   496→
+   497→|xref:bounded-contexts:profile.adoc[Profile Service] | Store
+   498→xref:ubiquitous_language.adoc#Partner%2520Link[Partner Link]
+   499→|xref:bounded-contexts:profile.adoc[Profile Service],
+   500→xref:bounded-contexts:interfaces/oauth.adoc[OAuth Service] | <
+
+<system-reminder>
+Whenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.
+</system-reminder>

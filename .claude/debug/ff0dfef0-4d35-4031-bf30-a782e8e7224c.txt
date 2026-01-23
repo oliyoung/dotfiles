@@ -1,0 +1,278 @@
+2026-01-05T23:48:23.140Z [DEBUG] Watching for changes in setting files /mnt/c/Users/o.young/work/architecture/.claude...
+2026-01-05T23:48:23.200Z [DEBUG] [LSP MANAGER] initializeLspServerManager() called
+2026-01-05T23:48:23.200Z [DEBUG] [LSP MANAGER] Created manager instance, state=pending
+2026-01-05T23:48:23.200Z [DEBUG] [LSP MANAGER] Starting async initialization (generation 1)
+2026-01-05T23:48:23.212Z [DEBUG] [SLOW OPERATION DETECTED] fs.realpathSync (5.0ms)
+2026-01-05T23:48:23.229Z [DEBUG] Applying permission update: Adding 45 allow rule(s) to destination 'localSettings': ["Bash(done)","Bash(echo:*)","Bash(find:*)","Bash(git add:*)","Bash(git commit:*)","Bash(git mv:*)","Bash(git pull:*)","Bash(git push:*)","Bash(git restore:*)","Bash(git rm:*)","Bash(git stash:*)","Bash(mkdir:*)","Bash(python3:*)","Bash(xargs:*)","WebFetch(domain:developer.eagleeye.com)","Bash(cml-ts:*)","Bash(node test-parse.js:*)","Bash(node test-generator.js:*)","Bash(npm run build:*)","Bash(node test-external.js:*)","Bash(ls:*)","Bash(git diff:*)","Bash(grep:*)","Bash(wc:*)","Bash(git ls-tree:*)","Bash(git checkout:*)","Bash(git check-ignore:*)","Bash(sudo apt update:*)","Bash(sudo apt install:*)","Bash(npm install:*)","Bash(npx md-to-pdf:*)","Bash(tree:*)","Bash(chmod:*)","Bash(do git mv \"$file\" \"$file/_/-\")","Bash(sort:*)","Bash(cat:*)","Bash(asciidoctor:*)","WebFetch(domain:contextmapper.org)","Bash(npx puppeteer browsers:*)","Bash(asciidoctor-pdf:*)","Bash(ln:*)","Bash(npm ls:*)","Bash(sudo npm update:*)","Bash(export PUPPETEER_EXECUTABLE_PATH=/home/oliy/.cache/puppeteer/chrome/linux-131.0.6778.264/chrome-linux64/chrome)","Bash(export PUPPETEER_EXECUTABLE_PATH=/home/oliy/.cache/puppeteer/chrome-headless-shell/linux-143.0.7499.169/chrome-headless-shell-linux64/chrome-headless-shell:*)"]
+2026-01-05T23:48:23.235Z [DEBUG] LSP server manager initialized successfully
+2026-01-05T23:48:23.235Z [DEBUG] LSP notification handlers registered successfully for all 0 server(s)
+2026-01-05T23:48:23.235Z [DEBUG] Found 0 plugins (0 enabled, 0 disabled)
+2026-01-05T23:48:23.260Z [DEBUG] Stats cache is up to date
+2026-01-05T23:48:23.285Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (24.6ms): ldd /bin/ls 2>/dev/null
+2026-01-05T23:48:23.302Z [DEBUG] Loading skills from: managed=/etc/claude-code/.claude/skills, user=/home/oliy/.claude/skills, project=[]
+2026-01-05T23:48:23.959Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (649.7ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:23.982Z [DEBUG] Loaded 0 installed plugins from /home/oliy/.claude/plugins/installed_plugins.json
+2026-01-05T23:48:24.097Z [DEBUG] Creating shell snapshot for zsh (/bin/zsh)
+2026-01-05T23:48:24.097Z [DEBUG] Looking for shell config file: /home/oliy/.zshrc
+2026-01-05T23:48:24.097Z [DEBUG] Snapshots directory: /home/oliy/.claude/shell-snapshots
+2026-01-05T23:48:24.100Z [DEBUG] Creating snapshot at: /home/oliy/.claude/shell-snapshots/snapshot-zsh-1767656904097-ys0dc1.sh
+2026-01-05T23:48:24.100Z [DEBUG] Shell binary exists: true
+2026-01-05T23:48:24.100Z [DEBUG] Execution timeout: 10000ms
+2026-01-05T23:48:24.104Z [DEBUG] Writing to temp file: /home/oliy/.claude/todos/ff0dfef0-4d35-4031-bf30-a782e8e7224c-agent-ff0dfef0-4d35-4031-bf30-a782e8e7224c.json.tmp.176351.1767656904104
+2026-01-05T23:48:24.113Z [DEBUG] [SLOW OPERATION DETECTED] fs.writeFileSync (8.3ms)
+2026-01-05T23:48:24.113Z [DEBUG] Temp file written successfully, size: 2 bytes
+2026-01-05T23:48:24.113Z [DEBUG] Renaming /home/oliy/.claude/todos/ff0dfef0-4d35-4031-bf30-a782e8e7224c-agent-ff0dfef0-4d35-4031-bf30-a782e8e7224c.json.tmp.176351.1767656904104 to /home/oliy/.claude/todos/ff0dfef0-4d35-4031-bf30-a782e8e7224c-agent-ff0dfef0-4d35-4031-bf30-a782e8e7224c.json
+2026-01-05T23:48:24.113Z [DEBUG] File /home/oliy/.claude/todos/ff0dfef0-4d35-4031-bf30-a782e8e7224c-agent-ff0dfef0-4d35-4031-bf30-a782e8e7224c.json written atomically
+2026-01-05T23:48:24.184Z [DEBUG] getPluginSkills: Processing 0 enabled plugins
+2026-01-05T23:48:24.184Z [DEBUG] Total plugin skills loaded: 0
+2026-01-05T23:48:24.184Z [DEBUG] Total plugin commands loaded: 0
+2026-01-05T23:48:24.185Z [DEBUG] Registered 0 hooks from 0 plugins
+2026-01-05T23:48:24.342Z [DEBUG] Loaded 0 unique skills (managed: 0, user: 0, project: 0, legacy commands: 0)
+2026-01-05T23:48:24.342Z [DEBUG] getSkills returning: 0 skill dir commands, 0 plugin skills
+2026-01-05T23:48:24.365Z [DEBUG] Writing to temp file: /home/oliy/.claude.json.tmp.176351.1767656904365
+2026-01-05T23:48:24.365Z [DEBUG] Preserving file permissions: 100600
+2026-01-05T23:48:24.375Z [DEBUG] [SLOW OPERATION DETECTED] fs.writeFileSync (9.8ms)
+2026-01-05T23:48:24.375Z [DEBUG] Temp file written successfully, size: 64702 bytes
+2026-01-05T23:48:24.375Z [DEBUG] Applied original permissions to temp file
+2026-01-05T23:48:24.375Z [DEBUG] Renaming /home/oliy/.claude.json.tmp.176351.1767656904365 to /home/oliy/.claude.json
+2026-01-05T23:48:24.375Z [DEBUG] File /home/oliy/.claude.json written atomically
+2026-01-05T23:48:24.404Z [DEBUG] Protecting locked version from cleanup: 2.0.72
+2026-01-05T23:48:24.416Z [ERROR] AxiosError: Error
+    at ry (/$bunfs/root/claude:58:1144)
+    at <anonymous> (/$bunfs/root/claude:59:10093)
+    at emit (node:events:92:22)
+    at endReadableNT (internal:streams/readable:862:50)
+    at processTicksAndRejections (native:7:39)
+    at request (/$bunfs/root/claude:61:2149)
+    at processTicksAndRejections (native:7:39)
+2026-01-05T23:48:24.418Z [DEBUG] Acquired mtime-based lock on running version: /home/oliy/.local/share/claude/versions/2.0.76
+2026-01-05T23:48:24.440Z [DEBUG] Total plugin agents loaded: 0
+2026-01-05T23:48:24.447Z [DEBUG] Protecting locked version from cleanup: 2.0.64
+2026-01-05T23:48:24.629Z [DEBUG] Git remote URL: https://github.com/otr-digital/architecture.git
+2026-01-05T23:48:24.629Z [DEBUG] Parsed repository: otr-digital/architecture from https://github.com/otr-digital/architecture.git
+2026-01-05T23:48:24.629Z [DEBUG] Parsed repository: otr-digital/architecture from URL: https://github.com/otr-digital/architecture.git
+2026-01-05T23:48:24.629Z [DEBUG] Path /mnt/c/Users/o.young/work/architecture already tracked for repo otr-digital/architecture
+2026-01-05T23:48:24.683Z [DEBUG] Shell snapshot created successfully (50518 bytes)
+2026-01-05T23:48:24.743Z [DEBUG] [SLOW OPERATION DETECTED] fs.readFileSync (7.9ms)
+2026-01-05T23:48:24.887Z [DEBUG] Initialized versioned plugins system with 0 plugins
+2026-01-05T23:48:24.896Z [DEBUG] Writing to temp file: /home/oliy/.claude.json.tmp.176351.1767656904896
+2026-01-05T23:48:24.896Z [DEBUG] Preserving file permissions: 100600
+2026-01-05T23:48:24.909Z [DEBUG] [SLOW OPERATION DETECTED] fs.writeFileSync (12.5ms)
+2026-01-05T23:48:24.909Z [DEBUG] Temp file written successfully, size: 64702 bytes
+2026-01-05T23:48:24.909Z [DEBUG] Applied original permissions to temp file
+2026-01-05T23:48:24.909Z [DEBUG] Renaming /home/oliy/.claude.json.tmp.176351.1767656904896 to /home/oliy/.claude.json
+2026-01-05T23:48:24.909Z [DEBUG] File /home/oliy/.claude.json written atomically
+2026-01-05T23:48:24.933Z [DEBUG] Getting matching hook commands for SessionStart with query: startup
+2026-01-05T23:48:24.933Z [DEBUG] Found 0 hook matchers in settings
+2026-01-05T23:48:24.933Z [DEBUG] Matched 0 unique hooks for query "startup" (0 before deduplication)
+2026-01-05T23:48:24.952Z [DEBUG] Protecting locked version from cleanup: 2.0.59
+2026-01-05T23:48:25.014Z [DEBUG] Protecting locked version from cleanup: 2.0.69
+2026-01-05T23:48:25.039Z [DEBUG] Protecting locked version from cleanup: 2.0.65
+2026-01-05T23:48:25.041Z [DEBUG] Failed to check metrics opt-out status: Request failed with status code 403
+2026-01-05T23:48:25.041Z [ERROR] AxiosError: Error
+    at ry (/$bunfs/root/claude:58:1144)
+    at <anonymous> (/$bunfs/root/claude:59:10093)
+    at emit (node:events:92:22)
+    at endReadableNT (internal:streams/readable:862:50)
+    at processTicksAndRejections (native:7:39)
+    at request (/$bunfs/root/claude:61:2149)
+    at processTicksAndRejections (native:7:39)
+2026-01-05T23:48:25.045Z [DEBUG] Protecting locked version from cleanup: 2.0.62
+2026-01-05T23:48:25.439Z [DEBUG] Writing to temp file: /home/oliy/.claude.json.tmp.176351.1767656905439
+2026-01-05T23:48:25.439Z [DEBUG] Preserving file permissions: 100600
+2026-01-05T23:48:25.452Z [DEBUG] [SLOW OPERATION DETECTED] fs.writeFileSync (13.4ms)
+2026-01-05T23:48:25.452Z [DEBUG] Temp file written successfully, size: 64629 bytes
+2026-01-05T23:48:25.452Z [DEBUG] Applied original permissions to temp file
+2026-01-05T23:48:25.452Z [DEBUG] Renaming /home/oliy/.claude.json.tmp.176351.1767656905439 to /home/oliy/.claude.json
+2026-01-05T23:48:25.453Z [DEBUG] File /home/oliy/.claude.json written atomically
+2026-01-05T23:48:26.543Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (1057.2ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:26.555Z [DEBUG] [SLOW OPERATION DETECTED] fs.existsSync (8.8ms)
+2026-01-05T23:48:26.567Z [DEBUG] [SLOW OPERATION DETECTED] fs.readdirSync (11.2ms)
+2026-01-05T23:48:26.574Z [DEBUG] [SLOW OPERATION DETECTED] fs.existsSync (6.7ms)
+2026-01-05T23:48:26.580Z [DEBUG] [SLOW OPERATION DETECTED] fs.existsSync (6.4ms)
+2026-01-05T23:48:26.596Z [DEBUG] [SLOW OPERATION DETECTED] fs.existsSync (12.8ms)
+2026-01-05T23:48:26.602Z [DEBUG] [SLOW OPERATION DETECTED] fs.existsSync (5.4ms)
+2026-01-05T23:48:26.623Z [DEBUG] [SLOW OPERATION DETECTED] fs.readdirSync (21.2ms)
+2026-01-05T23:48:26.643Z [DEBUG] [SLOW OPERATION DETECTED] fs.readdirSync (19.9ms)
+2026-01-05T23:48:26.645Z [DEBUG] Official marketplace auto-install skipped: already_attempted
+2026-01-05T23:48:26.646Z [DEBUG] performStartupChecks called
+2026-01-05T23:48:26.647Z [DEBUG] Starting background plugin installations
+2026-01-05T23:48:26.647Z [DEBUG] performBackgroundPluginInstallations called
+2026-01-05T23:48:27.816Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (1166.7ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:27.832Z [DEBUG] [SLOW OPERATION DETECTED] fs.existsSync (12.7ms)
+2026-01-05T23:48:27.838Z [DEBUG] [SLOW OPERATION DETECTED] fs.readdirSync (6.0ms)
+2026-01-05T23:48:27.866Z [DEBUG] [SLOW OPERATION DETECTED] fs.readdirSync (15.5ms)
+2026-01-05T23:48:27.877Z [DEBUG] [SLOW OPERATION DETECTED] fs.readdirSync (10.9ms)
+2026-01-05T23:48:27.916Z [DEBUG] AutoUpdaterWrapper: Installation type: native
+2026-01-05T23:48:28.813Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (894.5ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:28.842Z [DEBUG] Writing to temp file: /home/oliy/.claude.json.tmp.176351.1767656908842
+2026-01-05T23:48:28.842Z [DEBUG] Preserving file permissions: 100600
+2026-01-05T23:48:28.862Z [DEBUG] [SLOW OPERATION DETECTED] fs.writeFileSync (19.7ms)
+2026-01-05T23:48:28.862Z [DEBUG] Temp file written successfully, size: 64702 bytes
+2026-01-05T23:48:28.862Z [DEBUG] Applied original permissions to temp file
+2026-01-05T23:48:28.862Z [DEBUG] Renaming /home/oliy/.claude.json.tmp.176351.1767656908842 to /home/oliy/.claude.json
+2026-01-05T23:48:28.862Z [DEBUG] File /home/oliy/.claude.json written atomically
+2026-01-05T23:48:28.865Z [DEBUG] Setting installation status: 0 marketplaces, 0 installable plugins, 0 uninstallable plugins
+2026-01-05T23:48:28.866Z [DEBUG] Loaded plugins - Enabled: 0, Disabled: 0, Commands: 0, Agents: 0, Errors: 0
+2026-01-05T23:48:28.906Z [DEBUG] [SLOW OPERATION DETECTED] fs.writeFileSync (9.9ms)
+2026-01-05T23:48:28.906Z [DEBUG] Successfully refreshed marketplace: claude-plugins-official
+2026-01-05T23:48:28.907Z [DEBUG] Plugin autoupdate: checking installed plugins
+2026-01-05T23:48:28.911Z [DEBUG] Getting matching hook commands for SubagentStart with query: Explore
+2026-01-05T23:48:28.911Z [DEBUG] Found 0 hook matchers in settings
+2026-01-05T23:48:28.911Z [DEBUG] Matched 0 unique hooks for query "Explore" (0 before deduplication)
+2026-01-05T23:48:28.912Z [DEBUG] Getting matching hook commands for SubagentStart with query: Plan
+2026-01-05T23:48:28.912Z [DEBUG] Found 0 hook matchers in settings
+2026-01-05T23:48:28.912Z [DEBUG] Matched 0 unique hooks for query "Plan" (0 before deduplication)
+2026-01-05T23:48:28.926Z [DEBUG] Ripgrep first use test: PASSED (mode=builtin, path=/home/oliy/.local/share/claude/versions/2.0.76)
+2026-01-05T23:48:28.931Z [DEBUG] rg EAGAIN error detected, retrying with single-threaded mode (-j 1)
+2026-01-05T23:48:28.936Z [DEBUG] rg error (signal=undefined, code=ABORT_ERR, stderr: ), 0 results
+2026-01-05T23:48:28.937Z [ERROR] AbortError: AbortError: The operation was aborted.
+    at unknown
+    at abortChildProcess (node:child_process:937:42)
+    at onAbortListener2 (node:child_process:35:24)
+    at abort (unknown)
+    at <anonymous> (/$bunfs/root/claude:4920:14420)
+2026-01-05T23:48:28.951Z [DEBUG] Skills and commands included in Skill tool:
+2026-01-05T23:48:29.044Z [DEBUG] [SLOW OPERATION DETECTED] fs.writeFileSync (7.9ms)
+2026-01-05T23:48:29.056Z [DEBUG] [SLOW OPERATION DETECTED] fs.writeFileSync (7.2ms)
+2026-01-05T23:48:29.084Z [DEBUG] [SLOW OPERATION DETECTED] fs.writeFileSync (15.0ms)
+2026-01-05T23:48:29.135Z [DEBUG] Writing to temp file: /home/oliy/.claude.json.tmp.176351.1767656909135
+2026-01-05T23:48:29.135Z [DEBUG] Preserving file permissions: 100600
+2026-01-05T23:48:29.146Z [DEBUG] [SLOW OPERATION DETECTED] fs.writeFileSync (10.8ms)
+2026-01-05T23:48:29.146Z [DEBUG] Temp file written successfully, size: 64702 bytes
+2026-01-05T23:48:29.146Z [DEBUG] Applied original permissions to temp file
+2026-01-05T23:48:29.146Z [DEBUG] Renaming /home/oliy/.claude.json.tmp.176351.1767656909135 to /home/oliy/.claude.json
+2026-01-05T23:48:29.147Z [DEBUG] File /home/oliy/.claude.json written atomically
+2026-01-05T23:48:29.687Z [DEBUG] Checking for native installer update to version 2.0.76
+2026-01-05T23:48:29.687Z [DEBUG] Already running version 2.0.76 - no update needed
+2026-01-05T23:48:29.740Z [DEBUG] [SLOW OPERATION DETECTED] fs.existsSync (16.3ms)
+2026-01-05T23:48:30.570Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (705.6ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:30.591Z [DEBUG] [SLOW OPERATION DETECTED] fs.readdirSync (5.5ms)
+2026-01-05T23:48:30.596Z [DEBUG] [SLOW OPERATION DETECTED] fs.readdirSync (5.1ms)
+2026-01-05T23:48:30.609Z [DEBUG] Stream started - received first chunk
+2026-01-05T23:48:31.273Z [DEBUG] Stream started - received first chunk
+2026-01-05T23:48:32.177Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (579.0ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:33.786Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (589.1ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:33.971Z [DEBUG] Getting matching hook commands for SubagentStop with query: undefined
+2026-01-05T23:48:33.971Z [DEBUG] Found 0 hook matchers in settings
+2026-01-05T23:48:33.971Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-05T23:48:35.446Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (634.2ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:35.471Z [DEBUG] [SLOW OPERATION DETECTED] fs.readdirSync (5.0ms)
+2026-01-05T23:48:37.062Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (591.1ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:38.605Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (522.2ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:39.561Z [DEBUG] Getting matching hook commands for SubagentStop with query: undefined
+2026-01-05T23:48:39.561Z [DEBUG] Found 0 hook matchers in settings
+2026-01-05T23:48:39.561Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-05T23:48:40.164Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (539.6ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:41.681Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (496.6ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:43.163Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (465.8ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:44.616Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (437.2ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:46.107Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (473.1ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:47.575Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (449.5ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:49.046Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (447.7ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:49.651Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-05T23:48:49.651Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-05T23:48:49.651Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-05T23:48:49.651Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-05T23:48:49.714Z [DEBUG] [SLOW OPERATION DETECTED] fs.existsSync (6.4ms)
+2026-01-05T23:48:49.729Z [DEBUG] Getting matching hook commands for UserPromptSubmit with query: undefined
+2026-01-05T23:48:49.729Z [DEBUG] Found 0 hook matchers in settings
+2026-01-05T23:48:49.729Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-05T23:48:49.743Z [DEBUG] FileHistory: Added snapshot for e9919db7-363e-4ef0-bdda-37467619f676, tracking 0 files
+2026-01-05T23:48:49.827Z [DEBUG] Total plugin output styles loaded: 0
+2026-01-05T23:48:50.499Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (437.6ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:50.630Z [DEBUG] Stream started - received first chunk
+2026-01-05T23:48:52.015Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (502.6ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:52.031Z [DEBUG] Stream started - received first chunk
+2026-01-05T23:48:52.633Z [DEBUG] [SLOW OPERATION DETECTED] fs.existsSync (5.6ms)
+2026-01-05T23:48:53.499Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (468.9ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:53.997Z [DEBUG] [SLOW OPERATION DETECTED] fs.existsSync (9.2ms)
+2026-01-05T23:48:54.133Z [DEBUG] [SLOW OPERATION DETECTED] fs.existsSync (6.0ms)
+2026-01-05T23:48:54.292Z [DEBUG] [SLOW OPERATION DETECTED] fs.existsSync (6.7ms)
+2026-01-05T23:48:54.995Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (480.9ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:56.475Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (463.7ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:58.013Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (517.5ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:48:58.917Z [DEBUG] Language not supported while highlighting code, falling back to markdown: regex
+2026-01-05T23:48:59.014Z [DEBUG] Getting matching hook commands for Stop with query: undefined
+2026-01-05T23:48:59.014Z [DEBUG] Found 0 hook matchers in settings
+2026-01-05T23:48:59.014Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-05T23:48:59.535Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (518.7ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:49:00.065Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (506.0ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:49:00.090Z [DEBUG] [SLOW OPERATION DETECTED] fs.readdirSync (6.6ms)
+2026-01-05T23:49:15.310Z [DEBUG] [SLOW OPERATION DETECTED] fs.existsSync (10.3ms)
+2026-01-05T23:49:39.643Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-05T23:49:39.643Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-05T23:49:39.643Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-05T23:49:39.643Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-05T23:49:39.690Z [DEBUG] Getting matching hook commands for UserPromptSubmit with query: undefined
+2026-01-05T23:49:39.690Z [DEBUG] Found 0 hook matchers in settings
+2026-01-05T23:49:39.690Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-05T23:49:39.697Z [DEBUG] FileHistory: Making snapshot for message aeca3afc-79b2-436c-a593-7be8c96e51dc
+2026-01-05T23:49:39.697Z [DEBUG] FileHistory: Added snapshot for aeca3afc-79b2-436c-a593-7be8c96e51dc, tracking 0 files
+2026-01-05T23:49:39.907Z [DEBUG] [SLOW OPERATION DETECTED] fs.existsSync (5.7ms)
+2026-01-05T23:49:40.425Z [DEBUG] [SLOW OPERATION DETECTED] fs.existsSync (8.7ms)
+2026-01-05T23:49:40.631Z [DEBUG] [SLOW OPERATION DETECTED] fs.existsSync (5.4ms)
+2026-01-05T23:49:40.799Z [DEBUG] Stream started - received first chunk
+2026-01-05T23:49:40.839Z [DEBUG] Writing to temp file: /home/oliy/.claude.json.tmp.176351.1767656980839
+2026-01-05T23:49:40.839Z [DEBUG] Preserving file permissions: 100600
+2026-01-05T23:49:40.859Z [DEBUG] [SLOW OPERATION DETECTED] fs.writeFileSync (19.7ms)
+2026-01-05T23:49:40.859Z [DEBUG] Temp file written successfully, size: 64702 bytes
+2026-01-05T23:49:40.859Z [DEBUG] Applied original permissions to temp file
+2026-01-05T23:49:40.859Z [DEBUG] Renaming /home/oliy/.claude.json.tmp.176351.1767656980839 to /home/oliy/.claude.json
+2026-01-05T23:49:40.859Z [DEBUG] File /home/oliy/.claude.json written atomically
+2026-01-05T23:49:40.869Z [DEBUG] [SLOW OPERATION DETECTED] fs.existsSync (7.2ms)
+2026-01-05T23:49:41.134Z [DEBUG] [SLOW OPERATION DETECTED] fs.existsSync (7.3ms)
+2026-01-05T23:49:41.521Z [DEBUG] Stream started - received first chunk
+2026-01-05T23:49:41.788Z [DEBUG] Writing to temp file: /home/oliy/.claude.json.tmp.176351.1767656981788
+2026-01-05T23:49:41.788Z [DEBUG] Preserving file permissions: 100600
+2026-01-05T23:49:41.815Z [DEBUG] [SLOW OPERATION DETECTED] fs.writeFileSync (26.9ms)
+2026-01-05T23:49:41.815Z [DEBUG] Temp file written successfully, size: 64702 bytes
+2026-01-05T23:49:41.815Z [DEBUG] Applied original permissions to temp file
+2026-01-05T23:49:41.815Z [DEBUG] Renaming /home/oliy/.claude.json.tmp.176351.1767656981788 to /home/oliy/.claude.json
+2026-01-05T23:49:41.815Z [DEBUG] File /home/oliy/.claude.json written atomically
+2026-01-05T23:49:41.943Z [DEBUG] [SLOW OPERATION DETECTED] fs.existsSync (7.7ms)
+2026-01-05T23:49:42.522Z [DEBUG] [SLOW OPERATION DETECTED] fs.existsSync (8.7ms)
+2026-01-05T23:49:42.682Z [DEBUG] Getting matching hook commands for Stop with query: undefined
+2026-01-05T23:49:42.682Z [DEBUG] Found 0 hook matchers in settings
+2026-01-05T23:49:42.682Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-05T23:49:43.212Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (528.1ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:49:43.758Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (524.6ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:49:43.861Z [DEBUG] Getting matching hook commands for UserPromptSubmit with query: undefined
+2026-01-05T23:49:43.861Z [DEBUG] Found 0 hook matchers in settings
+2026-01-05T23:49:43.861Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-05T23:49:43.874Z [DEBUG] FileHistory: Making snapshot for message b88fbfd1-25c8-4a7d-aa40-8207257e58e4
+2026-01-05T23:49:43.874Z [DEBUG] FileHistory: Added snapshot for b88fbfd1-25c8-4a7d-aa40-8207257e58e4, tracking 0 files
+2026-01-05T23:49:44.584Z [DEBUG] Stream started - received first chunk
+2026-01-05T23:49:44.749Z [DEBUG] [SLOW OPERATION DETECTED] fs.statSync (6.6ms)
+2026-01-05T23:49:44.872Z [DEBUG] [SLOW OPERATION DETECTED] fs.statSync (8.1ms)
+2026-01-05T23:49:45.065Z [DEBUG] [SLOW OPERATION DETECTED] fs.statSync (5.2ms)
+2026-01-05T23:49:45.291Z [DEBUG] [SLOW OPERATION DETECTED] fs.statSync (7.0ms)
+2026-01-05T23:49:45.551Z [DEBUG] [SLOW OPERATION DETECTED] fs.statSync (5.1ms)
+2026-01-05T23:49:46.225Z [DEBUG] Stream started - received first chunk
+2026-01-05T23:49:46.507Z [DEBUG] Writing to temp file: /home/oliy/.claude.json.tmp.176351.1767656986507
+2026-01-05T23:49:46.507Z [DEBUG] Preserving file permissions: 100600
+2026-01-05T23:49:46.522Z [DEBUG] [SLOW OPERATION DETECTED] fs.writeFileSync (14.4ms)
+2026-01-05T23:49:46.522Z [DEBUG] Temp file written successfully, size: 64702 bytes
+2026-01-05T23:49:46.522Z [DEBUG] Applied original permissions to temp file
+2026-01-05T23:49:46.522Z [DEBUG] Renaming /home/oliy/.claude.json.tmp.176351.1767656986507 to /home/oliy/.claude.json
+2026-01-05T23:49:46.522Z [DEBUG] File /home/oliy/.claude.json written atomically
+2026-01-05T23:49:46.554Z [DEBUG] AutoUpdaterWrapper: Installation type: native
+2026-01-05T23:49:46.965Z [DEBUG] Checking for native installer update to version 2.0.76
+2026-01-05T23:49:46.965Z [DEBUG] Already running version 2.0.76 - no update needed
+2026-01-05T23:49:47.993Z [DEBUG] [SLOW OPERATION DETECTED] fs.statSync (9.2ms)
+2026-01-05T23:49:48.664Z [DEBUG] Getting matching hook commands for Stop with query: undefined
+2026-01-05T23:49:48.664Z [DEBUG] Found 0 hook matchers in settings
+2026-01-05T23:49:48.664Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-05T23:49:49.137Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (470.8ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:49:49.680Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (521.7ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:49:49.732Z [DEBUG] Getting matching hook commands for SessionEnd with query: prompt_input_exit
+2026-01-05T23:49:49.732Z [DEBUG] Found 0 hook matchers in settings
+2026-01-05T23:49:49.732Z [DEBUG] Matched 0 unique hooks for query "prompt_input_exit" (0 before deduplication)
+2026-01-05T23:49:49.738Z [DEBUG] Cleaned up session snapshot: /home/oliy/.claude/shell-snapshots/snapshot-zsh-1767656904097-ys0dc1.sh
+2026-01-05T23:49:49.739Z [DEBUG] LSP server manager shut down successfully
+2026-01-05T23:49:49.753Z [DEBUG] FileHistory: Making snapshot for message e77b55cf-062d-4e95-9dd6-625bb0ddf693
+2026-01-05T23:49:49.753Z [DEBUG] FileHistory: Added snapshot for e77b55cf-062d-4e95-9dd6-625bb0ddf693, tracking 0 files
+2026-01-05T23:49:49.756Z [DEBUG] UserCommandMessage rendering: "exit" (args: "none")
+2026-01-05T23:49:49.756Z [DEBUG] isSkillFormat: false
+2026-01-05T23:49:50.294Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (513.3ms): powershell.exe -Command '$env:USERPROFILE'
+2026-01-05T23:49:50.765Z [DEBUG] [SLOW OPERATION DETECTED] execSyncWithDefaults_DEPRECATED (454.7ms): powershell.exe -Command '$env:USERPROFILE'

@@ -1,0 +1,9 @@
+name: architecture
+title: OTR Digital Architecture
+version: main
+nav:
+- modules/ROOT/nav.adoc
+- modules/bounded-contexts/nav.adoc
+- modules/domains/nav.adoc
+- modules/solution-architectures/nav.adoc
+- modules/events/nav.adoc

@@ -1,0 +1,32 @@
+[
+  {
+    "content": "Create symlinks for missing initiative pages",
+    "status": "completed",
+    "activeForm": "Creating symlinks for missing initiative pages"
+  },
+  {
+    "content": "Create symlinks for missing architecture definition pages",
+    "status": "in_progress",
+    "activeForm": "Creating symlinks for missing architecture definition pages"
+  },
+  {
+    "content": "Create symlinks for missing solution architecture pages",
+    "status": "pending",
+    "activeForm": "Creating symlinks for missing solution architecture pages"
+  },
+  {
+    "content": "Update initiatives navigation to include all pages",
+    "status": "pending",
+    "activeForm": "Updating initiatives navigation to include all pages"
+  },
+  {
+    "content": "Update architecture-definitions navigation to include all pages",
+    "status": "pending",
+    "activeForm": "Updating architecture-definitions navigation to include all pages"
+  },
+  {
+    "content": "Update solution-architectures navigation to include all pages",
+    "status": "pending",
+    "activeForm": "Updating solution-architectures navigation to include all pages"
+  }
+]

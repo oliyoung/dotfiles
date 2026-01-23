@@ -1,0 +1,415 @@
+= Recommendation Bounded Context
+O.Young@otr.com.au
+v0.1, 2025-12-19
+:project-name: OTRG Apps & Ecommerce Architecture
+:togaf-adm-phase: Phase C: Information Systems Architectures
+:document-type: Bounded Context
+:status: Draft
+:version: 0.1
+:domain: Recommendation
+:bounded-context-type: APPLICATION
+:domain-architect: O.Young@otr.com.au
+:doctype: article
+:toc: left
+:toclevels: 4
+:sectanchors:
+:sectlinks:
+:sectnums:
+:icons: font
+:source-highlighter: highlightjs
+:experimental:
+:description: Bounded Context for the Recommendation Domain
+:keywords: recommendation, ai, ml, bounded context, togaf, ddd
+
+Backend-for-Frontend (BFF) service that orchestrates personalised
+recommendations by consuming customer signals and querying external
+AI/ML platforms via an Anti-Corruption Layer (ACL).
+
+== What RecommendationService Owns
+
+RecommendationService owns *3 Aggregates*:
+
+[arabic]
+. *RecommendationRequest*: Recommendation request life-cycle and context
+aggregation
+. *RecommendationFeedback*: Customer interaction tracking for ML
+feedback loop
+. *CustomerRecommendationProfile*: Cached customer preferences and
+recommendation history
+
+*Role:* Delivers personalised product suggestions, intelligent
+cross-sell/upsell, and AI-driven merchandising across app and in-store
+touchpoints.
+
+=== Domain Coverage
+
+* Real-time product recommendations (home screen, cart, checkout)
+* Cross-sell and upsell suggestions based on transaction and purchase
+history
+* AI-driven offer targeting with contextual relevance
+* Personalised onboarding flows adapted to customer profile
+* A/B testing framework for recommendation algorithm evaluation
+* Feedback loop to AI/ML platform for continuous model improvement
+
+=== NOT in this Context (Owned by Other Systems)
+
+* Product catalogue and inventory → D365 Commerce
+* Recommendation ML models and training → External AI/ML Platform (RFP
+in progress)
+* Customer master data → Salesforce (Profile)
+* Purchase history → D365 Commerce
+* Loyalty tier and points → EagleEye (via LoyaltyService)
+* Campaign execution → Braze (via EngagementService)
+* Aggregated recommendation analytics → EDP (Enterprise Data Platform)
+
+=== Integration Points
+
+* *Upstream*: MobileApp (recommendation requests), D365 Commerce
+(purchase events)
+* *Downstream*: AI/ML Platform (recommendation scoring),
+EngagementService (personalised campaigns)
+* *Event Consumers*: EDP (analytics), AI/ML Platform (feedback for
+training)
+
+=== Bounded Context Boundaries
+
+* RecommendationService orchestrates and caches, does not train models
+* AI/ML Platform owns recommendation algorithms and model training
+* EngagementService consumes recommendations for campaign
+personalisation
+* D365 Commerce owns product catalogue and inventory availability
+* EDP owns aggregated recommendation performance analytics
+
+== Architecture Decision Log
+
+=== Decision 1: BFF Pattern with AI/ML Platform ACL
+
+*Decision:* RecommendationService is a Backend-for-Frontend (BFF) that
+orchestrates personalisation by aggregating customer context and
+querying an external AI/ML platform via an Anti-Corruption Layer (ACL).
+
+*Rationale:*
+
+* External AI/ML platform specialises in recommendation algorithms and
+model training
+* ACL protects OTR domain from AI/ML platform complexity and vendor
+changes
+* RecommendationService owns context aggregation and recommendation
+caching
+* BFF pattern enables mobile app to request recommendations with simple
+API
+* Vendor-agnostic design supports future platform migration
+
+*Implementation:*
+
+* RecommendationService aggregates customer context (purchase history,
+loyalty tier, location)
+* AIMLPlatformAdapter (ACL) translates OTR context → AI/ML scoring
+request
+* AIMLPlatformAdapter translates AI/ML response → OTR recommendation
+domain model
+* Caching layer reduces AI/ML platform latency and API costs
+* Circuit breaker pattern handles AI/ML platform unavailability
+
+=== Decision 2: Three Aggregates for Request, Feedback, and Profile
+
+*Decision:* RecommendationService owns 3 aggregates:
+
+[arabic]
+. RecommendationRequest - Request life-cycle and context
+. RecommendationFeedback - Customer interaction tracking
+. CustomerRecommendationProfile - Cached preferences and history
+
+*Rationale:*
+
+* RecommendationRequest: Transactional aggregate for real-time
+recommendation requests
+* RecommendationFeedback: ML feedback loop aggregate for model
+improvement
+* CustomerRecommendationProfile: Performance optimisation via caching
+
+*Separation of concerns:*
+
+* Request life-cycle separate from feedback tracking
+* Profile caching separate from real-time requests
+* Each aggregate has distinct life-cycle and invariants
+
+*Implementation:*
+
+* RecommendationRequest: Azure Cosmos DB (low-latency, high-throughput)
+* RecommendationFeedback: Azure Cosmos DB (time-series data, batch
+processing)
+* CustomerRecommendationProfile: Azure Redis Cache (fast lookups, TTL)
+
+=== Decision 3: Real-Time Event Consumption for Context Enrichment
+
+*Decision:* RecommendationService subscribes to domain events from other
+bounded contexts to enrich customer recommendation context in real-time.
+
+*Rationale:*
+
+* Purchase events (D365 Commerce) signal customer preferences
+* Loyalty events (LoyaltyService) indicate tier changes and reward
+preferences
+* Engagement events (EngagementService) reveal campaign interaction
+patterns
+* Real-time context improves recommendation relevance
+
+*Events Consumed:*
+
+* TransactionCompleted (D365 Commerce) → update purchase history
+* PointsEarned (LoyaltyService) → update loyalty engagement
+* GrantIssued (LoyaltyService) → update promotional offer context for
+recommendations
+* PartnerLinked (LoyaltyService) → update reward preferences (Flybuys vs
+fuel discount)
+* CommunicationClicked (EngagementService) → update campaign engagement
+signals
+
+*Implementation:*
+
+* Event Hub consumer group for RecommendationService
+* Event handlers update CustomerRecommendationProfile cache
+* Eventual consistency acceptable (caching layer)
+
+=== Decision 4: Feedback Loop for ML Model Improvement
+
+*Decision:* RecommendationService tracks customer interactions with
+recommendations and publishes feedback events to AI/ML platform for
+model training.
+
+*Rationale:*
+
+* ML models improve with feedback on recommendation acceptance/rejection
+* Customer interactions (clicked, purchased, dismissed) signal
+recommendation quality
+* Feedback loop enables continuous model improvement
+* A/B testing requires tracking which recommendations were shown and
+customer response
+
+*Feedback Tracking:*
+
+* RecommendationServed event: Which recommendations were shown to
+customer
+* RecommendationInteracted event: Customer action (viewed, clicked,
+purchased, dismissed)
+* AI/ML platform consumes events for model retraining
+
+*Implementation:*
+
+* RecommendationFeedback aggregate stores interaction history
+* Batch processing publishes feedback to AI/ML platform (daily/weekly)
+* EDP consumes events for recommendation performance analytics
+
+=== Decision 5: Caching Layer for Performance and Cost Optimisation
+
+*Decision:* RecommendationService caches customer recommendation
+profiles and recent recommendations to reduce AI/ML platform API calls
+and improve latency.
+
+*Rationale:*
+
+* AI/ML platform API calls have latency (100-500ms) and cost
+* Customer context changes infrequently (purchase history, loyalty tier)
+* Recent recommendations can be reused for short time windows
+* Cache reduces mobile app response time
+
+*Caching Strategy:*
+
+* CustomerRecommendationProfile: 1-hour TTL (customer context)
+* Recent recommendations: 15-minute TTL (home screen, cart suggestions)
+* Cache invalidation on significant events (purchase, tier change)
+
+*Implementation:*
+
+* Azure Redis Cache for low-latency lookups
+* Cache-aside pattern (read-through, write-through)
+* Event-driven cache invalidation
+
+=== Decision 6: Fallback Recommendations for AI/ML Platform Unavailability
+
+*Decision:* RecommendationService provides rule-based fallback
+recommendations when AI/ML platform is unavailable or returns
+low-confidence scores.
+
+*Rationale:*
+
+* AI/ML platform may be unavailable (maintenance, outages)
+* Low-confidence scores indicate insufficient data for personalisation
+* Fallback recommendations maintain customer experience
+* Rule-based fallbacks use simple heuristics (popular products,
+category-based)
+
+*Fallback Logic:*
+
+* Popular products by category
+* Recently purchased products (replenishment suggestions)
+* Category-based recommendations (fuel → car care products)
+* Generic promotional offers
+
+*Implementation:*
+
+* FallbackRecommendationService domain service
+* Circuit breaker pattern detects AI/ML platform unavailability
+* Confidence threshold triggers fallback (e.g., < 0.3)
+
+=== Decision 7: A/B Testing Framework for Algorithm Evaluation
+
+*Decision:* RecommendationService supports A/B testing by tracking which
+recommendation algorithm variant was used and customer response.
+
+*Rationale:*
+
+* Multiple recommendation algorithms (collaborative filtering,
+content-based, hybrid)
+* A/B testing determines best-performing algorithm
+* Gradual rollout reduces risk of poor recommendations
+* EDP analytics evaluate conversion rates and revenue impact
+
+*A/B Testing Approach:*
+
+* RecommendationRequest includes experiment ID and variant
+* RecommendationServed event includes experiment details
+* EDP consumes events for statistical analysis
+* Feature flags control algorithm selection
+
+*Implementation:*
+
+* Experiment metadata stored in RecommendationRequest
+* Feature flag service determines algorithm variant
+* Events published with experiment context for analysis
+
+=== Decision 8: Personalised Onboarding via Recommendation Context
+
+*Decision:* RecommendationService provides intelligent onboarding
+recommendations based on initial customer profile (inferred from
+registration data and first session).
+
+*Rationale:*
+
+* First-time users lack purchase history for personalisation
+* Registration data provides initial signals (location, demographics)
+* Onboarding recommendations increase engagement and retention
+* Adaptive onboarding improves conversion vs generic flows
+
+*Onboarding Context:*
+
+* Location: Nearest stores, regional preferences
+* Time of day: Morning (coffee), evening (snacks)
+* Registration source: Partner link (Flybuys), organic app download
+* Inferred preferences: Fuel-only vs convenience retail
+
+*Implementation:*
+
+* Cold-start algorithm for new customers
+* OnboardingRecommendationService domain service
+* Integration with FTUE initiative (see initiatives/ftue.md)
+
+== Key Architectural Patterns
+
+=== 1. Backend-for-Frontend (BFF) Pattern
+
+* RecommendationService provides simplified API for mobile app
+* Orchestrates context aggregation from multiple sources
+* Hides AI/ML platform complexity from mobile clients
+
+=== 2. Anti-Corruption Layer (ACL)
+
+* AIMLPlatformAdapter translates between OTR domain and AI/ML platform
+APIs
+* Protects domain from vendor-specific terminology and data structures
+* Enables future AI/ML platform migration without impacting OTR domain
+
+=== 3. Event-Driven Integration
+
+* Consumes events from D365 Commerce, LoyaltyService, EngagementService
+* Publishes recommendation events for analytics and feedback loop
+* Loose coupling, temporal decoupling, scalability
+
+=== 4. Caching Pattern (Cache-Aside)
+
+* CustomerRecommendationProfile cached in Azure Redis
+* Read-through: Check cache, query AI/ML platform on miss, populate
+cache
+* Write-through: Update cache on context changes
+* Event-driven invalidation on significant customer events
+
+=== 5. Circuit Breaker Pattern
+
+* Detects AI/ML platform unavailability
+* Triggers fallback recommendations
+* Prevents cascading failures
+
+=== 6. Feedback Loop Pattern
+
+* Track recommendations served and customer interactions
+* Publish feedback to AI/ML platform for model retraining
+* Continuous improvement of recommendation quality
+
+== DDD Principles Applied
+
+=== Bounded Context Boundaries
+
+==== 1. Don’t duplicate data across contexts
+
+* Product catalogue → D365 Commerce owns
+* Purchase history → D365 Commerce owns
+* Loyalty tier → EagleEye owns (queried via LoyaltyService)
+* ML models → AI/ML Platform owns
+
+==== 2. Store only what you need
+
+* RecommendationService stores request history and feedback
+* Caches customer context for performance (not system of record)
+* No duplication of product or customer master data
+
+==== 3. Use references, not copies
+
+* Event payloads contain IDs only (VivaConsumerId, productSKU,
+transactionId)
+* Recommendations reference product SKUs (not full product details)
+* Query D365 Commerce for product details when needed
+
+==== 4. Identify true system of record
+
+* ML models and training → AI/ML Platform
+* Product catalogue → D365 Commerce
+* Customer profiles → Salesforce CRM
+* Recommendation request history → RecommendationService
+* Recommendation performance analytics → EDP
+
+==== 5. Infrastructure vs. Domain
+
+* Context aggregation → Domain concern (RecommendationService)
+* ML scoring → Infrastructure concern (AI/ML Platform via ACL)
+* Caching → Infrastructure concern (Redis)
+* Recommendation logic → Domain concern (fallback, onboarding)
+
+== Future Work
+
+*Reference Links:*
+
+* https://www.braze.com/docs/user_guide/brazeai/recommendations
+* https://aws.amazon.com/personalize/
+
+[arabic]
+. Complete AI/ML Platform RFP and vendor selection
+. Implement AIMLPlatformAdapter ACL for chosen vendor
+. Define recommendation confidence threshold for fallback
+. Implement A/B testing framework and feature flags
+. Define recommendation placement strategy (home, cart, checkout,
+in-store)
+. Implement feedback batch processing pipeline to AI/ML platform
+. Define cache invalidation rules for CustomerRecommendationProfile
+. Integrate with FTUE initiative for personalised onboarding
+. Define metrics and monitoring for recommendation performance
+. Implement real-time event consumption from D365, Loyalty, Engagement
+
+== Related Files
+
+* link:Bounded%2520Context/recommendation.cml[recommendation.cml] -
+Bounded context definition (domain model)
+* Domains/recommendation.cml - Domain definition
+* digital.cml - System-level context map
+* First Time User Enhancements
+- First-Time User Experience initiative

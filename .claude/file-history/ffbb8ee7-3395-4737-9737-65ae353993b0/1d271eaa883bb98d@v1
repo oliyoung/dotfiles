@@ -1,0 +1,219 @@
+= Location Bounded Context
+O.Young@otr.com.au
+v0.1, 2025-12-19
+:project-name: OTRG Apps & Ecommerce Architecture
+:togaf-adm-phase: Phase C: Information Systems Architectures
+:document-type: Bounded Context
+:status: Draft
+:version: 0.1
+:domain: Location
+:domain-architect: O.Young@otr.com.au
+:doctype: article
+:toc: left
+:toclevels: 4
+:sectanchors:
+:sectlinks:
+:sectnums:
+:icons: font
+:source-highlighter: highlightjs
+:experimental:
+:description: Bounded Context for the Location Domain
+:keywords: location, bounded context, togaf, ddd
+
+Provides location-aware services for store discovery, proximity detection, location-based loyalty engagement, and customer store preference tracking.
+
+## Responsibilities
+
+- Store location search and discovery
+- Store information management
+- Loyalty programme availability by location
+- Proximity detection and geofencing - Location-based targeting coordination
+- Customer store preference tracking
+- Proximity-based loyalty event publishing
+
+== Loyalty Programme Availability by Location
+
+*Decision:*
+
+LocationService owns which loyalty programmes are available at each store location. This is location metadata, not loyalty business rules.
+
+*Rationale:*
+
+Different store brands support different loyalty programmes:
+
+* *OTR stores*: OTR Rewards, Flybuys, Shell Price Save
+* *Reddy Express (REXP)*: OTR Rewards, Flybuys (Shell Price Save may not
+be available)
+* *Shell-Branded Dealer Operated Sites (SBDOS)*: Flybuys only (no OTR
+Rewards)
+* Programme availability is location-specific configuration, not loyalty
+domain logic
+* Mobile app needs to show available programmes when customer selects
+store
+* LoyaltyService queries available programmes before transaction
+adjudication
+
+*Implementation:*
+
+* Store aggregate includes AvailableLoyaltyProgrammes value object
+* StoreDiscoveryService provides getLoyaltyProgrammesForStore(storeId)
+query
+* LoyaltyService queries available programmes during reward preference
+selection
+* Mobile app displays only available programmes when customer at
+specific store
+
+*Integration:*
+
+* LoyaltyService queries LocationService for programme availability
+(synchronous REST API)
+* Mobile app queries LocationService for available programmes when
+displaying store details
+
+*NOT in LocationService:*
+
+* Loyalty programme business rules (points calculation, eligibility) →
+LoyaltyService
+* Programme configuration (EagleEye campaigns, Flybuys partner rules) →
+LoyaltyService
+* Customer’s chosen reward preference → ProfileService
+
+*Examples:*
+
+* StoreId ``OTR001'' → OTR Rewards, Flybuys, Shell Price Save available
+* StoreId ``REXP042'' → OTR Rewards, Flybuys available (no Shell Price
+Save)
+* StoreId ``SBDOS201'' → Flybuys only (Shell-branded dealer site)
+
+== Customer Store Preference Tracking
+
+*Decision:* LocationService tracks customer store visit patterns and
+preferences to enable location-based loyalty features and personalised
+recommendations.
+
+*Rationale:*
+
+* Customers have preferred stores based on commute patterns, home/work
+locations
+* Store preference signals enable personalised offers (e.g., ``Your
+local store has a new offer'')
+* Visit frequency data supports loyalty tier progression and engagement
+campaigns
+* Location affinity enables proximity-based push notifications and
+geofencing
+
+*Implementation:*
+
+* CustomerStorePreference aggregate tracks visit history, preferred
+stores, last visit
+* Geofence triggers publish CustomerNearStore events when customer
+enters store proximity
+* LoyaltyService consumes events to trigger proximity-based offers
+* RecommendationService consumes events to update location affinity for
+personalised recommendations
+* EngagementService consumes events for location-based campaign
+targeting
+
+*Integration:*
+
+* Event-driven: Publishes CustomerNearStore, StoreVisited domain events
+* Query API: Provides customer’s preferred stores for campaign targeting
+
+*Privacy:*
+
+* Location tracking requires explicit customer consent
+* Customers can opt-out of location-based features
+* Location data retention: 90 days for visit history, aggregated
+thereafter
+
+== Proximity-Based Loyalty Events
+
+*Decision:* LocationService publishes proximity events consumed by
+LoyaltyService and RecommendationService for location-aware loyalty
+features.
+
+*Rationale:*
+
+* Proximity detection enables ``check-in'' rewards and location-based
+offers
+* Real-time events support push notifications when customer near store
+* Location context enriches recommendation relevance (store inventory,
+local offers)
+
+*Implementation:*
+
+* Geofence monitoring publishes CustomerNearStore event (within 500m
+radius)
+* CustomerApproachedStore event published when entering geofence
+* StoreVisited event published when transaction detected at store (from
+D365Commerce correlation)
+* Events include: VivaConsumerId, StoreId, timestamp, distance
+
+*Integration:*
+
+* *LoyaltyService*: Consumes events to trigger proximity-based offers,
+check-in rewards
+* *RecommendationService*: Consumes events to update location affinity
+* *EngagementService*: Consumes events for location-based push
+notifications
+
+== Domain Model
+
+=== Aggregates
+==== Store
+
+Core aggregate containing store location, brand, operating hours,
+amenities, services, and loyalty programme availability.
+
+*Key Attributes:*
+
+* StoreId
+* storeName
+* brand (OTR, REDDY_EXPRESS, SBDOS)
+* address (street, suburb, state, postcode)
+* coordinates (latitude, longitude)
+* operatingHours (weekly schedule, special dates)
+* amenities and services
+* loyaltyProgrammes (which programmes available)
+* status (OPEN, CLOSED, TEMPORARILY_CLOSED)
+
+==== FuelPrice
+
+Stores current fuel prices by type (unleaded, premium, diesel, E10) and
+price history.
+
+==== ProximityZone (Geofence)
+
+Defines geofenced zones around stores for proximity detection.
+
+*Attributes:*
+
+* centerPoint (coordinates)
+* radius (distance)
+* type (ARRIVAL, DEPARTURE, DWELL)
+* isActive flag
+
+==== CustomerStorePreference
+
+Tracks customer visit patterns and preferred stores.
+
+*Invariants:*
+
+* VivaConsumerId must be valid (15-character Salesforce Record ID)
+* PreferredStores list limited to top 5 stores by visit frequency
+* Visit history retained for 90 days, then aggregated
+* Location tracking requires customer consent (consent flag must be
+true)
+
+== Related Files
+
+* link:Bounded%2520Context/location.cml[location.cml] - Bounded context
+definition (domain model)
+* Domains/location.cml - Domain definition
+* digital.cml - System-level context map
+* link:/Bounded%20Context/Loyalty%20Service.md[loyalty.md] -
+LoyaltyService documentation (consumes location events)
+* link:/Bounded%20Context/Recommendation%20Service.md[recommendation.md]
+- RecommendationService documentation (consumes location events)
+* link:/Bounded%20Context/Engagement%20Service.md[engagement.md] -
+EngagementService documentation (consumes location events)

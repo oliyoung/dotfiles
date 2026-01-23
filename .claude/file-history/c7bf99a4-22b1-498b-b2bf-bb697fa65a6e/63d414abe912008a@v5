@@ -1,0 +1,4215 @@
+= Flybuys Integration - Solution Architecture
+
+:project-name: Flybuys Integration
+:togaf-adm-phase: Phase E: Opportunities & Solutions
+:document-type: Solution Architecture Document
+:status: Discovery
+:version: 0.1
+:domain: Loyalty
+:programme-lead: Frankie.Mullaly@vivaenergy.com.au
+:domain-architect: O.Young@otr.com.au
+:business-owner: D.Peisley@otr.com.au
+:business-analyst: Fiona.Cheung@vivaenergy.com.au
+:architecture-definition: xref:../architecture_definitions/flybuys_integration.adoc[Architecture Definitions/Flybuys Integration]
+:doctype: article
+:toc: left
+:toclevels: 4
+:sectanchors:
+:sectxrefs:
+:sectnums:
+:icons: font
+:source-highlighter: highlightjs
+:experimental:
+:description: Solution Architecture Document for Flybuys Coalition Loyalty Integration
+:keywords: loyalty, flybuys, integration, solution-architecture, togaf
+
+== Purpose and Scope
+
+=== Purpose
+
+This Solution Architecture defines how the Flybuys Integration will be implemented - the specific technology products, configurations, interfaces, and deployment architecture that realise the xref:../architecture_definitions/flybuys_integration.adoc[Flybuys Integration].
+
+<<<
+=== Scope
+
+==== In Scope
+
+* Solution Building Blocks (SBBs) - specific technology products and versions
+* Interface specifications (APIs, events, data formats)
+* Data architecture and schema specifications
+* Transition architecture with phased implementation states
+* Technical validation criteria and testing approach
+* External system integration specifications
+
+==== Out of Scope
+
+===== Covered in xref:../architecture_definitions/flybuys_integration.adoc[Architecture Definition]
+
+* Business requirements and stakeholder analysis
+* Architecture decisions and rationale
+* Bounded context definitions and responsibilities
+* High-level integration patterns (ACL, Conformist, OHS+PL)
+* Business capability mapping and value streams
+* Non-functional requirements (referenced, not duplicated)
+* Architecture principles and governance
+
+===== Covered in other documents
+
+* Detailed design (class diagrams, sequence diagrams for all flows)
+* Implementation code and unit tests
+* Business case and return-on-investment analysis
+* Operational run books and support procedures
+
+<<<
+== Executive Summary
+
+Integrate xref:../bounded_context/external/flybuys.adoc[Flybuys] Coalition Loyalty across all OTRG Digital and In-Person channels without tightly coupling to external partner systems.
+
+Enable xref:../ubiquitous_language.adoc#customer[Customers] to link their xref:../ubiquitous_language.adoc#flybuys-digital-identity[Flybuys Digital Identity] with their xref:../ubiquitous_language.adoc#otr-app[Mobile Application] user profile, and present unified xref:../ubiquitous_language.adoc#loyalty-credential[Loyalty Credentials] at all xref:../bounded_context/interfaces/otr_pos.adoc[OTR POS] and xref:../bounded_context/interfaces/otr_plus_pos.adoc[OTR+ POS] stores.
+
+The solution establishes the xref:../ubiquitous_language.adoc#viva-consumer-id-vci[Viva Consumer ID (VCI)] as *the canonical customer identifier* across all integrated systems, ensuring consistent customer reference throughout the loyalty platform and eliminating identity fragmentation.
+
+<<<
+== Solution Approach
+
+* Deploy xref:../bounded_context/profile.adoc[Profile Service] and xref:../bounded_context/loyalty.adoc[Loyalty Service] as bounded context microservices
+* Use NoSQL local document storage with partition key optimisation for caching.
+* Implement Anti-Corruption Layers (ACLs) for xref:../bounded_context/external/braze.adoc[Braze], xref:../bounded_context/external/flybuys.adoc[Flybuys] and xref:../bounded_context/external/eagle_eye.adoc[EagleEye] integration
+* Deploy xref:../bounded_context/interfaces/oauth.adoc[OAuth Service] with Key Vault token encryption
+* Establish event-driven architecture as the foundational integration pattern for the platform.
+* Phased roll-out (AS-1 → AS-4)
+
+=== Related Documentation
+
+This solution architecture references detailed technical specifications:
+
+==== API Specifications
+
+* xref:../specifications/REST/profile-service-v1.yaml.md[Profile Service REST API (OpenAPI 3.0)] - Partner linking, preference management (4 endpoints)
+* xref:../specifications/AsyncAPI/otr-event-bus-v1.yaml.md[Event Bus (AsyncAPI 2.6.0)] - Domain events, CloudEvents 1.0 format
+
+==== Sequence Diagrams
+
+* Flybuys Integration Flows[Flybuys Integration Flows] - Comprehensive diagrams with happy path + error scenarios:
+** Transaction Adjudication (POS real-time, 4 scenarios)
+** OAuth Partner linking (mobile app, 4 scenarios)
+** Batch File Processing (nightly, 3 scenarios)
+** Circuit Breaker State Transitions
+** Event Propagation Timeline
+** OAuth Token Refresh (proactive + errors, 3 scenarios)
+
+==== JSON Schemas
+
+* xref:../specifications/JSON%2520Schemas/.md[JSON Schemas Directory] - Domain event schemas, request/response models
+
+==== Executive Summary
+
+* xref:../executive_summaries/flybuys_integration.adoc[Executive Summary] - 1-page overview for business stakeholders
+
+<<<
+== Key Technology Decisions
+
+[cols="1,2,4,3"]
+|===
+| ID | Kind | Description | Rationale
+
+| DEC-001
+| Implementation
+| .NET 8.0
+| Aligns with OTR platform standards, team expertise in C#
+
+| DEC-002
+| Hosting
+| #TBD#
+| Autoscaling, managed infrastructure, Docker support
+
+| DEC-003
+| NoSQL Database
+| #TBD#
+| Partition key performance, global distribution, TTL support
+
+| DEC-004
+| Event Bus
+| #TBD#
+| CloudEvents 1.0 standard, built-in retry, dead letter queue
+
+| DEC-005
+| Key Storage
+| #TBD#
+| SaaS OAuth provider, Flybuys IDP integration, reduces custom implementation risk
+
+| DEC-006
+| Data Processing
+| #TBD#
+| SFTP connector, PGP encryption, scheduling
+
+| DEC-007
+| Monitoring
+| #TBD#
+| Native Azure integration, distributed tracing, correlation IDs
+
+| DEC-008
+| API Gateway
+| #TBD#
+| OAuth validation, rate limiting, request transformation
+
+| DEC-009
+| Caching Layer
+| #TBD#
+| Reduces Flybuys API load, low-latency access
+
+| DEC-010
+| Mobile App
+| #TBD#
+| Shared business logic, reduces duplicate code for iOS/Android
+
+| DEC-011
+| Authentication
+| xref:../bounded_context/external/microsoft_entra_external_id.adoc[Microsoft Entra External ID]
+| Standardised auth, secure token handling, integrates with mobile app
+
+| DEC-013
+| Resilience
+| #TBD#
+| Circuit breaker, retry policies for external API calls
+
+| DEC-014
+| Configuration / Feature Flags
+| #TBD#
+| Dynamic feature toggling, reduces deployment risk
+
+| DEC-015
+| Transport
+| REST over HTTPS
+|
+
+| DEC-016
+| Observability
+| #TBD#
+|
+
+| DEC-017
+| Deployment
+| #TBD#
+| Docker container + Azure Container Registry
+
+| DEC-018
+| Encryption (At Rest)
+| AES-256
+|
+
+| DEC-019
+| Encryption (In Flight)
+| TLS 1.3
+|
+
+| DEC-020
+| Schema Registry
+| #TBD#
+|
+|===
+
+=== Implementation Constraints
+
+* Must conform to Flybuys API specifications - cannot modify (xref:../architecture_definitions/flybuys_integration.adoc#constraints[CON-002])
+* Flybuys partnership potentially term 2-3 years - architecture must support partner flexibility (xref:../architecture_definitions/flybuys_integration.adoc#constraints[CON-006])
+* OAuth tokens must be `AES-256` encrypted at rest (<<key-technology-decisions,DEC-018>>), `TLS 1.3` in transit (DEC-018 xref:../architecture_definitions/flybuys_integration.adoc#constraints[CON-003])
+* Customer data must reside in Australia East region (xref:../architecture_definitions/flybuys_integration.adoc#constraints[CON-011])
+* Phased rollout required, no big-bang deployment (xref:../architecture_definitions/flybuys_integration.adoc#constraints[CON-004])
+
+=== Success Criteria
+
+* xref:../bounded_context/profile.adoc[Profile Service] / xref:../bounded_context/loyalty.adoc[Loyalty Service] APIs operational with <`500ms` `p95` latency (NFR-001, NFR-002)
+* OAuth linking success rate >95% over 30-day pilot period (7.5 Validation Exit Criteria)
+* Flybuys batch acknowledgement rate >98% for 60 days (NFR-016)
+
+<<<
+== Solution Building Blocks
+
+This section maps the conceptual *Architecture Building Blocks* (ABBs) defined in the xref:../architecture_definitions/flybuys_integration.adoc[Architecture Definition] to specific *Solution Building Blocks* (SBBs).
+
+=== Technology Portfolio Catalogue
+
+This catalogue lists all technology components required to implement the Flybuys Integration solution, mapped to the xref:../architecture_definitions/flybuys_integration.adoc#Technology%2520Capability%2520Requirements[Technology Capability Requirements] defined in the Architecture Definition.
+
+[cols="1,1,3,1,2,1"]
+|===
+| Component | Category | Technology Stack | Lifecycle Stage | Rationale | Standards/Patterns
+
+| Event Bus
+| Integration
+| #TBD#
+| Planned
+| Event-driven architecture, loose coupling between services
+| OHS + Published Language
+
+| OAuth Service
+| Infrastructure
+| #TBD#
+| Planned
+| Secure token management, PCI compliance
+| OAuth 2.0, PKCE
+
+| Circuit Breaker
+| Resilience
+| #TBD#
+| Planned
+| Flybuys API failure handling
+| Circuit Breaker Pattern
+
+| Feature Flags
+| Deployment
+| #TBD#
+| Planned
+| Gradual rollout, kill switch for rollback
+| Feature Toggle Pattern
+
+| API Gateway
+| Infrastructure
+| #TBD#
+| Active
+| Single entry point, rate limiting, auth
+| RESTful API, OpenAPI
+
+| NoSQL Database
+| Data Storage
+| #TBD#
+| Active
+| Database per bounded context, high throughput
+| Database per Service
+
+| Key Vault
+| Security
+| #TBD#
+| Active
+| OAuth token storage, encryption keys
+| AES-256, Customer-Managed Keys
+
+| Redis Cache
+| Caching
+| #TBD#
+| Active
+| Flybuys balance caching (5-min TTL), circuit breaker fallback
+| In-Memory Cache, TTL Pattern
+
+| Monitoring Stack
+| Observability
+| #TBD#
+| Active
+| Distributed tracing, metrics, logging
+| OpenTelemetry, Structured Logging
+
+| Identity Provider
+| Authentication
+| xref:../bounded_context/external/microsoft_entra_external_id.adoc[Microsoft Entra External ID]
+| Active
+| Customer authentication, CIAM
+| OAuth 2.0, OIDC
+
+| SFTP Service
+| Integration
+| xref:../bounded_context/external/azure_data_factory.adoc[Azure Data Factory]
+| Active
+| Flybuys batch file transmission
+| SFTP Protocol, Batch File Transfer
+
+| Batch Scheduler
+| Infrastructure
+| xref:../bounded_context/external/azure_data_factory.adoc[Azure Data Factory]
+| Active
+| Nightly batch file generation
+| Cron-based Scheduling
+|===
+
+*Note*: Components marked #TBD# are deferred to implementation phase as engineering choices. See <<key-technology-decisions,Technology Decisions>> for evaluation criteria.
+
+<<<
+
+=== Solution Building Block Mapping
+
+[cols="1,3,2,3,4"]
+|===
+| ABB ID | ABB Name | SBB ID | SBB Name | Technology Product/Component
+
+| ABB-001
+| xref:../bounded_context/profile.adoc[Profile Service] Bounded Context
+| <<sbb-001-profile-service-api,SBB-001>>
+| xref:../bounded_context/profile.adoc[Profile Service] API
+| <<key-technology-decisions,DEC-001 Implementation>>
+
+| ABB-001
+| xref:../bounded_context/profile.adoc[Profile Service] Data Store
+| <<sbb-002-profile-service-database,SBB-002>>
+| xref:../bounded_context/profile.adoc[Profile Service] Database
+| <<key-technology-decisions,DEC-003 NoSQL>>
+
+| ABB-002
+| xref:../bounded_context/loyalty.adoc[Loyalty Service] Bounded Context
+| <<sbb-003-loyalty-service-api,SBB-003>>
+| xref:../bounded_context/loyalty.adoc[Loyalty Service] API
+| <<key-technology-decisions,DEC-001 Implementation>>
+
+| ABB-002
+| xref:../bounded_context/loyalty.adoc[Loyalty Service] Data Store
+| <<sbb-004-loyalty-service-database,SBB-004>>
+| xref:../bounded_context/loyalty.adoc[Loyalty Service] Database
+| <<key-technology-decisions,DEC-003 NoSQL>>
+
+| ABB-006
+| xref:../bounded_context/interfaces/oauth.adoc[OAuth Service]
+| <<sbb-005-oauth-token-manager,SBB-005>>
+| OAuth Token Manager
+| <<key-technology-decisions,DEC-005 Key Storage>>
+
+| ABB-005
+| Event Bus[Event Bus]
+| <<sbb-006-domain-event-bus,SBB-006>>
+| Domain Event Bus
+| <<key-technology-decisions,DEC-004 Event Bus>>
+
+| ABB-004
+| xref:../bounded_context/engagement.adoc[Engagement Service] Bounded Context
+| <<sbb-007-engagement-service-api,SBB-007>>
+| xref:../bounded_context/engagement.adoc[Engagement Service] API
+| <<key-technology-decisions,DEC-001 Implementation>>
+
+| ABB-004
+| xref:../bounded_context/engagement.adoc[Engagement Service] Data Store
+| <<sbb-008-engagement-service-database,SBB-008>>
+| xref:../bounded_context/engagement.adoc[Engagement Service] Datastore
+| <<key-technology-decisions,DEC-003 NoSQL>>
+
+| ABB-012
+| Braze ACL
+| <<sbb-009-braze-integration-adaptor,SBB-009>>
+| xref:../bounded_context/external/braze.adoc[Braze Integration Adaptor]
+| <<key-technology-decisions,DEC-001 Implementation>>
+
+| ABB-013
+| Flybuys ACL
+| <<sbb-010-flybuys-integration-adaptor,SBB-010>>
+| xref:../bounded_context/external/flybuys.adoc[Flybuys Integration Adaptor]
+| <<key-technology-decisions,DEC-001 Implementation>> + <<key-technology-decisions,DEC-006 Data Processing>>
+
+| ABB-014
+| EagleEye ACL
+| <<sbb-011-eagleeye-integration-adaptor,SBB-011>>
+| xref:../bounded_context/external/eagle_eye.adoc[EagleEye Integration Adaptor]
+| <<key-technology-decisions,DEC-001 Implementation>>
+
+| ABB-009
+| Monitoring & Observability
+| <<sbb-012-application-monitoring,SBB-012>>
+| Application Monitoring
+| <<key-technology-decisions,DEC-007 Monitoring>>
+
+| ABB-007
+| API Gateway
+| <<sbb-013-api-gateway,SBB-013>>
+| xref:../bounded_context/interfaces/api_gateway.adoc[API Gateway]
+| <<key-technology-decisions,DEC-008 API Gateway>>
+
+| ABB-010
+| xref:../bounded_context/interfaces/mobile.adoc[Mobile Application]
+| <<sbb-014-otr-mobile-app,SBB-014>>
+| OTR Mobile App
+| <<key-technology-decisions,DEC-010 Mobile Application>>
+
+| ABB-015
+| Points File Management
+| <<sbb-015-batch-file-pipeline,SBB-015>>
+| Batch File Pipeline
+| <<key-technology-decisions,DEC-006 Data Processing>>
+
+| ABB-011
+| Caching Layer
+| <<sbb-016-distributed-cache,SBB-016>>
+| Distributed Cache
+| <<key-technology-decisions,DEC-009 Caching Layer>>
+
+| ABB-008
+| App Config / Feature Flags
+| <<sbb-017-feature-flag-service,SBB-017>>
+| Feature Flags
+|
+
+| ABB-003
+| xref:../bounded_context/location.adoc[Location Service] Bounded Context
+| <<sbb-018-location,SBB-018>>
+| xref:../bounded_context/location.adoc[Location Service] API
+| <<key-technology-decisions,DEC-001 Implementation>>
+
+| ABB-003
+| xref:../bounded_context/location.adoc[Location Service] Data Store
+| <<SBB-019,SBB-019>>
+| xref:../bounded_context/location.adoc[Location Service] Data Store
+|
+|===
+
+<<<
+=== SBB-001: Profile Service API
+
+[cols="1,3"]
+|===
+| Attribute | Specification
+
+| Description
+| Provides APIs for managing customer xref:../ubiquitous_language.adoc#partner-xref[PartnerLink]s with Flybuys, storing reward preferences, and retrieving linked profile data.
+
+| ABB Reference
+| xref:../bounded_context/profile.adoc[Profile Service] Bounded Context (see xref:../architecture_definitions/flybuys_integration.adoc#service-catalogues[Architecture Definition §3.2.1])
+
+| Component Type
+| Microservice (Domain Service)
+
+| Technology Stack
+| <<key-technology-decisions,DEC-001 Implementation>>
+
+| Hosting Platform
+| <<key-technology-decisions,DEC-002 Hosting>>
+
+| API Contract
+| <<key-technology-decisions,DEC-005 Transport>> - See xref:/specifications/rest/profile-service-v1.yaml[OpenAPI 3.0 Specification]
+
+| Authentication
+| <<key-technology-decisions,DEC-011 Authentication>>
+
+| Observability
+| <<key-technology-decisions,DEC-016 Observability>>
+
+| Configuration
+| <<key-technology-decisions,DEC-014 Configuration>>
+
+| Health Checks
+| `/health` HTTPS endpoint
+
+| Deployment Unit
+| <<key-technology-decisions,DEC-017 Deployment>>
+|===
+
+==== Dependencies
+
+[cols="2,2,4"]
+|===
+| SBB ID | Dependency | Reason
+
+| <<sbb-002-profile-service-database,SBB-002>>
+| xref:../bounded_context/profile.adoc[Profile Service] Database
+| xref:../ubiquitous_language.adoc#partner-xref[PartnerLink] aggregate persistence
+
+| <<sbb-005-oauth-token-manager,SBB-005>>
+| OAuth Token Manager
+| xref:../bounded_context/external/flybuys.adoc[Flybuys] OAuth token storage/retrieval
+
+| <<sbb-006-domain-event-bus,SBB-006>>
+| Domain Event Bus
+| Publishing Partnerlinked event schema[Partnerlinked], xref:/specifications/json_schemas/RewardPreferenceChanged.event.schema.json[RewardPreferenceChanged], xref:/specifications/json_schemas/CustomerEnrolled.event.schema.json[CustomerEnrolled] events (see AsyncAPI Spec[AsyncAPI Spec])
+
+| <<sbb-010-flybuys-integration-adaptor,SBB-010>>
+| API Gateway
+| Ingress routing, rate limiting, OAuth validation
+
+| Salesforce
+| xref:../bounded_context/external/salesforce.adoc[Salesforce CRM]
+| Verify Contact record exists during profile creation (`POST /api/v1/profile/customers`)
+
+| <<sbb-011-eagleeye-integration-adaptor,SBB-011>>
+| xref:../bounded_context/external/eagle_eye.adoc[EagleEye ACL]
+| Wallet provisioning during profile creation (`POST /api/v1/profile/customers`)
+|===
+
+
+<<<
+=== SBB-002: Profile Service Database
+
+[cols="1,3"]
+|===
+| Attribute | Specification
+
+| ABB Reference
+| xref:../bounded_context/profile.adoc[Profile Service] Data Store
+
+| Database Type
+| NoSQL Document Database
+
+| Product
+| <<key-technology-decisions,DEC-003>>
+
+| Consistency
+| Session consistency (default), Strong consistency for PartnerLink operations
+
+| Partition Strategy
+| Partition key: `/vivaConsumerId` (enables single-partition queries, ~10KB documents)
+
+| Throughput
+| Autoscale: 1000-10000 RU/s (scales based on load, avg 4000 RU/s expected)
+
+| Geo-Replication
+| xref:../architecture_definitions/flybuys_integration.adoc#Constraints[CON-011]
+
+| Backup
+| Continuous backup (7-day point-in-time recovery, hourly snapshots)
+
+| Indexes
+| Default indexing + composite index on `[/partner ASC, /status ASC]`
+
+| Containers
+| `partner-links` (main), `customer-profiles` (read model for Salesforce sync)
+
+| Data Residency
+| xref:../architecture_definitions/flybuys_integration.adoc#Constraints[CON-011]
+|===
+
+
+<<<
+=== SBB-003: Loyalty Service API
+
+[cols="1,3"]
+|===
+| Attribute | Specification
+
+| ABB Reference
+| xref:../bounded_context/loyalty.adoc[Loyalty Service] Bounded Context (see xref:../architecture_definitions/flybuys_integration.adoc#service-catalogues[Architecture Definition §3.2.1])
+
+| Component Type
+| Microservice (Domain Service)
+
+| Technology Stack
+| <<key-technology-decisions,DEC-001 Implementation>>
+
+| Hosting Platform
+| <<key-technology-decisions,DEC-002 Hosting>>
+
+| API Contract
+| <<key-technology-decisions,DEC-005 Transport>> - See xref:../specifications/REST/loyalty-service-v1.yaml[OpenAPI 3.0 Specification]
+
+| Batch Processing
+| <<key-technology-decisions,DEC-012 Batch Processing>>
+
+| Authentication
+| <<key-technology-decisions,DEC-011 Authentication>>
+
+| Observability
+| <<key-technology-decisions,DEC-016 Observability>>
+
+| Configuration
+| <<key-technology-decisions,DEC-014 Configuration>>
+
+| Health Checks
+| `/health` HTTPS endpoint
+
+| Deployment Unit
+| <<key-technology-decisions,DEC-017 Deployment>>
+|===
+
+==== Capabilities
+
+===== Loyalty Credential Resolution
+
+* Resolves EAN-13 barcodes from xref:../bounded_context/interfaces/otr_pos.adoc[OTR POS] and xref:../bounded_context/interfaces/otr_plus_pos.adoc[OTR+ POS] scanners to xref:../ubiquitous_language.adoc#viva-consumer-id-vci[Viva Consumer Id (VCI)]
+* Supports all xref:../ubiquitous_language.adoc#loyalty-credential[Loyalty Credential] types:
+** Barcode from xref:../bounded_context/interfaces/mobile.adoc[OTR Mobile],
+** Barcode from xref:../bounded_context/interfaces/mobile.adoc[SPS Mobile],
+** xref:../bounded_context/interfaces/mobile.adoc[Apple/Google Wallet passes],
+** Physical Flybuys cards,
+** Flybuys Mobile barcodes
+* Resolved Loyalty Credentials to
+** Direct resolution for OTR credentials (barcode → VCI)
+** Indirect resolution for Flybuys credentials (barcode → PartnerLink → VCI)
+* Returns customer context (VCI, reward preference, wallet ID) to POS within 500ms p95 (xref:../architecture_definitions/flybuys_integration.adoc#non-functional-requirements[NFR-002])
+
+==== Dependencies
+
+[cols="2,3,5"]
+|===
+| SBB ID | Dependency | Reason
+
+| <<SBB-004 Loyalty Service Database,SBB-004>>
+| xref:../bounded_context/loyalty.adoc[Loyalty Service] Database
+| xref:../ubiquitous_language.adoc#reward-transaction[RewardTransaction] aggregate persistence
+
+| <<SBB-001 Profile Service API,SBB-001>>
+| xref:../bounded_context/profile.adoc[Profile Service] API
+| PartnerLink lookup for Flybuys credential resolution
+
+| <<SBB-006 Domain Event Bus,SBB-006>>
+| Domain Event Bus
+| Consuming xref:../specifications/JSON%2520Schemas/Partnerlinked.event.schema.json[Partnerlinked] events, publishing xref:../specifications/JSON%2520Schemas/TransactionAdjudicated.event.schema.json[TransactionAdjudicated] events (see xref:../specifications/AsyncAPI/otr-event-bus-v1.yaml[AsyncAPI Spec])
+
+| <<SBB-007 Flybuys Integration Adapter,SBB-007>>
+| xref:../bounded_context/external/flybuys.adoc[Flybuys Integration Adapter]
+| Balance queries, batch file transmission
+
+| <<SBB-008 EagleEye Integration Adapter,SBB-008>>
+| xref:../bounded_context/external/eagle_eye.adoc[EagleEye Integration Adapter]
+| Transaction Adjudication, wallet queries
+
+| <<SBB-010 API Gateway,SBB-010>>
+| xref:../bounded_context/interfaces/api_gateway.adoc[API Gateway]
+| Ingress routing for mobile app and POS systems
+
+| <<SBB-013 Distributed Cache,SBB-013>>
+| Distributed Cache
+| Caching Flybuys balance queries
+|===
+
+
+<<<
+=== SBB-004: Loyalty Service Database
+
+[cols="1,3"]
+|===
+| Attribute | Specification
+
+| ABB Reference
+| xref:../bounded_context/loyalty.adoc[Loyalty Service] Data Store
+
+| Database Type
+| NoSQL Document Database
+
+| Product
+| <<key-technology-decisions,DEC-003>>
+
+| Consistency
+| Session consistency (eventual consistency acceptable for audit trail)
+
+| Partition Strategy
+| Partition key: `/vivaConsumerId` (enables single-partition transaction queries)
+
+| Throughput
+| Autoscale: 1000-20000 RU/s (higher peak for POS transaction volume)
+
+| Geo-Replication
+| xref:../architecture_definitions/flybuys_integration.adoc#Constraints[CON-011]
+
+| Backup
+| Continuous backup (7-day point-in-time recovery)
+
+| TTL
+| 2592000 seconds (30 days) - automatic deletion for RewardTransaction documents
+
+| Indexes
+| Default indexing + range index on `/transactionDate DESC` for recent queries
+
+| Containers
+| `reward-transactions` (audit trail with 30-day TTL)
+
+| Data Residency
+| xref:../architecture_definitions/flybuys_integration.adoc#Constraints[CON-011]
+|===
+
+
+<<<
+=== SBB-005: OAuth Token Manager
+
+[cols="1,3"]
+|===
+| Attribute | Specification
+
+| ABB Reference
+| OAuth Service (Infrastructure)
+
+| Component Type
+| Infrastructure Service (OAuth provider + secure token storage)
+
+| Token Storage
+| <<key-technology-decisions,DEC-005>>
+
+| Token Format
+| https://www.oauth.com/oauth2-servers/access-tokens/
+
+| Secret Naming
+| `\{partner}-token-{vivaConsumerId}` (e.g., `flybuys-token-vci_xyz789abc`)
+
+| Refresh Logic
+| Azure Function (Timer trigger every 50 minutes, before 60-minute expiry)
+
+| Encryption
+|
+|===
+
+==== OAuth Token Refresh Flow
+
+See detailed sequence diagrams in #oauth-token-refresh-flow[Sequence Diagrams] for error scenarios including token expiry and API unavailability.
+
+[mermaid]
+----
+sequenceDiagram
+    autonumber
+    participant Timer as Azure Function<br/>(Timer Trigger)
+    participant TokenManager as OAuth Token Manager
+    participant KeyVault as Azure Key Vault
+    participant FlybuysOAuth as Flybuys OAuth Server
+    participant DB as Profile Database
+    participant Monitor as Monitoring
+
+    Note over Timer,Monitor: Timer trigger: Every 50 minutes
+
+    Timer->>TokenManager: Trigger token refresh job
+
+    activate TokenManager
+    TokenManager->>DB: Query PartnerLinks<br/>WHERE partner="FLYBUYS" AND status="linked"
+    activate DB
+    DB-->>TokenManager: 10,000 active PartnerLinks
+    deactivate DB
+
+    loop For each PartnerLink (batch of 100)
+        TokenManager->>KeyVault: Get token<br/>SecretName: flybuys-token-{vci}
+        activate KeyVault
+        KeyVault-->>TokenManager: {access_token, refresh_token, expiresAt}
+        deactivate KeyVault
+
+        TokenManager->>TokenManager: Check: expiresAt - now < 10 minutes?
+
+        alt Token expiring soon
+            TokenManager->>FlybuysOAuth: POST /token<br/>{grant_type: "refresh_token", refresh_token}
+            activate FlybuysOAuth
+            FlybuysOAuth->>FlybuysOAuth: Validate refresh_token
+            FlybuysOAuth-->>TokenManager: {access_token (new), refresh_token (new), expires_in: 3600}
+            deactivate FlybuysOAuth
+
+            TokenManager->>KeyVault: Update secret<br/>flybuys-token-{vci}
+            activate KeyVault
+            KeyVault-->>TokenManager: Secret updated
+            deactivate KeyVault
+
+            TokenManager->>Monitor: Metric: token_refresh_success
+        else Token still valid
+            TokenManager->>Monitor: Metric: token_refresh_skipped
+        end
+    end
+
+    TokenManager-->>Timer: Job complete<br/>Refreshed: 8,500 tokens<br/>Skipped: 1,500 tokens
+    deactivate TokenManager
+
+    Timer->>Monitor: Log job duration: 45 seconds
+----
+
+==== Dependencies
+
+[cols="2,2,4"]
+|===
+| SBB ID | Dependency | Reason
+
+| <<SBB-001 Profile Service API,SBB-001>>
+| xref:../bounded_context/profile.adoc[Profile Service]
+| Initiates OAuth flow, stores `oauthTokenReference` in PartnerLink
+
+| External
+| OAuth Provider
+| Flybuys OAuth API integration
+|===
+
+
+<<<
+=== SBB-006: Domain Event Bus
+
+==== Event Specifications
+
+See xref:../specifications/AsyncAPI/otr-event-bus-v1.yaml[AsyncAPI 2.6.0 Specification] for complete event definitions, schemas, and examples. Individual event schemas available in xref:../specifications/JSON%2520Schemas[JSON Schemas directory].
+
+[cols="1,3"]
+|===
+| Attribute | Specification
+
+| ABB Reference
+| Domain Event Bus
+
+| Platform
+| <<key-technology-decisions,DEC-004>>
+
+| Retention
+| 7 days (with dead letter queue for failed deliveries)
+
+| Schema Registry
+| <<key-technology-decisions,DEC-020>>
+
+| Delivery Guarantee
+| At-least-once delivery with retry (max 30 attempts, exponential backoff)
+
+| Monitoring
+| <<key-technology-decisions,DEC-007>>
+|===
+
+===== Topics
+
+*Profile Events* (`profile.events` topic)
+
+[cols="2,3,1"]
+|===
+| Event Name | Description | Schema
+
+| `PartnerLinked`
+| Partner account linked to customer profile
+| PartnerLinked event schema[Schema]
+
+| `PartnerUnlinked`
+| Partner account unlinked from customer
+| xref:../specifications/JSON%2520Schemas/PartnerUnlinked.event.schema.json[Schema]
+
+| `RewardPreferenceChanged`
+| Customer changed reward preference selection
+| xref:../specifications/JSON%2520Schemas/RewardPreferenceChanged.event.schema.json[Schema]
+|===
+
+*Loyalty Events* (`loyalty.events` topic)
+
+[cols="2,3,1"]
+|===
+| Event Name | Description | Schema
+
+| `CustomerEnrolled`
+| Customer enrolled in loyalty programme
+| xref:../specifications/JSON%2520Schemas/CustomerEnrolled.event.schema.json[Schema]
+
+| `TransactionAdjudicated`
+| Transaction Adjudication completed
+| xref:../specifications/JSON%2520Schemas/TransactionAdjudicated.event.schema.json[Schema]
+
+| `PointsEarned`
+| Points earned in loyalty programme
+| xref:../specifications/JSON%2520Schemas/PointsEarned.event.schema.json[Schema]
+
+| `FuelDiscountApplied`
+| Fuel discount applied to transaction
+| xref:../specifications/JSON%2520Schemas/FuelDiscountApplied.event.schema.json[Schema]
+
+| `RewardTransactionFailed`
+| Transaction adjudication failed
+| xref:../specifications/JSON%2520Schemas/RewardTransactionFailed.event.schema.json[Schema]
+
+| `PointsRedeemed`
+| Points redeemed in loyalty programme
+| _Planned_
+
+| `PointsExpired`
+| Points expired
+| _Planned_
+
+| `GrantIssued`
+| Loyalty grant issued
+| _Planned_
+
+| `GrantRedeemed`
+| Loyalty grant redeemed
+| _Planned_
+
+| `FlybuysPointsEarned`
+| Points earned in Flybuys programme
+| _Planned_
+
+| `FlybuysBalanceUpdated`
+| Flybuys points balance changed
+| _Planned_
+
+| `PartnerAccountlinked`
+| Flybuys member linked (OAuth complete)
+| _Planned_
+
+| `PartnerAccountUnlinked`
+| Flybuys member unlinked
+| _Planned_
+
+| `DailyPointsFileGenerated`
+| Daily partner points file generated
+| _Planned_
+
+| `DailyPointsFileTransmitted`
+| Daily points file sent to partner
+| _Planned_
+
+| `DailyPointsFileAcknowledged`
+| Partner acknowledged file receipt
+| _Planned_
+|===
+
+==== Event Documentation
+
+See xref:../specifications/AsyncAPI/otr-event-bus-v1.yaml[AsyncAPI Specification] for complete event definitions with examples, or xref:../bounded_context/loyalty.cml[Bounded Context/loyalty.cml] for CML domain model. CloudEvents 1.0 specification used for all domain events.
+
+==== Event Propagation Timeline
+
+See detailed sequence diagrams in #event-propagation-timeline[Sequence Diagrams] for out-of-order event handling and version-based conflict resolution.
+
+[mermaid]
+----
+sequenceDiagram
+    autonumber
+    participant Mobile as Mobile App
+    participant Profile as Profile Service
+    participant EventBus as Event Bus
+    participant Loyalty as Loyalty Service
+    participant Engagement as Engagement Service
+
+    Note over Mobile,Engagement: T=0: OAuth linking completes
+
+    Mobile->>Profile: POST /partners
+    activate Profile
+    Profile->>Profile: Store PartnerLink (status: linked)
+    Profile->>Profile: Commit database transaction
+
+    Note over Profile: T+50ms: Transaction committed
+
+    Profile->>EventBus: Publish Partnerlinked event<br/>{vivaConsumerId, partner, externalMemberId}
+    activate EventBus
+    EventBus->>EventBus: Persist event (durability guarantee)
+    EventBus-->>Profile: Event ID: evt-123456
+    deactivate EventBus
+
+    Profile-->>Mobile: 201 Created {PartnerLinkId}
+    deactivate Profile
+
+    Note over EventBus: T+100ms: Event persisted
+
+    par Parallel Event Delivery
+        EventBus->>Loyalty: Deliver Partnerlinked event
+        activate Loyalty
+        Loyalty->>Loyalty: Update reward preference cache<br/>(vivaConsumerId → FLYBUYS_POINTS)
+        Loyalty-->>EventBus: ACK
+        deactivate Loyalty
+
+        Note over Loyalty: T+200ms: Cache updated
+    and
+        EventBus->>Engagement: Deliver Partnerlinked event
+        activate Engagement
+        Engagement->>Engagement: Trigger welcome campaign<br/>"Earn Flybuys points at OTR"
+        Engagement-->>EventBus: ACK
+        deactivate Engagement
+
+        Note over Engagement: T+500ms: Campaign triggered
+    end
+
+    Note over Mobile,Engagement: Eventual consistency achieved within 500ms
+----
+
+==== Event Flow
+
+[cols="2,3"]
+|===
+| From | To
+
+| xref:../bounded_context/profile.adoc[Profile Service]
+| xref:../bounded_context/loyalty.adoc[Loyalty Service]
+
+| xref:../bounded_context/profile.adoc[Profile Service]
+| xref:../bounded_context/engagement.adoc[Engagement Service]
+
+| xref:../bounded_context/profile.adoc[Profile Service]
+| xref:../bounded_context/recommendation.adoc[Recommendation Service]
+
+| xref:../bounded_context/loyalty.adoc[Loyalty Service]
+| xref:../bounded_context/engagement.adoc[Engagement Service]
+
+| xref:../bounded_context/loyalty.adoc[Loyalty Service]
+| xref:../bounded_context/recommendation.adoc[Recommendation Service]
+|===
+
+
+<<<
+=== SBB-007: Engagement Service API
+
+[cols="1,3"]
+|===
+| Attribute | Specification
+
+| ABB Reference
+| Engagement Service (Bounded Context)
+
+| Component Type
+| Microservice (Event Consumer + Anti-Corruption Layer)
+
+| Implementation
+| <<key-technology-decisions,DEC-001>>
+
+| Hosting
+| <<key-technology-decisions,DEC-002>>
+
+| Database
+| <<sbb-008-engagement-service-database,SBB-008>>
+
+| Event Subscriptions
+| `profile.events.*`, `loyalty.events.*` (all Profile and Loyalty domain events)
+
+| External Integration
+| xref:../bounded_context/external/braze.adoc[Braze] (via ACL)
+|===
+
+==== Responsibilities
+
+* *Event Relay*: Relay domain events to xref:../bounded_context/external/braze.adoc[Braze] webhooks to enable transactional Customer communications
+** *Event-Driven Campaign Triggers*: Consumes domain events from Profile Service and Loyalty Service
+** *Braze Anti-Corruption Layer*: Translates OTRG domain events into xref:../bounded_context/external/braze.adoc[Braze] webhook payloads
+** *Customer Notification Orchestration*: Triggers push notifications, emails, in-app messages
+* *Campaign State Management*: Tracks campaign eligibility and notification delivery status
+
+==== Key Events Consumed
+
+[cols="1,2,3"]
+|===
+| Event Source | Event Name | Campaign Trigger
+
+| Profile Service
+| `Partnerlinked`
+| Welcome campaign: "_You're earning Flybuys points now!_"
+
+| Profile Service
+| `RewardPreferenceChanged`
+| Confirmation: "_Reward preference updated_"
+
+| Loyalty Service
+| `TransactionAdjudicated`
+| Transaction confirmation: "_You earned 150 Flybuys pts_"
+
+| Loyalty Service
+| `PointsEarned`
+| Points milestone: "_You've earned 1000 points this week_"
+
+| Loyalty Service
+| `RewardTransactionFailed`
+| Error notification: "_Transaction processing delayed_"
+|===
+
+
+<<<
+=== SBB-008: Engagement Service Database
+
+[cols="1,3"]
+|===
+| Attribute | Specification
+
+| ABB Reference
+| Engagement Service Data Store
+
+| Platform
+| <<key-technology-decisions,DEC-003>>
+
+| Purpose
+| Campaign state tracking, notification delivery history
+
+| Data Residency
+| Australia East (primary), Australia Southeast (failover)
+
+| Retention
+| 90 days (notification history), indefinite (campaign state)
+|===
+
+
+<<<
+=== SBB-009: Braze Integration Adaptor
+
+[cols="1,3"]
+|===
+| Attribute | Specification
+
+| ABB Reference
+| Braze ACL
+
+| Component Type
+| Data Egress Anti-Corruption Layer (ACL) - Conformist pattern
+
+| Implementation
+| Referenced by xref:../bounded_context/engagement.adoc[Engagement Service]
+
+| External APIs
+| Braze REST API v3 (User Tracking API)
+
+| Webhook URL
+| `\https://rest.iad-06.braze.com/`
+
+| Endpoint
+| xref:https://www.braze.com/docs/api/endpoints/user_data/post_user_track/[`/users/track`]
+
+| Circuit Breaker
+| 5 consecutive failures → open circuit, 30s timeout
+
+| Retry Policy
+| Exponential backoff: 3 retries (2s, 4s, 8s delays) for transient failures (5xx errors)
+
+| API Key Management
+| API key stored in Azure Key Vault
+
+| Rate Limits
+| 250 requests/minute per API key (Braze SLA)
+
+| Event Processing Latency
+| <500ms p95 (from Event Bus delivery to Braze webhook trigger)
+
+| Braze Webhook Timeout
+| 5 seconds (with retry logic)
+
+| Event Throughput
+| 1000 events/minute sustained
+|===
+
+==== Dependencies
+
+[cols="2,2,3"]
+|===
+| SBB ID | Dependency | Reason
+
+| <<sbb-006-domain-event-bus,SBB-006 Domain Event Bus>>
+| Event subscriptions
+| Consumes Partnerlinked, TransactionAdjudicated events
+
+| xref:../bounded_context/profile.adoc[Profile Service]
+| Customer profile
+| Enriches event data with customer attributes (optional)
+|===
+
+
+<<<
+=== SBB-010: Flybuys Integration Adaptor
+
+[cols="1,3"]
+|===
+| Attribute | Specification
+
+| ABB Reference
+| Flybuys ACL
+
+| Component Type
+| Anti-Corruption Layer (ACL) - Conformist pattern (reference ADR-003 in ADD)
+
+| Implementation
+| #TBD# (referenced by xref:../bounded_context/loyalty.adoc[Loyalty Service], conforms to Flybuys API)
+
+| External APIs
+| Flybuys OAuth API, Balance API (`GET /v1/members/\{id}/balance`), Docket API
+
+| Batch SFTP
+| #TBD# (Batch processing with SFTP connector, SSH key auth, PGP 2048-bit encryption)
+
+| Circuit Breaker
+| #TBD#
+
+| Caching
+| #TBD# (Distributed cache, 5-minute TTL for balance queries, reduces Flybuys API load)
+
+| Retry Policy
+| Exponential backoff: 3 retries (2s, 4s, 8s delays) for transient failures
+|===
+
+*Flybuys Implementation*: `FlybuysPointsServiceAdapter` (conforms to Flybuys CSV batch file spec v3.2)
+
+
+<<<
+=== SBB-011: EagleEye Integration Adaptor
+
+[cols="1,3"]
+|===
+| Attribute | Specification
+
+| ABB Reference
+| EagleEye ACL
+
+| Component Type
+| Anti-Corruption Layer (ACL)
+
+| Implementation
+| #TBD#(referenced by xref:../bounded_context/loyalty.adoc[Loyalty Service])
+
+| External APIs
+| EagleEye REST API v3 (wallet, campaigns, Transaction Adjudication)
+
+| Circuit Breaker
+| #TBD# (5 consecutive failures → open circuit, 30s timeout)
+
+| Retry Policy
+| Exponential backoff: 3 retries (2s, 4s, 8s delays)
+
+| API Key Management
+| API key stored in #TBD# (secure key vault service)
+
+| Rate Limits
+| 1000 requests/minute per API key (EagleEye SLA)
+|===
+
+
+<<<
+=== SBB-012: Application Monitoring
+
+[cols="1,3"]
+|===
+| MAttribute | Specification
+
+| ABB Reference
+| Monitoring & Observability
+
+| Platform
+| xref:#Key_Technology_Decisions[DEC-007]
+
+| Application Insights
+| #TBD# (Workspace-based shared across xref:../bounded_context/profile.adoc[Profile Service], xref:../bounded_context/loyalty.adoc[Loyalty Service])
+
+| Instrumentation
+| #TBD# (SDK for distributed tracing, OpenTelemetry support)
+
+| Log Aggregation
+| Structured logging (Serilog) → #TBD# (centralized log aggregation with query language)
+
+| Metrics
+| Custom metrics: API latency (p50/p95/p99), OAuth success rate, batch file acknowledgement rate
+
+| Distributed Tracing
+| W3C Trace Context standard (see <<Correlation ID Propagation Specification,Correlation ID Specification>>)
+
+| Dashboards
+| #TBD# (Flybuys Integration Health, Customer Adoption Metrics dashboards)
+|===
+
+*Alerting*:
+
+* Critical: xref:../bounded_context/profile.adoc[Profile Service] API error rate > 5% → PagerDuty (on-call architect)
+* Critical: Batch file generation fails → Immediate alert to xref:../bounded_context/loyalty.adoc[Loyalty Service] team
+* Warning: Flybuys API latency > 3s p95 → Slack alert
+
+
+<<<
+=== SBB-013: API Gateway
+
+[cols="1,3"]
+|===
+| Attribute | Specification
+
+| ABB Reference
+| API Gateway
+
+| Platform
+| xref:#Key_Technology_Decisions[DEC-008]
+
+| Base URL
+| `\https://api.otr.com.au`
+
+| Authentication
+| xref:#Key_Technology_Decisions[DEC-011]
+
+| Rate Limiting
+| 1000 requests/minute per user, 10000 requests/minute global
+
+| Policies
+| JWT validation, rate limiting, CORS, request/response transformation
+
+| TLS
+| xref:#Key_Technology_Decisions[DEC-019]
+|===
+
+
+<<<
+=== SBB-014: OTR Mobile App
+
+[cols="1,3"]
+|===
+| Attribute | Specification
+
+| ABB Reference
+| Mobile Application (Presentation Layer)
+
+| Platform
+| xref:#Key_Technology_Decisions[DEC-011]
+
+| Deployment
+| App Store (iOS), Google Play (Android)
+
+| Authentication
+| xref:#Key_Technology_Decisions[DEC-011]
+|===
+
+==== Integration
+
+[cols="2,3"]
+|===
+| Integration | Description
+
+| <<SBB-001 Profile Service API,SBB-001 Profile Service API>>
+| Partner linking
+
+| <<SBB-003 Loyalty Service API,SBB-003 Loyalty Service API>>
+| Balance queries / Transaction history
+|===
+
+
+<<<
+=== SBB-015: Batch File Pipeline
+
+[cols="1,3"]
+|===
+| Attribute | Specification
+
+| ABB Reference
+| Batch Processing
+
+| Orchestration
+| #TBD# (Batch pipeline scheduled 01:00 UTC daily)
+
+| Generation Logic
+| #TBD# (Serverless functions for transaction aggregation)
+
+| SFTP Transfer
+| #TBD# (SFTP connector with SSH key authentication)
+
+| PGP Encryption
+| #TBD# (PGP encryption activity, Flybuys 2048-bit RSA public key)
+
+| File Format
+| CSV (UTF-8 with BOM, CRLF line endings, max 200MB / 100k transactions)
+
+| Acknowledgement
+| #TBD# (SFTP polling to read acknowledgement file from Flybuys)
+
+| Batch File Naming
+| `OTR_TRANSACTIONS_\{YYYYMMDD}_{HHMMSS}.csv.pgp`
+|===
+
+==== Batch File Processing Flow
+
+See detailed sequence diagrams in #batch-file-retry-flow[Sequence Diagrams] for happy path and error scenarios.
+
+[mermaid]
+----
+sequenceDiagram
+    autonumber
+    participant Scheduler as Azure Data Factory<br/>(Batch Scheduler)
+    participant Loyalty as Loyalty Service
+    participant DB as Loyalty Database
+    participant SFTP as Flybuys SFTP
+    participant Flybuys as Flybuys Processing
+    participant Monitor as Monitoring
+
+    Note over Scheduler,Monitor: Nightly batch window: 01:00-02:00 UTC
+
+    Scheduler->>Loyalty: Timer trigger: 01:00 UTC<br/>Start batch job
+
+    activate Loyalty
+    Loyalty->>DB: Query RewardTransactions<br/>WHERE status="PENDING"<br/>AND transactionDate=yesterday
+    activate DB
+    DB-->>Loyalty: 10,000 transactions
+    deactivate DB
+
+    Note over Loyalty: Aggregate by externalMemberId
+
+    Loyalty->>Loyalty: Generate CSV<br/>Format: memberId,date,points,storeId
+    Loyalty->>Loyalty: PGP encrypt with Flybuys public key
+    Loyalty->>Loyalty: Generate filename<br/>OTR_TRANSACTIONS_20251212_010000.csv.pgp
+
+    Loyalty->>SFTP: Upload batch file<br/>(15 minutes, 2MB file)
+    activate SFTP
+    SFTP-->>Loyalty: Upload complete
+    deactivate SFTP
+
+    Loyalty->>DB: Update RewardTransactions<br/>SET batchFileId="OTR_TRANSACTIONS_20251212_010000.csv.pgp"
+    activate DB
+    DB-->>Loyalty: 10,000 rows updated
+    deactivate DB
+
+    Loyalty-->>Scheduler: Job complete (duration: 60 min)
+    deactivate Loyalty
+
+    Scheduler->>Monitor: Log success metric<br/>batch_file_generation_duration_seconds
+
+    Note over Flybuys: Flybuys processes file (2-4 hours)
+
+    Flybuys->>SFTP: Upload acknowledgement file<br/>OTR_TRANSACTIONS_20251212_010000.ack
+
+    Note over Scheduler,Monitor: Acknowledgement polling (every 30 minutes)
+
+    Scheduler->>Loyalty: Poll for acknowledgement
+    activate Loyalty
+    Loyalty->>SFTP: Check for .ack file
+    activate SFTP
+    SFTP-->>Loyalty: Found: 9,800 accepted, 200 rejected
+    deactivate SFTP
+
+    Loyalty->>DB: Update status="COMPLETED" (9,800 rows)<br/>SET status="FAILED" (200 rows)
+    activate DB
+    DB-->>Loyalty: Updates complete
+    deactivate DB
+
+    Loyalty-->>Scheduler: Acknowledgement processed
+    deactivate Loyalty
+
+    Scheduler->>Monitor: Log metric<br/>batch_acknowledgement_rate=98%
+----
+
+
+<<<
+=== SBB-016: Distributed Cache
+
+*ABB Reference*: Caching Layer (for Flybuys balance queries)
+
+[cols="1,3"]
+|===
+| Attribute | Specification
+
+| Platform
+| #TBD# (In-memory distributed cache)
+
+| Purpose
+| Cache Flybuys balance queries (5-minute TTL, reduces external API load)
+
+| Eviction Policy
+| Volatile-ttl (evict keys with shortest TTL when memory full)
+
+| Persistence
+| Not enabled (cache can be regenerated from Flybuys API)
+
+| Cache Key Format
+| `flybuys:balance:\{externalMemberId}` (e.g., `flybuys:balance:123456789012`)
+|===
+
+==== Circuit Breaker Pattern
+
+The distributed cache works in conjunction with circuit breakers to provide graceful degradation when external APIs fail.
+
+See detailed sequence diagrams in #circuit-breaker-state-transitions[Sequence Diagrams] for complete state transition flows.
+
+[mermaid]
+----
+stateDiagram-v2
+    [*] --> Closed: Initial state
+
+    Closed --> Open: 5 consecutive failures
+    Closed --> Closed: Success (reset failure count)
+
+    Open --> HalfOpen: 30 seconds elapsed
+
+    HalfOpen --> Closed: Success
+    HalfOpen --> Open: Failure
+
+    Open --> Open: All requests rejected
+
+    note right of Closed
+        Normal operation
+        Requests pass through
+        Track failure count
+    end note
+
+    note right of Open
+        Fail fast
+        Return cached response
+        No calls to external API
+    end note
+
+    note right of HalfOpen
+        Test recovery
+        Single request allowed
+        Decide: Closed or Open
+    end note
+----
+
+
+<<<
+=== SBB-017: Feature Flag Service
+
+[cols="1,3"]
+|===
+| Attribute | Specification
+
+| ABB Reference
+| Feature Toggle Management (see xref:../architecture_definitions/flybuys_integration.adoc#Technology%2520Capability%2520Requirements[Architecture Definition §3.2.2])
+
+| Component Type
+| Infrastructure Service
+
+| Technology Stack
+| <<key-technology-decisions,DEC-014 Configuration / Feature Flags>>
+
+| Purpose
+| Dynamic feature control without code deployment, progressive rollout, instant rollback
+
+| Flag Definitions
+| See xref:../architecture_definitions/flybuys_integration.adoc#Feature%2520Flag%2520Register[Feature Flag Register] for all flags
+
+| Deployment Schedule
+| See <<Transition Phase Matrix,Transition Phase Matrix>> for rollout by architecture state
+
+| Rollback Procedures
+| See <<Rollback Strategy,Rollback Strategy>> for flag-based rollback procedures
+|===
+
+*Operational Characteristics*:
+
+* *Evaluation Frequency*: Real-time flag evaluation on each request (no caching)
+* *Update Propagation*: Flag changes propagate within 5 seconds across all service instances
+* *Monitoring*: Flag state changes logged with correlation IDs, dashboards per flag showing usage metrics
+* *Access Control*: Flag management restricted to designated roles (Platform Team, Product Owner, Operations Team per flag)
+
+<<<
+=== SBB-018: Location
+
+<<<
+== Data Architecture
+
+This section defines the logical and physical data models for Solution Building Blocks.
+
+=== Physical Data Models
+
+==== Profile Service - PartnerLink Document Schema
+
+===== JSON Schema
+
+See xref:../specifications/JSON%2520Schemas/PartnerLink.schema.json[PartnerLink.schema.json] for complete schema specification including field definitions, type constraints, and validation rules.
+
+===== Database Configuration
+
+*Container*: `partner-links` +
+*Partition Key*: `/vivaConsumerId` +
+*Document Type*: JSON (NoSQL document database)
+
+===== Key Fields
+
+* `id`: Unique document identifier (GUID)
+* `PartnerLinkId`: Aggregate root identifier (GUID)
+* `vivaConsumerId`: Partition key, Salesforce VCI (e.g., vci_xyz789abc)
+* `partner`: Enum - FLYBUYS | SHELL_CARD | AFL | BUDGET_DIRECT
+* `status`: Enum - linking_IN_PROGRESS | linked | UNlinked | FAILED
+* `externalMemberId`: Partner member ID (e.g., Flybuys 12-digit number)
+* `rewardPreference`: Enum - FLYBUYS_POINTS | OTR_FUEL_DISCOUNT | SHELL_PRICE_SAVE
+* `linkedAt` / `unlinkedAt`: ISO8601 timestamps
+* `oauthTokenReference`: Key Vault secret identifier
+* `metadata`: Document metadata (createdAt, updatedAt, version)
+* `_etag`: Database concurrency token
+
+===== Example Document
+
+[source,json]
+----
+{
+  "id": "pl_a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "PartnerLinkId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "vivaConsumerId": "vci_xyz789abc",
+  "partner": "FLYBUYS",
+  "status": "linked",
+  "externalMemberId": "123456789012",
+  "rewardPreference": "FLYBUYS_POINTS",
+  "linkedAt": "2025-12-09T10:30:00Z",
+  "unlinkedAt": null,
+  "oauthTokenReference": "flybuys-token-vci_xyz789abc",
+  "metadata": {
+    "createdAt": "2025-12-09T10:30:00Z",
+    "updatedAt": "2025-12-09T10:30:00Z",
+    "version": 1
+  },
+  "_etag": "\"0x8DCDEF123456\""
+}
+----
+
+===== Indexes
+
+* Primary: `/id` (automatic)
+* Partition key: `/vivaConsumerId` (automatic)
+* Composite: `[/partner ASC, /status ASC]` (custom - query all Flybuys linked partners)
+
+===== Constraints
+
+* `vivaConsumerId`: Required, must match pattern `^vci_[a-zA-Z0-9]\{10,}$`
+* `partner`: Required, must be valid enum value
+* `status`: Required, must be valid enum value
+* `externalMemberId`: Required if status = linked
+* `rewardPreference`: Required if status = linked
+* Uniqueness: One linked partner per (vivaConsumerId, partner) combination
+
+==== Loyalty Service - RewardTransaction Document Schema
+
+===== JSON Schema
+
+See xref:../specifications/JSON%2520Schemas/RewardTransactionDocument.schema.json[RewardTransactionDocument.schema.json] for complete schema specification including field definitions, nested structures, type constraints, and validation rules.
+
+===== Database Configuration
+
+*Container*: `reward-transactions` +
+*Partition Key*: `/vivaConsumerId` +
+*TTL*: 2592000 seconds (30 days) +
+*Document Type*: JSON (NoSQL document database)
+
+===== Key Fields
+
+* `id`: Unique document identifier (GUID)
+* `transactionId`: Aggregate root identifier (GUID)
+* `vivaConsumerId`: Partition key
+* `externalTransactionId`: D365 Commerce transaction ID
+* `transactionDate`: ISO8601 timestamp
+* `storeId`: OTR store identifier
+* `rewardPreference`: Enum - FLYBUYS_POINTS | OTR_FUEL_DISCOUNT
+* `grants[]`: Array of reward grants (grantId, partner, grantType, amount, description)
+* `transaction`: Transaction details (totalAmount, paymentMethod)
+* `partnerPosting`: Partner posting status (Flybuys batch file details)
+* `status`: Enum - PENDING | COMPLETED | FAILED
+* `metadata`: Document metadata (createdAt, ttl)
+* `_etag`: Database concurrency token
+
+===== Example Document
+
+[source,json]
+----
+{
+  "id": "rt_b2c3d4e5-f6a7-8901-bcde-f12345678901",
+  "transactionId": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+  "vivaConsumerId": "vci_xyz789abc",
+  "externalTransactionId": "D365_TXN_20251209_001234",
+  "transactionDate": "2025-12-09T14:30:00Z",
+  "storeId": "OTR001",
+  "rewardPreference": "FLYBUYS_POINTS",
+  "grants": [
+    {
+      "grantId": "grt_c3d4e5f6-a7b8-9012-cdef-123456789012",
+      "partner": "FLYBUYS",
+      "grantType": "POINTS",
+      "amount": 150,
+      "description": "Base points: 100, Bonus points: 50 (fuel purchase campaign)"
+    }
+  ],
+  "transaction": {
+    "totalAmount": 75.50,
+    "paymentMethod": "CREDIT_CARD"
+  },
+  "partnerPosting": {
+    "flybuys": {
+      "posted": true,
+      "batchFileId": "OTR_TRANSACTIONS_20251210_010000.csv.pgp",
+      "postedAt": "2025-12-10T01:15:00Z",
+      "retryCount": 0
+    }
+  },
+  "status": "COMPLETED",
+  "metadata": {
+    "createdAt": "2025-12-09T14:30:00Z",
+    "ttl": 2592000
+  },
+  "_etag": "\"0x8DCDEF789012\" - database concurrency token"
+}
+----
+
+===== Indexes
+
+* Primary: `/id` (automatic)
+* Partition key: `/vivaConsumerId` (automatic)
+* Range: `/transactionDate DESC` (custom - query recent transactions)
+
+===== Constraints
+
+* `vivaConsumerId`: Required
+* `externalTransactionId`: Required, must be unique
+* `transactionDate`: Required, cannot be future-dated
+* `grants`: Array must contain at least one grant
+* TTL: Automatically deleted 30 days after creation (audit trail summary only)
+
+==== OAuth Token Storage Schema (Key Vault)
+
+===== JSON Schema
+
+See xref:../specifications/JSON%2520Schemas/OAuthTokenStorageSchema.schema.json[OAuthTokenStorageSchema.schema.json] for complete schema specification including OAuth token structure, expiration rules, and metadata requirements.
+
+===== Key Vault Configuration
+
+*Service*: #TBD# (Secure key vault service) +
+*Secret Naming Convention*: `\{partner}-token-{vivaConsumerId}`
+
+===== Secret Value (JSON) - Key Fields
+
+* `accessToken`: OAuth access token (JWT, ~2KB)
+* `refreshToken`: OAuth refresh token
+* `expiresAt`: ISO8601 timestamp (60 minutes from issuance)
+* `scope`: OAuth scopes granted (e.g., member:read member:balance)
+* `tokenType`: Bearer
+
+===== Example Secret
+
+*Name*: `flybuys-token-vci_xyz789abc`
+
+*Value*:
+
+[source,json]
+----
+{
+  "accessToken": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "rt_abc123def456...",
+  "expiresAt": "2025-12-09T15:30:00Z",
+  "scope": "member:read member:balance member:dockets",
+  "tokenType": "Bearer"
+}
+----
+
+===== Metadata
+
+* Content Type: `application/json`
+* Enabled: `true`
+* Activation Date: Token creation timestamp
+* Expiration Date: 90 days (refresh token expiry)
+* Tags: `{ "partner": "FLYBUYS", "vivaConsumerId": "vci_xyz789abc" }`
+
+===== Encryption
+
+AES-256 with customer-managed keys (compliance with CON-003)
+
+<<<
+== Interface Specifications
+
+This section defines the contracts between Solution Building Blocks - REST APIs, domain events, and data formats.
+
+=== Complete API Documentation
+
+See xref:../specifications/README.md[Specifications README] for comprehensive documentation on OpenAPI, AsyncAPI, JSON Schemas, tooling, versioning, and validation.
+
+=== REST API
+
+[cols="2,3,2"]
+|===
+| Service | OpenAPI Spec | Endpoints
+
+| Profile Service
+| xref:../specifications/REST/profile-service-v1.yaml[profile-service-v1.yaml]
+| 6 endpoints (profile creation, profile retrieval, partner linking, preference management)
+
+| Loyalty Service
+| xref:../specifications/REST/loyalty-service-v1.yaml[loyalty-service-v1.yaml]
+| 5 endpoints (credential resolution, transaction adjudication, balance queries)
+|===
+
+=== Domain Events
+
+==== AsyncAPI Specification
+
+xref:../specifications/AsyncAPI/otr-event-bus-v1.yaml[otr-event-bus-v1.yaml] - Complete event bus specification with 9 domain events, CloudEvents 1.0 structure, message examples, and channel definitions.
+
+==== Event Schemas
+
+All domain events use JSON Schema definitions in xref:../specifications/JSON%2520Schemas[JSON Schemas directory]. See <<sbb-006-domain-event-bus,SBB-006>> for event catalogue.
+
+==== API Versioning Policy
+
+All REST APIs exposed by ProfileService and LoyaltyService follow this versioning policy to manage API evolution while maintaining backwards compatibility for consumers (Mobile Application, POS systems).
+
+===== Version Numbering
+
+*URI Versioning*: Major version included in URI path (`/api/v1/`, `/api/v2/`)
+
+*Format*: `/api/v{major}/\{resource}`
+
+*Examples*:
+
+* `/api/v1/loyalty/credentials/resolve`
+* `/api/v2/profile/customers`
+
+*Version Components*:
+
+* *Major version* (v1, v2, v3): Breaking changes to API contract
+* *Minor version* (not in URI): Additive changes, backwards compatible
+* *Patch version* (not in URI): Bug fixes, no contract changes
+
+===== When to Version
+
+*Major Version Bump (v1 → v2)* - Breaking changes requiring new URI:
+
+[cols="2,3,1"]
+|===
+| Change Type | Example | Requires v2?
+
+| Remove field from response
+| Delete `walletId` from credential resolution response
+| ✓ Yes
+
+| Rename field
+| `rewardPreference` → `preferredReward`
+| ✓ Yes
+
+| Change field type
+| `linkedAt` from string to DateTime object
+| ✓ Yes
+
+| Add required request field
+| Add required `storeType` parameter
+| ✓ Yes
+
+| Change HTTP method
+| `POST` → `PUT` for same resource
+| ✓ Yes
+
+| Change status codes
+| `404` → `422` for partner not linked
+| ✓ Yes
+
+| Remove endpoint
+| Delete `GET /api/v1/legacy-endpoint`
+| ✓ Yes
+|===
+
+*Minor Version (No URI change)* - Backwards compatible additions:
+
+[cols="2,3,1"]
+|===
+| Change Type | Example | Requires v2?
+
+| Add optional request field
+| Add optional `includeBalance` query parameter
+| ✗ No
+
+| Add new response field
+| Add `partnerTier` to credential resolution response
+| ✗ No
+
+| Add new endpoint
+| Add `POST /api/v1/loyalty/batch/validate`
+| ✗ No
+
+| Add new HTTP header
+| Add `X-Request-Priority` header support
+| ✗ No
+
+| Expand enum values
+| `rewardPreference` adds `SHELL_PRICE_SAVE` option
+| ✗ No
+|===
+
+*Patch Version* - Internal only, not visible to API consumers:
+
+* Bug fixes that don't change contract
+* Performance improvements
+* Internal refactoring
+
+===== Parallel Version Support
+
+*Support Duration*: Both versions supported in parallel until deprecated version reaches sunset date
+
+*Versioning Lifecycle*:
+
+. Release new major version with breaking changes
+. Run both versions in parallel during deprecation period
+. Sunset deprecated version after migration window
+. Remove deprecated version after grace period
+
+*Infrastructure*:
+
+* Both versions deployed simultaneously (same service, route-based dispatch)
+* Shared business logic where possible (avoid duplicate implementations)
+* Feature flags: `ProfileService.API.v1.Enabled`, `ProfileService.API.v2.Enabled`
+
+===== Deprecation Notification
+
+*HTTP Headers* (included in deprecated version responses):
+
+[source,http]
+----
+HTTP/1.1 200 OK
+Deprecation: true
+Sunset: <sunset-date>
+xref: </api/v2/profile/customers>; rel="successor-version"
+Content-Type: application/json
+----
+
+*Header Definitions*:
+
+* `Deprecation: true` - API version is deprecated (RFC 8594)
+* `Sunset: \{date}` - Date when API will be removed (RFC 8594)
+* `xref: \{url}; rel="successor-version"` - URL of replacement API
+
+*OpenAPI Specification*:
+
+[source,yaml]
+----
+openapi: 3.0.0
+info:
+  title: Profile Service API
+  version: 1.0.0
+  x-api-deprecation:
+    deprecated: true
+    sunset: "<sunset-date>"
+    successorVersion: "2.0.0"
+    migrationGuide: "https://docs.otr.com.au/api/migration/v1-to-v2"
+----
+
+*Consumer Communication Sequence*:
+
+. Release notes published with breaking changes documented
+. Email notification to API consumers with migration guide
+. Deprecation headers added to deprecated version responses
+. Warning logs enabled for deprecated version usage
+. Final migration reminder before sunset
+. Sunset date reached (API returns `410 Gone`)
+. Hard removal after grace period
+
+===== Version Discovery
+
+*API Root Endpoint*: `GET /api/versions`
+
+[source,json]
+----
+{
+  "versions": [
+    {
+      "version": "1.0",
+      "status": "deprecated",
+      "sunsetDate": "<sunset-date>",
+      "baseUrl": "/api/v1",
+      "documentation": "https://docs.otr.com.au/api/v1"
+    },
+    {
+      "version": "2.0",
+      "status": "current",
+      "sunsetDate": null,
+      "baseUrl": "/api/v2",
+      "documentation": "https://docs.otr.com.au/api/v2"
+    }
+  ],
+  "recommended": "2.0"
+}
+----
+
+*Status Values*:
+
+* `current`: Recommended version, fully supported
+* `supported`: Older version, still functional, no new features
+* `deprecated`: Scheduled for removal, sunset date published
+* `sunset`: No longer accepting requests, returns `410 Gone`
+
+===== Consumer Compatibility
+
+*Mobile Application*:
+
+* iOS/Android apps pin to specific API version
+* App Store updates required for major version migrations
+* Migration coordinated with mobile app release cycles
+
+*POS Systems*:
+
+* Store rollout requires coordinated deployment
+* POS configuration updated via D365 Commerce central config
+* API version specified in POS tenant configuration
+* Gradual rollout strategy to minimize disruption
+
+*Backward Compatibility Guarantee*:
+
+* Deprecated version contract remains stable during parallel support period
+* No breaking changes to deprecated version during support window
+* Bug fixes backported to deprecated version during support period
+
+===== Error Response for Sunset APIs
+
+*After Sunset Date* (`410 Gone`):
+
+[source,json]
+----
+{
+  "error": {
+    "code": "API_VERSION_SUNSET",
+    "message": "API v1 has been sunset. Please migrate to v2.",
+    "sunsetDate": "<sunset-date>",
+    "successorVersion": "2.0",
+    "migrationGuide": "https://docs.otr.com.au/api/migration/v1-to-v2"
+  }
+}
+----
+
+*HTTP Status*: `410 Gone` (permanent redirect, cache-safe)
+
+===== Semantic Versioning Alignment
+
+While URI versioning uses major version only, OpenAPI specs follow semantic versioning:
+
+* *OpenAPI spec version*: `2.3.1` (semver)
+* *API URI version*: `/api/v2/` (major only)
+
+*Mapping*:
+
+* OpenAPI `2.0.0` → URI `/api/v2/`
+* OpenAPI `2.1.0` → URI `/api/v2/` (additive change, no URI change)
+* OpenAPI `2.1.5` → URI `/api/v2/` (bug fix, no URI change)
+* OpenAPI `3.0.0` → URI `/api/v3/` (breaking change, new URI)
+
+==== Loyalty Credential Resolution API
+
+*Endpoint*: `POST /api/v1/loyalty/credentials/resolve`
+
+*Purpose*: Resolves EAN-13 barcodes scanned at xref:../bounded_context/interfaces/otr_pos.adoc[OTR POS] and xref:../bounded_context/interfaces/otr_plus_pos.adoc[OTR+ POS] to customer identity and context for Transaction Adjudication.
+
+*Request*:
+
+[source,json]
+----
+{
+  "barcode": "1234567890123",
+  "storeId": "OTR001",
+  "transactionId": "TXN_20251211_001234"
+}
+----
+
+*Request Schema*:
+
+[cols="1,1,1,3"]
+|===
+| Field | Type | Required | Validation
+
+| `barcode`
+| string
+| Yes
+| Must match pattern `^\d\{13}$` (EAN-13)
+
+| `storeId`
+| string
+| Yes
+| Must be registered OTR store (OTR001-OTR999)
+
+| `transactionId`
+| string
+| Yes
+| Unique transaction identifier from POS
+|===
+
+*Response* (200 OK):
+
+[source,json]
+----
+{
+  "vivaConsumerId": "vci_xyz789abc",
+  "rewardPreference": "FLYBUYS_POINTS",
+  "walletId": "wallet_123456",
+  "linkedPartners": ["FLYBUYS"],
+  "credentialType": "FLYBUYS_CARD"
+}
+----
+
+*Response Schema*:
+
+[cols="1,1,4"]
+|===
+| Field | Type | Description
+
+| `vivaConsumerId`
+| string
+| Salesforce VCI (customer identity)
+
+| `rewardPreference`
+| string
+| Enum: `FLYBUYS_POINTS` \| `OTR_FUEL_DISCOUNT` \| `SHELL_PRICE_SAVE`
+
+| `walletId`
+| string
+| EagleEye wallet identifier
+
+| `linkedPartners`
+| string[]
+| List of linked partner codes (e.g., `["FLYBUYS", "SHELL"]`)
+
+| `credentialType`
+| string
+| Enum: `OTR_MOBILE` \| `SPS_MOBILE` \| `WALLET_PASS` \| `FLYBUYS_CARD` \| `FLYBUYS_MOBILE`
+|===
+
+*Error Responses*:
+
+[cols="1,2,3"]
+|===
+| Status | Error Code | Description
+
+| 400
+| `INVALID_BARCODE`
+| Barcode format invalid (not 13 digits)
+
+| 404
+| `CREDENTIAL_NOT_FOUND`
+| Barcode not recognized or customer not enrolled
+
+| 422
+| `PARTNER_NOT_linked`
+| Flybuys credential presented but not linked to OTR profile
+
+| 500
+| `RESOLUTION_FAILED`
+| Internal error during resolution
+|===
+
+*Resolution Logic*:
+
+. *OTR credentials* (OTR Mobile, SPS Mobile, Apple/Google Wallet):
+** Barcode encodes OTR member ID
+** Direct lookup: OTR member ID → VCI
+** Query xref:../bounded_context/profile.adoc[Profile Service]: `GET /api/v1/profile/customers?memberId=\{otrMemberId}`
+. *Flybuys credentials* (Physical card, Flybuys Mobile):
+** Barcode encodes Flybuys 12-digit member number
+** Extract member number from EAN-13 barcode
+** Query xref:../bounded_context/profile.adoc[Profile Service]: `GET /api/v1/profile/partner-links?partner=FLYBUYS&externalMemberId=\{flybuysNumber}`
+** Retrieve VCI from PartnerLink aggregate
+** If no PartnerLink found → return `422 PARTNER_NOT_linked`
+
+*Performance Requirements*:
+
+* *Latency*: p95 < 500ms (xref:../architecture_definitions/flybuys_integration.adoc#Non-Functional%2520Requirements[NFR-002])
+* *Throughput*: 500 concurrent requests/sec (peak POS load across 500+ stores)
+* *Availability*: 99.9% uptime (max 4.3 hours downtime/month)
+
+==== Customer Profile Creation API
+
+*Endpoint*: `POST /api/v1/profile/customers`
+
+*Purpose*: Creates a new customer profile, links to Salesforce VCI, and provisions an EagleEye wallet. Used by the xref:../ubiquitous_language.adoc#just-in-time-integration[Just-In-Time Integration] during customer login (AS-1 Foundation).
+
+*Request*:
+
+[source,json]
+----
+{
+  "salesforceContactId": "003Dn000001234ABC",
+  "vivaConsumerId": "vci_xyz789abc",
+  "membershipTier": "BRONZE",
+  "rewardPreference": "OTR_FUEL_DISCOUNT"
+}
+----
+
+*Request Schema*:
+
+[cols="1,1,1,3"]
+|===
+| Field | Type | Required | Validation
+
+| `salesforceContactId`
+| string
+| Yes
+| Must be valid 15 or 18-character Salesforce Contact ID
+
+| `vivaConsumerId`
+| string
+| Yes
+| Must be unique VCI identifier (format: vci_*)
+
+| `membershipTier`
+| string
+| Yes
+| Enum: `BRONZE` \| `SILVER` \| `GOLD` \| `PLATINUM`
+
+| `rewardPreference`
+| string
+| No
+| Enum: `OTR_FUEL_DISCOUNT` \| `FLYBUYS_POINTS` \| `SHELL_PRICE_SAVE` (defaults to `OTR_FUEL_DISCOUNT`)
+|===
+
+*Response* (201 Created):
+
+[source,json]
+----
+{
+  "vivaConsumerId": "vci_xyz789abc",
+  "salesforceContactId": "003Dn000001234ABC",
+  "walletId": "wallet_123456",
+  "membershipTier": "BRONZE",
+  "rewardPreference": "OTR_FUEL_DISCOUNT",
+  "createdAt": "2025-12-09T10:30:00Z",
+  "status": "ACTIVE"
+}
+----
+
+*Response Schema*:
+
+[cols="1,1,4"]
+|===
+| Field | Type | Description
+
+| `vivaConsumerId`
+| string
+| Salesforce VCI (customer identity)
+
+| `salesforceContactId`
+| string
+| Salesforce Contact record ID
+
+| `walletId`
+| string
+| EagleEye wallet identifier (provisioned atomically)
+
+| `membershipTier`
+| string
+| Customer's loyalty tier
+
+| `rewardPreference`
+| string
+| Default reward preference
+
+| `createdAt`
+| string (ISO 8601)
+| Profile creation timestamp
+
+| `status`
+| string
+| Enum: `ACTIVE` \| `SUSPENDED` \| `CLOSED`
+|===
+
+*Error Responses*:
+
+[cols="1,2,3"]
+|===
+| Status | Error Code | Description
+
+| 400
+| `INVALID_SALESFORCE_CONTACT_ID`
+| Salesforce Contact ID format invalid
+
+| 404
+| `SALESFORCE_CONTACT_NOT_FOUND`
+| Salesforce Contact does not exist
+
+| 409
+| `PROFILE_ALREADY_EXISTS`
+| Customer profile already exists for this VCI (idempotent)
+
+| 503
+| `EAGLEEYE_UNAVAILABLE`
+| EagleEye wallet creation failed
+|===
+
+*Business Rules*:
+
+* VCI must be unique across all customers
+* Orchestrates EagleEye wallet creation via <<sbb-011-eagleeye-integration-adaptor,EagleEye ACL>>
+* Links to Salesforce Contact record (validates Contact exists)
+* Publishes `CustomerEnrolled` domain event on success
+* Returns `409 Conflict` if profile already exists (idempotent operation)
+* Transaction is atomic - if wallet creation fails, profile creation is rolled back
+
+*Performance Requirements*:
+
+* *Latency*: p95 < 500ms (includes EagleEye wallet creation)
+* *Used during login flow* - must not block user experience
+* *Availability*: 99.9% uptime (critical for customer onboarding)
+
+*Orchestration Flow*:
+
+. Validate VCI uniqueness in ProfileService database
+. Verify Salesforce Contact exists (call Salesforce API)
+. Create EagleEye wallet via <<sbb-011-eagleeye-integration-adaptor,EagleEye ACL>>
+. Create Customer aggregate in ProfileService database
+. Publish `CustomerEnrolled` domain event to Event Bus
+. Return profile details with walletId to caller
+
+==== Customer Profile Retrieval API
+
+*Endpoint*: `GET /api/v1/profile/customers/{vivaConsumerId}`
+
+*Purpose*: Retrieves customer profile details by Viva Consumer ID. Used by LoyaltyService during transaction adjudication to get reward preferences and wallet information.
+
+*Request Parameters*:
+
+[cols="1,1,1,3"]
+|===
+| Parameter | Type | Required | Validation
+
+| `vivaConsumerId`
+| string (path)
+| Yes
+| Must be valid VCI identifier (format: vci_*)
+|===
+
+*Response* (200 OK):
+
+[source,json]
+----
+{
+  "vivaConsumerId": "vci_xyz789abc",
+  "salesforceContactId": "003Dn000001234ABC",
+  "walletId": "wallet_123456",
+  "membershipTier": "BRONZE",
+  "rewardPreference": "FLYBUYS_POINTS",
+  "createdAt": "2025-12-09T10:30:00Z",
+  "status": "ACTIVE"
+}
+----
+
+*Response Schema*:
+
+[cols="1,1,4"]
+|===
+| Field | Type | Description
+
+| `vivaConsumerId`
+| string
+| Salesforce VCI (customer identity)
+
+| `salesforceContactId`
+| string
+| Salesforce Contact record ID
+
+| `walletId`
+| string
+| EagleEye wallet identifier
+
+| `membershipTier`
+| string
+| Customer's loyalty tier
+
+| `rewardPreference`
+| string
+| Customer's current reward preference
+
+| `createdAt`
+| string (ISO 8601)
+| Profile creation timestamp
+
+| `status`
+| string
+| Enum: `ACTIVE` \| `SUSPENDED` \| `CLOSED`
+|===
+
+*Error Responses*:
+
+[cols="1,2,3"]
+|===
+| Status | Error Code | Description
+
+| 401
+| `UNAUTHORIZED`
+| Authentication failed
+
+| 404
+| `CUSTOMER_NOT_FOUND`
+| Customer profile does not exist for this VCI
+|===
+
+*Performance Requirements*:
+
+* *Latency*: p95 < 200ms
+* *Availability*: 99.9% uptime
+* *Cache Strategy*: Response can be cached for 5 minutes
+
+*Usage Examples*:
+
+* Transaction adjudication: `GET /api/v1/profile/customers/{vivaConsumerId}/reward-preference`
+* Customer lookup: `GET /api/v1/profile/customers?memberId={otrMemberId}`
+* Profile details retrieval: `GET /api/v1/profile/customers/{vivaConsumerId}`
+
+=== Domain Events
+
+*AsyncAPI Specification*: `Specifications/AsyncAPI/otr-event-bus-v1.yaml`
+
+*Event Standard*: CloudEvents 1.0 (https://cloudevents.io/)
+
+*Architecture Pattern*: Open Host Service + Published Language
+
+All domain events follow the CloudEvents 1.0 specification and are defined with JSON Schema validation. Event schemas are maintained as separate JSON Schema files to ensure consistency and enable tooling integration (validation, code generation, documentation).
+
+==== Event Catalogue
+
+[cols="1,1,1,1,3"]
+|===
+| Event | Channel | Source | JSON Schema | Description
+
+| `Partnerlinked`
+| `profile.events`
+| `/profile-service`
+| xref:../specifications/JSON%2520Schemas/Partnerlinked.event.schema.json[Partnerlinked.event.schema.json]
+| Customer successfully linked coalition partner account (Flybuys, Shell Card)
+
+| `PartnerUnlinked`
+| `profile.events`
+| `/profile-service`
+| xref:../specifications/JSON%2520Schemas/PartnerUnlinked.event.schema.json[PartnerUnlinked.event.schema.json]
+| Customer unlinked coalition partner account
+
+| `PartnerLinkFailed`
+| `profile.events`
+| `/profile-service`
+| xref:../specifications/JSON%2520Schemas/PartnerLinkFailed.event.schema.json[PartnerLinkFailed.event.schema.json]
+| Partner linking attempt failed (OAuth error, invalid credentials)
+
+| `RewardPreferenceChanged`
+| `profile.events`
+| `/profile-service`
+| xref:../specifications/JSON%2520Schemas/RewardPreferenceChanged.event.schema.json[RewardPreferenceChanged.event.schema.json]
+| Customer changed reward preference (Flybuys points ↔ OTR fuel discount)
+
+| `CustomerEnrolled`
+| `loyalty.events`
+| `/loyalty-service`
+| xref:../specifications/JSON%2520Schemas/CustomerEnrolled.event.schema.json[CustomerEnrolled.event.schema.json]
+| Customer enrolled in OTR loyalty program (EagleEye wallet created)
+
+| `TransactionAdjudicated`
+| `loyalty.events`
+| `/loyalty-service`
+| xref:../specifications/JSON%2520Schemas/TransactionAdjudicated.event.schema.json[TransactionAdjudicated.event.schema.json]
+| Transaction adjudicated, rewards calculated and granted
+
+| `PointsEarned`
+| `loyalty.events`
+| `/loyalty-service`
+| xref:../specifications/JSON%2520Schemas/PointsEarned.event.schema.json[PointsEarned.event.schema.json]
+| Customer earned Flybuys points on transaction
+
+| `FuelDiscountApplied`
+| `loyalty.events`
+| `/loyalty-service`
+| xref:../specifications/JSON%2520Schemas/FuelDiscountApplied.event.schema.json[FuelDiscountApplied.event.schema.json]
+| Customer received OTR fuel discount on transaction
+
+| `RewardTransactionFailed`
+| `loyalty.events`
+| `/loyalty-service`
+| xref:../specifications/JSON%2520Schemas/RewardTransactionFailed.event.schema.json[RewardTransactionFailed.event.schema.json]
+| Transaction adjudication failed (system error, API timeout)
+|===
+
+==== Event Consumers
+
+[cols="1,2,3"]
+|===
+| Bounded Context | Subscribed Events | Responsibility
+
+| *Loyalty Service*
+| `Partnerlinked`, `RewardPreferenceChanged`
+| Updates adjudication rules based on partner linking and preference changes
+
+| *Engagement Service*
+| `Partnerlinked`, `PartnerLinkFailed`, `RewardPreferenceChanged`, `CustomerEnrolled`, `TransactionAdjudicated`, `PointsEarned`, `FuelDiscountApplied`
+| Sends customer notifications (linking confirmation, points earned, welcome messages)
+
+| *Recommendation Service*
+| `Partnerlinked`, `RewardPreferenceChanged`, `CustomerEnrolled`
+| Updates personalization engine based on customer loyalty profile changes
+
+| *Analytics Service*
+| `TransactionAdjudicated`, `PointsEarned`, `FuelDiscountApplied`
+| Tracks reward transactions for business intelligence and reporting
+|===
+
+==== Event Delivery Guarantees
+
+*Delivery Semantics*: At-least-once delivery (Event Bus guarantees)
+
+*Retry Policy*:
+
+* Initial retry: Immediate
+* Subsequent retries: Exponential backoff (2s, 4s, 8s, 16s, 32s)
+* Maximum retries: 5 attempts
+* Dead Letter Queue: After 5 failed attempts, events routed to DLQ for manual investigation
+
+*Idempotency*: All event consumers must implement idempotent processing (use `id` field for deduplication)
+
+*Ordering*: Events within the same `vivaConsumerId` partition maintain order; cross-partition ordering not guaranteed
+
+=== Correlation ID Propagation Specification
+
+All service-to-service communication and domain events must propagate correlation IDs to enable distributed tracing and request correlation across the Flybuys Integration architecture.
+
+==== Standard
+
+*W3C Trace Context* (https://www.w3.org/TR/trace-context/)
+
+==== HTTP Propagation
+
+*Headers*:
+
+* `traceparent`: Required trace context (format: `\{version}-{trace-id}-{parent-id}-{trace-flags}`)
+* `tracestate`: Optional vendor-specific trace data
+
+*Generation Point*: API Gateway (or Mobile Application if request originates outside API Gateway)
+
+*Example*:
+
+[source,http]
+----
+POST /api/v1/loyalty/credentials/resolve HTTP/1.1
+Host: api.otr.com.au
+traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
+tracestate: otr=t61rcWkgMzE
+Content-Type: application/json
+----
+
+*Trace ID Format*:
+
+* `version`: `00` (current W3C version)
+* `trace-id`: 32 hex characters (128-bit globally unique identifier)
+* `parent-id`: 16 hex characters (64-bit span identifier)
+* `trace-flags`: 2 hex characters (sampling decision: `01` = sampled, `00` = not sampled)
+
+*Propagation Rules*:
+
+. *API Gateway → Service*: Generate `traceparent` if not present, forward if present
+. *Service → Service*: Preserve `trace-id`, generate new `parent-id` for span
+. *Service → External API*: Propagate `traceparent` header (Flybuys, EagleEye, Salesforce)
+
+==== Event Propagation
+
+*CloudEvents Extension*: All domain events MUST include `traceparent` as CloudEvents extension attribute
+
+*Example*:
+
+[source,json]
+----
+{
+  "specversion": "1.0",
+  "type": "com.otr.profile.Partnerlinked",
+  "source": "/profile-service",
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "time": "2025-12-09T14:30:00Z",
+  "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+  "datacontenttype": "application/json",
+  "data": {
+    "vivaConsumerId": "vci_xyz789abc",
+    "partner": "FLYBUYS"
+  }
+}
+----
+
+*Event Consumer Propagation*: Consumers MUST extract `traceparent` from event and propagate to downstream calls
+
+*Example Flow*:
+
+. POS calls `POST /api/v1/loyalty/credentials/resolve` with `traceparent: 00-\{trace-id}-{span-1}-01`
+. LoyaltyService calls ProfileService `GET /api/v1/profile/partner-links` with `traceparent: 00-\{trace-id}-{span-2}-01`
+. ProfileService publishes `Partnerlinked` event with `traceparent: 00-\{trace-id}-{span-3}-01`
+. All requests share same `trace-id` (`4bf92f3577b34da6a3ce929d0e0e4736`)
+
+==== Structured Logging
+
+All log entries MUST include correlation context:
+
+*Log Format* (JSON structured logging via Serilog):
+
+[source,json]
+----
+{
+  "timestamp": "2025-12-09T14:30:00.123Z",
+  "level": "Information",
+  "message": "Credential resolution completed",
+  "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+  "spanId": "00f067aa0ba902b7",
+  "service": "loyalty-service",
+  "vivaConsumerId": "vci_xyz789abc",
+  "operation": "ResolveCredential"
+}
+----
+
+*Required Fields*:
+
+* `traceId`: W3C trace-id (32 hex characters)
+* `spanId`: W3C parent-id (16 hex characters)
+* `service`: Service name (profile-service, loyalty-service, etc.)
+
+*Query Example*: Find all logs for a specific request
+
+----
+traceId = "4bf92f3577b34da6a3ce929d0e0e4736"
+----
+
+==== Trace Visualization
+
+*Tool*: <<SBB-009 Application Monitoring,Application Monitoring>> platform (DEC-007) must support W3C Trace Context
+
+*Expected Trace View*:
+
+----
+POS Transaction (trace-id: 4bf92f3577b34da6a3ce929d0e0e4736)
+├─ API Gateway [50ms]
+├─ LoyaltyService.ResolveCredential [280ms]
+│  ├─ ProfileService.GetPartnerLink [120ms]
+│  │  └─ Cosmos DB Query [80ms]
+│  └─ Redis Cache Lookup [15ms]
+└─ API Gateway Response [20ms]
+Total: 350ms
+----
+
+==== Implementation Notes
+
+*Libraries*:
+
+* .NET: `System.Diagnostics.Activity` (built-in W3C Trace Context support)
+* OpenTelemetry SDK: Auto-instrumentation for HTTP and event propagation
+
+*Sampling Strategy*:
+
+* Production: 10% sampling (`trace-flags: 01` for 1 in 10 requests)
+* UAT: 100% sampling (all requests traced)
+* Error traces: Always sampled (override sampling decision on errors)
+
+*Privacy*: `traceparent` contains no PII - safe to log and transmit
+
+=== Data Formats
+
+==== Flybuys Batch File Format (CSV)
+
+Flybuys Transaction File Format v3.2 (January 2025) - external specification
+
+===== Format
+
+[source,csv]
+----
+MEMBER_ID,TRANSACTION_DATE,TRANSACTION_TIME,STORE_CODE,TRANSACTION_ID,BASE_POINTS,BONUS_POINTS,TOTAL_AMOUNT,FUEL_LITRES
+123456789012,2025-12-09,14:30:00,OTR001,TXN123456,100,50,75.50,45.2
+123456789012,2025-12-09,15:45:00,OTR002,TXN123457,200,0,120.00,0
+----
+
+===== Field Specifications
+
+[cols="1,1,1,1,3"]
+|===
+| Field | Type | Length | Format | Validation
+
+| MEMBER_ID
+| String
+| 12
+| Numeric
+| Must match Flybuys member pattern (12 digits)
+
+| TRANSACTION_DATE
+| Date
+| 10
+| YYYY-MM-DD
+| Not future-dated
+
+| TRANSACTION_TIME
+| Time
+| 8
+| HH:MM:SS
+| 24-hour format
+
+| STORE_CODE
+| String
+| 10
+| Alphanumeric
+| Must be registered OTR store (OTR001-OTR999)
+
+| TRANSACTION_ID
+| String
+| 50
+| Alphanumeric
+| Unique per file (D365 Commerce transaction ID)
+
+| BASE_POINTS
+| Integer
+| 10
+| Numeric
+| Non-negative
+
+| BONUS_POINTS
+| Integer
+| 10
+| Numeric
+| Non-negative
+
+| TOTAL_AMOUNT
+| Decimal
+| 10,2
+| 99999999.99
+| Non-negative (AUD)
+
+| FUEL_LITRES
+| Decimal
+| 10,2
+| 99999999.99
+| Optional (0 for non-fuel transactions)
+|===
+
+===== File Requirements
+
+* Encoding: UTF-8 with BOM
+* Line ending: CRLF (`\r\n`)
+* Header row: Required (field names as shown above)
+* Max file size: 200MB (approx. 100,000 transactions)
+* Submission deadline: 02:00 UTC daily (Flybuys SLA)
+
+===== PGP Encryption Specifications
+
+* Algorithm: RSA 2048-bit + AES-256
+* Flybuys public key ID: `0xABCD1234` (expires 2026-12-31)
+* Compression: ZIP (level 6)
+* ASCII armor: Yes (`.pgp` extension)
+
+=== Interaction Flows
+
+This section provides sequence diagrams for critical multi-service interactions across the Flybuys Integration architecture.
+
+==== OAuth linking Flow (AS-2 linking)
+
+Customer links their Flybuys account via OAuth 2.0 Authorization Code Flow with PKCE from the Mobile Application.
+
+[mermaid]
+----
+sequenceDiagram
+    actor Customer
+    participant Mobile as Mobile App
+    participant Gateway as API Gateway
+    participant Profile as ProfileService
+    participant OAuth as OAuth Service
+    participant Flybuys as Flybuys OAuth
+    participant EventBus as Event Bus
+    participant Loyalty as LoyaltyService
+
+    Customer->>Mobile: Tap "link Flybuys Account"
+    Mobile->>Mobile: Generate PKCE code_verifier & code_challenge
+    Mobile->>Gateway: GET /api/v1/profile/oauth/authorize?partner=FLYBUYS
+    Gateway->>Profile: Forward request
+    Profile->>OAuth: InitiateOAuthFlow(partner=FLYBUYS, code_challenge)
+    OAuth->>OAuth: Store code_challenge + state
+    OAuth-->>Profile: OAuth URL + state
+    Profile-->>Gateway: Redirect URL
+    Gateway-->>Mobile: 302 Redirect to Flybuys OAuth
+
+    Mobile->>Flybuys: OAuth Authorization Request
+    Flybuys->>Customer: Login & Consent Screen
+    Customer->>Flybuys: Approve consent
+    Flybuys-->>Mobile: 302 Redirect with auth_code
+
+    Mobile->>Gateway: POST /api/v1/profile/oauth/callback<br/>(auth_code, code_verifier)
+    Gateway->>Profile: Forward callback
+    Profile->>OAuth: ValidateCallback(auth_code, code_verifier)
+    OAuth->>OAuth: Verify code_challenge == hash(code_verifier)
+    OAuth->>Flybuys: POST /oauth/token<br/>(auth_code, code_verifier)
+    Flybuys-->>OAuth: access_token + refresh_token
+    OAuth->>OAuth: Encrypt tokens (AES-256)
+    OAuth->>OAuth: Store in Key Vault
+    OAuth-->>Profile: Token reference + member_id
+
+    Profile->>Profile: Create PartnerLink aggregate<br/>(vivaConsumerId, partner=FLYBUYS, externalMemberId)
+    Profile->>Profile: Set rewardPreference = FLYBUYS_POINTS
+    Profile->>EventBus: Publish Partnerlinked event
+    Profile-->>Gateway: 200 OK (linking success)
+    Gateway-->>Mobile: linking confirmation
+    Mobile->>Customer: "Flybuys account linked!"
+
+    EventBus->>Loyalty: Consume Partnerlinked event
+    Loyalty->>Loyalty: Update adjudication rules for customer
+
+    Note over Customer,Loyalty: Error Scenarios
+
+    alt OAuth Authorization Denied
+        Customer->>Flybuys: Deny consent
+        Flybuys-->>Mobile: 302 Redirect with error=access_denied
+        Mobile->>Gateway: POST /api/v1/profile/oauth/callback?error=access_denied
+        Gateway->>Profile: Forward error
+        Profile-->>Gateway: 400 Bad Request (user cancelled)
+        Gateway-->>Mobile: linking cancelled
+        Mobile->>Customer: "linking cancelled"
+    end
+
+    alt Flybuys API Failure
+        OAuth->>Flybuys: POST /oauth/token
+        Flybuys-->>OAuth: 500 Internal Server Error
+        OAuth-->>Profile: OAuth token exchange failed
+        Profile-->>Gateway: 502 Bad Gateway
+        Gateway-->>Mobile: Partner temporarily unavailable
+        Mobile->>Customer: "Flybuys unavailable, try again later"
+    end
+----
+
+*Key Points*:
+
+* *PKCE*: Code verifier/challenge prevents authorization code interception
+* *Token Storage*: OAuth tokens encrypted in Key Vault, ProfileService stores only reference
+* *Event Publishing*: Partnerlinked event triggers LoyaltyService adjudication rule updates
+* *Error Handling*: User cancellation vs. API failure handled differently
+
+==== Just-In-Time Profile Creation Flow (AS-1 Foundation)
+
+This flow shows how customer profiles are created on-demand during first login using the xref:../ubiquitous_language.adoc#just-in-time-integration[Just-In-Time Integration] pattern. The Mobile App calls `POST /api/v1/profile/customers` to create the profile and provision an EagleEye wallet atomically.
+
+[mermaid]
+----
+sequenceDiagram
+    actor Customer
+    participant Mobile as Mobile App
+    participant Gateway as API Gateway
+    participant Profile as ProfileService
+    participant ProfileDB as Profile DB
+    participant Salesforce as Salesforce
+    participant EagleEye as EagleEye ACL
+    participant EventBus as Event Bus
+
+    Customer->>Mobile: Login (first time)
+    Mobile->>Gateway: Authenticate with CIAM
+    Gateway-->>Mobile: JWT token + salesforceContactId
+
+    Mobile->>Gateway: GET /api/v1/profile/customers?salesforceContactId={id}
+    Gateway->>Profile: Forward request
+    Profile->>ProfileDB: Query by salesforceContactId
+    ProfileDB-->>Profile: Not Found
+    Profile-->>Gateway: 404 Not Found
+    Gateway-->>Mobile: 404 - Profile does not exist
+
+    Note over Mobile: Profile creation required
+
+    Mobile->>Gateway: POST /api/v1/profile/customers<br/>{salesforceContactId, vivaConsumerId, tier, preference}
+    Gateway->>Profile: Forward request
+    activate Profile
+
+    Profile->>ProfileDB: Check VCI uniqueness
+    ProfileDB-->>Profile: VCI available
+
+    Profile->>Salesforce: GET /contacts/{salesforceContactId}
+    Salesforce-->>Profile: Contact details
+
+    Profile->>EagleEye: POST /wallets<br/>{vivaConsumerId, tier}
+    EagleEye-->>Profile: {walletId}
+
+    Profile->>ProfileDB: Create Customer aggregate<br/>(VCI, walletId, Salesforce link)
+    ProfileDB-->>Profile: Customer created
+
+    Profile->>EventBus: Publish CustomerEnrolled event
+    EventBus-->>Profile: Event published
+
+    Profile-->>Gateway: 201 Created<br/>{vivaConsumerId, walletId, tier, status}
+    deactivate Profile
+    Gateway-->>Mobile: Profile created successfully
+
+    Mobile->>Customer: Login complete - proceed to app
+
+    Note over Customer,EventBus: Error Scenarios
+
+    alt VCI Already Exists
+        Profile->>ProfileDB: Check VCI uniqueness
+        ProfileDB-->>Profile: VCI exists
+        Profile-->>Gateway: 409 Conflict (profile already exists)
+        Gateway-->>Mobile: Profile exists - use existing
+        Mobile->>Mobile: Proceed with existing profile
+    end
+
+    alt Salesforce Contact Not Found
+        Profile->>Salesforce: GET /contacts/{salesforceContactId}
+        Salesforce-->>Profile: 404 Not Found
+        Profile-->>Gateway: 404 Salesforce Contact not found
+        Gateway-->>Mobile: Invalid Contact ID
+        Mobile->>Customer: "Unable to create profile"
+    end
+
+    alt EagleEye Wallet Creation Failed
+        Profile->>EagleEye: POST /wallets
+        EagleEye-->>Profile: 500 Internal Server Error
+        Profile->>Profile: Rollback transaction
+        Profile-->>Gateway: 503 EagleEye unavailable
+        Gateway-->>Mobile: Wallet creation failed
+        Mobile->>Customer: "Unable to create profile, try again"
+    end
+----
+
+*Key Points*:
+
+* *Just-In-Time Integration*: Profile created on first login, not during registration
+* *Atomic Transaction*: Profile creation and wallet provisioning are atomic - both succeed or both fail
+* *Idempotent Operation*: Returns `409 Conflict` if profile already exists (safe to retry)
+* *Event Publishing*: `CustomerEnrolled` event triggers downstream systems (EngagementService, etc.)
+* *Rollback on Failure*: If EagleEye wallet creation fails, profile creation is rolled back
+* *Performance Target*: p95 < 500ms (critical for login flow UX)
+
+==== POS Integration Flow (AS-3 Grants)
+
+xref:../bounded_context/interfaces/otr_pos.adoc[OTR POS] scans Loyalty Credential barcode to resolve customer identity before transaction.
+
+[mermaid]
+----
+sequenceDiagram
+    actor Customer
+    participant POS as D365 Commerce POS
+    participant POSACL as POS ACL Adapter<br/>(D365 → Loyalty Domain)
+    participant LoyaltyACL as Loyalty ACL Adapter
+    participant Profile as ProfileService
+    participant ProfileDB as Profile DB
+
+    Customer->>POS: Present barcode
+    POS->>POS: Scan barcode (D365 format)
+
+    Note over POS,ProfileDB: D365 → Loyalty Domain Translation
+
+    POS->>POSACL: GetLoyaltyCardData(barcode, storeId)
+    POSACL->>POSACL: Translate D365 concepts:<br/>LoyaltyCard → VivaConsumerId<br/>StoreCode → siteId<br/>TransactionId → sourceTransactionId
+    POSACL->>Loyalty: POST /api/v1/loyalty/credentials/resolve<br/>{barcode, siteId, sourceTransactionId}
+
+    alt OTR Credential (direct resolution)
+        Loyalty->>Loyalty: Parse OTR member ID from barcode
+        Loyalty->>Profile: GET /customers?memberId={otrMemberId}
+        Profile->>ProfileDB: Query by memberId
+        ProfileDB-->>Profile: Customer (VCI, rewardPreference)
+        Profile-->>Loyalty: Customer context
+    else Flybuys Credential (indirect via PartnerLink)
+        Loyalty->>Loyalty: Parse Flybuys member# from barcode
+        Loyalty->>Profile: GET /partner-links?partner=FLYBUYS&externalMemberId={flybuysNumber}
+        Profile->>ProfileDB: Query PartnerLink aggregate
+        ProfileDB-->>Profile: PartnerLink (VCI, rewardPreference)
+        Profile-->>Loyalty: Customer context
+    end
+
+    Loyalty-->>LoyaltyACL: 200 OK {vivaConsumerId, rewardPreference, walletId}
+
+    Note over POSACL,ProfileDB: Loyalty Domain → D365 Translation
+
+    LoyaltyACL->>LoyaltyACL: Translate Loyalty domain:<br/>vivaConsumerId → LoyaltyCardNumber<br/>rewardPreference → LoyaltyProgramId<br/>walletId → AccountId
+    LoyaltyACL-->>POSACL: LoyaltyResponse {CardNumber, ProgramId, AccountId}
+    POSACL-->>POS: D365 LoyaltyCardData object
+    POS->>Customer: Display: "Welcome back, Sarah!"
+
+    Note over Customer,ProfileDB: Error Scenarios
+
+    alt ProfileService Unavailable
+        Loyalty->>Profile: GET /customers (timeout)
+        Profile-->>Loyalty: 503 Service Unavailable
+        Loyalty-->>LoyaltyACL: 503 Service Unavailable
+        LoyaltyACL->>LoyaltyACL: Map to D365 error:<br/>503 → LoyaltyErrorCode.ServiceTemporarilyUnavailable
+        LoyaltyACL-->>POSACL: LoyaltyResponse {ErrorCode, Message}
+        POSACL-->>POS: D365 error object
+        POS->>Customer: "Loyalty temporarily unavailable, proceed without points"
+    end
+
+    alt Invalid Barcode Format
+        Loyalty->>Loyalty: Parse barcode (validation fails)
+        Loyalty-->>LoyaltyACL: 400 Bad Request (invalid barcode format)
+        LoyaltyACL->>LoyaltyACL: Map to D365 error:<br/>400 → LoyaltyErrorCode.InvalidCardNumber
+        LoyaltyACL-->>POSACL: LoyaltyResponse {ErrorCode}
+        POSACL-->>POS: D365 error object
+        POS->>Customer: "Barcode not recognized"
+    end
+
+    alt Credential Not Found
+        Loyalty->>Profile: GET /partner-links (no match)
+        Profile-->>Loyalty: 404 Not Found
+        Loyalty-->>LoyaltyACL: 404 Not Found (credential not linked)
+        LoyaltyACL->>LoyaltyACL: Map to D365 error:<br/>404 → LoyaltyErrorCode.CardNotFound
+        LoyaltyACL-->>POSACL: LoyaltyResponse {ErrorCode}
+        POSACL-->>POS: D365 error object
+        POS->>Customer: "Card not registered, visit counter"
+    end
+
+    alt Partner Not linked
+        Loyalty->>Profile: GET /partner-links?partner=FLYBUYS
+        Profile-->>Loyalty: 200 OK {linked: false}
+        Loyalty-->>LoyaltyACL: 200 OK {requireslinking: true}
+        LoyaltyACL->>LoyaltyACL: Map to D365 business rule:<br/>requireslinking → Prompt for enrollment
+        LoyaltyACL-->>POSACL: LoyaltyResponse {RequiresEnrollment}
+        POSACL-->>POS: D365 enrollment prompt
+        POS->>Customer: "link Flybuys in app for points"
+    end
+----
+
+*Key Points*:
+
+* *Bidirectional ACL*: POS ACL Adapter translates D365 Commerce → Loyalty domain; Loyalty ACL Adapter translates Loyalty domain → D365 Commerce
+* *Two Credential Types*: OTR (direct via memberId) vs Flybuys (indirect via PartnerLink aggregate)
+* *Domain Isolation*: D365 POS never sees Loyalty domain concepts (VivaConsumerId, PartnerLink, RewardPreference)
+* *Error Mapping*: Loyalty HTTP status codes and error types mapped to D365 LoyaltyErrorCode enum
+
+==== POS Transaction Adjudication Flow (AS-3 Grants)
+
+Customer presents Loyalty Credential at POS for transaction adjudication and reward determination.
+
+[mermaid]
+----
+sequenceDiagram
+    actor Customer
+    participant POS as OTR POS
+    participant Gateway as API Gateway
+    participant Loyalty as LoyaltyService
+    participant Profile as ProfileService
+    participant ProfileDB as Profile DB
+    participant EagleEye as EagleEye ACL
+    participant EagleEyeAPI as EagleEye API
+    participant EventBus as Event Bus
+
+    Customer->>POS: Present barcode (EAN-13)
+    POS->>POS: Scan barcode: "1234567890123"
+
+    Note over POS,Gateway: Credential Resolution Phase
+    POS->>Gateway: POST /api/v1/loyalty/credentials/resolve<br/>{barcode, storeId, transactionId}<br/>traceparent: 00-{trace-id}-{span-1}-01
+    Gateway->>Loyalty: Forward (add correlation ID)
+    Loyalty->>Loyalty: Parse EAN-13 barcode
+
+    alt OTR Credential (barcode encodes OTR member ID)
+        Loyalty->>Profile: GET /api/v1/profile/customers?memberId={otrMemberId}
+        Profile->>ProfileDB: Query by memberId
+        ProfileDB-->>Profile: Customer record (VCI, rewardPreference)
+        Profile-->>Loyalty: Customer context
+    else Flybuys Credential (barcode encodes Flybuys member number)
+        Loyalty->>Loyalty: Extract Flybuys member# from barcode
+        Loyalty->>Profile: GET /api/v1/profile/partner-links?<br/>partner=FLYBUYS&externalMemberId={flybuysNumber}
+        Profile->>ProfileDB: Query PartnerLink aggregate
+        ProfileDB-->>Profile: PartnerLink (VCI, rewardPreference)
+        Profile-->>Loyalty: Customer context
+    end
+
+    Loyalty-->>Gateway: 200 OK {vivaConsumerId, rewardPreference, walletId}
+    Gateway-->>POS: Credential resolved (280ms p95)
+    POS->>Customer: Display name: "Welcome back, Sarah!"
+
+    Note over Customer,EventBus: Transaction Adjudication Phase
+    Customer->>POS: Complete purchase ($75.50)
+    POS->>Gateway: POST /api/v1/loyalty/transactions/adjudicate<br/>{vivaConsumerId, transactionId, items[], total}
+    Gateway->>Loyalty: Forward request
+
+    Loyalty->>Profile: GET /api/v1/profile/customers/{vivaConsumerId}/reward-preference
+    Profile-->>Loyalty: rewardPreference = FLYBUYS_POINTS
+
+    alt Reward Preference = FLYBUYS_POINTS
+        Loyalty->>EagleEye: POST /transactions/validate<br/>(transaction details, walletId)
+        EagleEye->>EagleEyeAPI: Forward to EagleEye AIR
+        EagleEyeAPI-->>EagleEye: Provisional rewards (150 points)
+        EagleEye-->>Loyalty: Validation response
+        Loyalty->>Loyalty: Create RewardTransaction aggregate<br/>(vivaConsumerId, flybuysPoints=150, status=PENDING)
+        Loyalty-->>Gateway: 200 OK {provisionalRewards: 150 points}
+        Gateway-->>POS: Adjudication complete
+        POS->>Customer: "You'll earn 150 Flybuys points"
+    else Reward Preference = OTR_FUEL_DISCOUNT
+        Loyalty->>EagleEye: POST /transactions/validate<br/>(fuel discount campaign)
+        EagleEye->>EagleEyeAPI: Check fuel discount grants
+        EagleEyeAPI-->>EagleEye: 8c/L discount available
+        EagleEye-->>Loyalty: Validation response
+        Loyalty-->>Gateway: 200 OK {fuelDiscount: 8cpl}
+        Gateway-->>POS: Adjudication complete
+        POS->>Customer: "8c/L fuel discount applied"
+    end
+
+    Note over POS,EventBus: Post-Payment Finalization
+    POS->>POS: Payment captured
+    POS->>Gateway: POST /api/v1/loyalty/transactions/{txnId}/redeem
+    Gateway->>Loyalty: Finalize transaction
+    Loyalty->>EagleEye: POST /transactions/redeem<br/>(confirm rewards)
+    EagleEye->>EagleEyeAPI: Finalize in EagleEye
+    EagleEyeAPI-->>EagleEye: Confirmed
+    EagleEye-->>Loyalty: Redemption complete
+
+    Loyalty->>Loyalty: Update RewardTransaction<br/>(status=CONFIRMED, finalPoints=150)
+    Loyalty->>EventBus: Publish TransactionAdjudicated event
+    Loyalty-->>Gateway: 200 OK
+    Gateway-->>POS: Transaction finalized
+
+    Note over Customer,EventBus: Error Scenarios
+
+    alt ProfileService Unavailable
+        Loyalty->>Profile: GET /api/v1/profile/partner-links
+        Profile-->>Loyalty: 503 Service Unavailable
+        Loyalty->>Loyalty: Circuit breaker OPEN
+        Loyalty-->>Gateway: 503 Service Unavailable<br/>{fallback: "proceed without points"}
+        Gateway-->>POS: Degraded mode
+        POS->>Customer: "Points temporarily unavailable"
+        POS->>POS: Complete transaction without points
+    end
+
+    alt EagleEye API Timeout
+        Loyalty->>EagleEye: POST /transactions/validate
+        EagleEye->>EagleEyeAPI: Forward request
+        Note over EagleEyeAPI: Timeout after 3s
+        EagleEye-->>Loyalty: 504 Gateway Timeout
+        Loyalty->>Loyalty: Return cached default reward
+        Loyalty-->>Gateway: 200 OK {provisionalRewards: 100 points (default)}
+        Gateway-->>POS: Adjudication complete (degraded)
+        POS->>Customer: "You'll earn ~100 points (estimate)"
+    end
+----
+
+*Key Points*:
+
+* *Two-phase adjudication*: Validation (pre-payment) → Redemption (post-payment)
+* *Latency budget*: 500ms p95 for credential resolution (NFR-002)
+* *Graceful degradation*: Circuit breaker returns default rewards if EagleEye slow
+* *Trace propagation*: W3C traceparent header flows through all services
+
+==== Batch File Processing Flow (AS-3 Grants)
+
+Nightly batch job aggregates transactions and transmits to Flybuys via SFTP.
+
+[mermaid]
+----
+sequenceDiagram
+    participant Scheduler as Batch Scheduler<br/>(Azure Data Factory)
+    participant Loyalty as LoyaltyService<br/>(Batch Job)
+    participant LoyaltyDB as Loyalty DB
+    participant D365 as D365 Commerce<br/>(POS Transactions)
+    participant FileGen as CSV Generator
+    participant PGP as PGP Encryption
+    participant SFTP as SFTP Client
+    participant Flybuys as Flybuys SFTP Server
+    participant Monitor as Monitoring
+
+    Note over Scheduler,Monitor: Daily Batch Window: 01:00 - 02:00 UTC
+
+    Scheduler->>Scheduler: Timer trigger: 01:00 UTC
+    Scheduler->>Loyalty: Start batch job<br/>(jobId, runDate=yesterday)
+
+    Note over Loyalty,D365: Phase 1: Transaction Aggregation (01:00 - 01:20)
+    Loyalty->>LoyaltyDB: Query RewardTransactions<br/>(status=CONFIRMED, date=yesterday)
+    LoyaltyDB-->>Loyalty: 50,000 transactions
+
+    Loyalty->>D365: Query transactions for reconciliation<br/>(transactionIds[])
+    D365-->>Loyalty: Transaction details
+
+    Loyalty->>Loyalty: Aggregate by Flybuys member<br/>(group by externalMemberId)
+    Loyalty->>Loyalty: Calculate BASE_POINTS + BONUS_POINTS
+    Loyalty->>Monitor: Log progress: "Aggregated 50k transactions"
+
+    Note over FileGen,PGP: Phase 2: File Generation (01:20 - 01:35)
+    Loyalty->>FileGen: Generate CSV file<br/>(transactions[], filename=OTR_TRANSACTIONS_20251209_010000.csv)
+    FileGen->>FileGen: Write header row
+    FileGen->>FileGen: Write 50,000 transaction rows
+    FileGen->>FileGen: Validate file format (UTF-8 BOM, CRLF)
+    FileGen-->>Loyalty: CSV file (25MB)
+
+    Loyalty->>PGP: Encrypt file<br/>(publicKey=Flybuys_RSA_2048, compression=ZIP)
+    PGP->>PGP: Compress CSV (ZIP level 6): 25MB → 8MB
+    PGP->>PGP: Encrypt with RSA+AES-256
+    PGP->>PGP: ASCII armor (.pgp extension)
+    PGP-->>Loyalty: Encrypted file (9MB)
+    Loyalty->>Monitor: Log progress: "File generated, size=9MB"
+
+    Note over SFTP,Flybuys: Phase 3: SFTP Transmission (01:35 - 01:50)
+    Loyalty->>SFTP: Transmit file<br/>(OTR_TRANSACTIONS_20251209_010000.csv.pgp)
+    SFTP->>Flybuys: SSH connect + authenticate
+    Flybuys-->>SFTP: Connection established
+    SFTP->>Flybuys: PUT file (9MB, ~5 min upload)
+    Flybuys-->>SFTP: Transfer complete
+    SFTP->>Flybuys: Verify checksum (MD5)
+    Flybuys-->>SFTP: Checksum OK
+    SFTP-->>Loyalty: Upload successful
+
+    Loyalty->>LoyaltyDB: Update RewardTransactions<br/>(status=POSTED_TO_FLYBUYS, postedAt=01:45 UTC)
+    Loyalty->>Monitor: Log success: "Batch file transmitted, size=9MB, records=50k"
+
+    Note over Flybuys,Monitor: Phase 4: Acknowledgement (01:50 - 02:00)
+    Loyalty->>Loyalty: Wait 5 minutes for ACK file
+    Loyalty->>SFTP: Poll for acknowledgement file<br/>(OTR_TRANSACTIONS_20251209_010000.ack)
+    SFTP->>Flybuys: LIST /outbound/*.ack
+
+    alt Acknowledgement File Present
+        Flybuys-->>SFTP: ACK file found
+        SFTP->>Flybuys: GET acknowledgement file
+        Flybuys-->>SFTP: ACK file content<br/>(status=SUCCESS, records=50000)
+        SFTP-->>Loyalty: ACK file downloaded
+        Loyalty->>Loyalty: Parse ACK file
+        Loyalty->>LoyaltyDB: Update batch job status=ACKNOWLEDGED
+        Loyalty->>Monitor: Log success: "Batch acknowledged by Flybuys"
+        Loyalty-->>Scheduler: Job complete (duration=60 min)
+    else No Acknowledgement File
+        SFTP-->>Loyalty: ACK file not found
+        Loyalty->>Loyalty: Wait 2 minutes, retry poll
+        Loyalty->>SFTP: Poll again
+
+        alt ACK Found on Retry
+            SFTP-->>Loyalty: ACK file found (retry successful)
+            Loyalty->>Monitor: Log warning: "ACK delayed but received"
+            Loyalty-->>Scheduler: Job complete (duration=62 min)
+        else ACK Still Missing
+            Loyalty->>Monitor: Alert CRITICAL: "Batch ACK missing after 10 min"
+            Loyalty->>LoyaltyDB: Update batch job status=ACK_PENDING
+            Loyalty-->>Scheduler: Job partial success (manual follow-up required)
+        end
+    end
+
+    Note over Scheduler,Monitor: Error Scenarios
+
+    alt SFTP Upload Failure
+        SFTP->>Flybuys: PUT file
+        Flybuys-->>SFTP: 500 Internal Server Error
+        SFTP-->>Loyalty: Upload failed
+        Loyalty->>Loyalty: Exponential backoff retry (2min, 4min, 8min)
+        Loyalty->>SFTP: Retry upload (attempt 2/3)
+
+        alt Retry Successful
+            SFTP->>Flybuys: PUT file (retry)
+            Flybuys-->>SFTP: Transfer complete
+            SFTP-->>Loyalty: Upload successful
+            Loyalty->>Monitor: Log warning: "Upload succeeded on retry 2"
+            Loyalty-->>Scheduler: Job complete
+        else All Retries Failed
+            Loyalty->>Monitor: Alert CRITICAL: "Batch upload failed after 3 attempts"
+            Loyalty->>LoyaltyDB: Update batch job status=FAILED
+            Loyalty-->>Scheduler: Job failed (manual intervention required)
+        end
+    end
+
+    alt Batch Window Deadline Exceeded
+        Note over Loyalty: Current time: 01:58 UTC
+        Loyalty->>Loyalty: Check time remaining: 2 minutes
+        Loyalty->>Monitor: Alert WARNING: "Approaching 02:00 UTC deadline"
+        Loyalty->>SFTP: Attempt final upload (priority)
+
+        alt Upload Completes Before 02:00
+            SFTP-->>Loyalty: Upload complete 01:59 UTC
+            Loyalty->>Monitor: Log warning: "Deadline met with 1 min margin"
+            Loyalty-->>Scheduler: Job complete (late but within SLA)
+        else Upload Exceeds 02:00 UTC
+            Note over Loyalty: Current time: 02:02 UTC
+            SFTP-->>Loyalty: Upload complete 02:02 UTC
+            Loyalty->>Monitor: Alert CRITICAL: "SLA breach - uploaded after 02:00 UTC deadline"
+            Loyalty->>LoyaltyDB: Update batch job status=LATE
+            Loyalty-->>Scheduler: Job complete (SLA breach, escalate to Flybuys)
+        end
+    end
+----
+
+*Key Points*:
+
+* *Batch window*: 01:00-02:00 UTC (1-hour window for 50k-100k transactions)
+* *Four phases*: Aggregation (20 min) → Generation (15 min) → Upload (15 min) → ACK (10 min)
+* *Retry strategy*: Exponential backoff for SFTP failures (2min, 4min, 8min)
+* *SLA deadline*: 02:00 UTC submission deadline enforced by Flybuys
+* *Monitoring*: Critical alerts for ACK missing, upload failures, deadline breaches
+
+<<<
+== Transition Architecture
+
+This section defines the phased approach to migrate from current state to target architecture, showing intermediate architecture states and technical dependencies.
+
+. *No Big-Bang Migration*: Incremental rollout using Strangler Fig pattern (reference ADR-005 in Architecture Definition)
+. *Zero Downtime*: New bounded contexts operate in parallel with legacy OTR App API during transition
+. *Feature Flag Control*: All new capabilities behind feature flags (see xref:../architecture_definitions/flybuys_integration.adoc#Feature%2520Flag%2520Register[Feature Flag Register] in Architecture Definition)
+. *Data Coexistence*: Dual-write to legacy and new systems during AS-1 Foundation phase (30 days)
+. *Rollback Capability*: Each phase independently reversible without data loss
+
+=== Transition Phase Matrix
+
+Progressive rollout of feature flags across architecture states (AS-0 → AS-1 → AS-2 → AS-3 → AS-4).
+
+*Flag Definitions*: See xref:../architecture_definitions/flybuys_integration.adoc#Feature%2520Flag%2520Register[Feature Flag Register] in Architecture Definition for complete flag purposes, ownership, and strategic rationale.
+
+[cols="3,1,1,1,1,1"]
+|===
+| Flag Name | AS-0 Current | AS-1 Foundation | AS-2 linking | AS-3 Grants | AS-4 Target
+
+| +OTR.Loyalty.Enabled+
+| OFF
+| ON
+| ON
+| ON
+| ON
+
+| +OTR.Loyalty.PartnerLink.Flybuys+
+| OFF
+| OFF
+| ON
+| ON
+| ON
+
+| +OTR.Loyalty.RewardPreferenceSelection+
+| OFF
+| OFF
+| ON
+| ON
+| ON
+
+| +OTR.Loyalty.TransactionAdjudication+
+| OFF
+| OFF
+| OFF
+| ON
+| ON
+
+| +OTR.Loyalty.PointsEarn.Flybuys+
+| OFF
+| OFF
+| OFF
+| ON
+| ON
+
+| +OTR.Loyalty.FlybuysBatchPosting+
+| OFF
+| OFF
+| OFF
+| ON
+| ON
+|===
+
+*Dependencies*:
+
+* +OTR.Loyalty.PartnerLink.Flybuys+ requires +OTR.Loyalty.Enabled+ = ON
+* +OTR.Loyalty.TransactionAdjudication+ requires +OTR.Loyalty.Enabled+ = ON
+* +OTR.Loyalty.PointsEarn.Flybuys+ requires +OTR.Loyalty.TransactionAdjudication+ = ON
+
+=== Rollback Strategy
+
+Feature flags enable rapid rollback without code deployment. Each architecture state can be rolled back by disabling the corresponding flags:
+
+==== AS-1 Foundation Rollback
+
+*Trigger*: VCI migration failures, EagleEye wallet creation issues, or infrastructure instability
+
+*Actions*:
+
+. Set +OTR.Loyalty.Enabled+ = OFF (disables all loyalty features)
+. Delete customer VCI records created during pilot (data cleanup)
+. Validate legacy OTR App API is functioning normally
+
+*Impact*: Mobile app reverts to legacy loyalty features (no EagleEye integration)
+
+==== AS-2 linking Rollback
+
+*Trigger*: OAuth flow failures (>5% failure rate), Flybuys API unavailability, or customer support tickets >50/day
+
+*Actions*:
+
+. Set +OTR.Loyalty.PartnerLink.Flybuys+ = OFF (disables Flybuys linking UI)
+. Set +OTR.Loyalty.RewardPreferenceSelection+ = OFF (hides reward preference selection)
+. Communicate to pilot users via push notification and email
+
+*Impact*: Customers cannot link Flybuys accounts, balance queries disabled
+
+==== AS-3 Grants Rollback
+
+*Trigger*: POS integration failures, batch file acknowledgement rate <98%, or transaction adjudication errors
+
+*Actions*:
+
+. Set +OTR.Loyalty.TransactionAdjudication+ = OFF (reverts to legacy POS integration)
+. Set +OTR.Loyalty.PointsEarn.Flybuys+ = OFF (stops points earning)
+. Set +OTR.Loyalty.FlybuysBatchPosting+ = OFF (stops daily batch transmission)
+. Re-enable Reddy Express legacy Flybuys integration (barcode pattern matching)
+
+*Impact*: POS reverts to legacy Flybuys integration, transactions in-flight may need manual reconciliation
+
+==== Partial Rollback (Batch Posting Issues Only)
+
+*Trigger*: Flybuys batch file acknowledgement failures, SFTP transmission errors
+
+*Actions*:
+
+. Set +OTR.Loyalty.FlybuysBatchPosting+ = OFF (stops batch transmission)
+. Investigate SFTP connectivity, PGP encryption, and acknowledgement file parsing
+. Keep +OTR.Loyalty.TransactionAdjudication+ = ON (POS integration continues)
+
+*Impact*: Points not posted to Flybuys immediately, requires manual batch file regeneration and transmission
+
+=== AS-0 Current State
+
+Pre-initiative architecture (reference Architecture Definition §2 Current State)
+
+==== Active Components
+
+* OTR App API (AWS Lambda, DynamoDB)
+* Reddy Express legacy loyalty (SQL Server, POS barcode matching) - Flybuys-only
+* No unified customer identity (OTR users and Reddy Express customers separate)
+* No partner integrations beyond basic xref:../ubiquitous_language.adoc#flybuys-cardholder-number[Flybuys Card] scanning
+
+==== Technical Debt
+
+* Fragmented customer identity (OTR vs Reddy Express silos)
+* No event-driven architecture (synchronous-only integrations)
+* Tight POS coupling (direct Flybuys barcode pattern matching at OTR+ stores)
+* No OAuth infrastructure (no secure third-party account linking)
+
+
+=== AS-1 Foundation
+
+Establish xref:../bounded_context/profile.adoc[Profile Service], xref:../bounded_context/loyalty.adoc[Loyalty Service], xref:../bounded_context/interfaces/otr_app_api.adoc[Event Bus] without customer-facing features
+
+==== New SBBS
+
+[cols="1,3"]
+|===
+| SBB | Description
+
+| <<sbb-001-profile-service-api,SBB-001>>
+| xref:../bounded_context/profile.adoc[Profile Service] API
+
+| <<sbb-002-profile-service-database,SBB-002>>
+| xref:../bounded_context/profile.adoc[Profile Service] Database
+
+| <<sbb-003-loyalty-service-api,SBB-003>>
+| xref:../bounded_context/loyalty.adoc[Loyalty Service] API
+
+| <<sbb-004-loyalty-service-database,SBB-004>>
+| xref:../bounded_context/loyalty.adoc[Loyalty Service] Database
+
+| <<sbb-006-domain-event-bus,SBB-006>>
+| Domain xref:../bounded_context/interfaces/otr_app_api.adoc[Event Bus] (Event Grid)
+
+| SBB-008
+| Eagle Eye[Eagle Eye] Integration Adaptor
+
+| <<sbb-012-application-monitoring,SBB-012>>
+| Application Monitoring (App Insights)
+
+| <<sbb-013-api-gateway,SBB-013>>
+| API Gateway (APIM)
+|===
+
+==== Implementation Approach
+
+Enable xref:../ubiquitous_language.adoc#customer[Customer] uplift with a xref:../ubiquitous_language.adoc#dark-launch[Dark Launch] rollout strategy. New integration runs in parallel with existing system, validating technical implementation without customer impact
+
+[cols="2,5"]
+|===
+| Activity | Description
+
+| Customer Profile Creation
+| xref:../ubiquitous_language.adoc#just-in-time-integration[Just-In-Time Integration] via `POST /api/v1/profile/customers` endpoint - xref:../ubiquitous_language.adoc#otr-app[Mobile Application] calls this during login if xref:../ubiquitous_language.adoc#customer[Customer] has no xref:../ubiquitous_language.adoc#viva-consumer-id-vci[VCI], creating profile and linking to Salesforce
+
+| Wallet Provisioning
+| Orchestrated by profile creation endpoint - `POST /api/v1/profile/customers` calls EagleEye ACL to provision xref:../ubiquitous_language.adoc#wallet[EagleEye Wallet] atomically with profile creation
+
+| Dual-Write Pattern
+| xref:../ubiquitous_language.adoc#otr-app[Mobile Application] sends requests to both legacy OTR App API and new xref:../bounded_context/profile.adoc[Profile Service] / xref:../bounded_context/loyalty.adoc[Loyalty Service], while legacy remains authoritative until Loyalty Value Chain[Loyalty Value Chain]
+|===
+
+===== Architecture Diagram
+
+[mermaid]
+----
+graph TD
+    MobileApp[Mobile App]
+    LegacyAPI[Legacy API<br/>Primary]
+    Services[Profile Service<br/>Loyalty Service<br/>pilot only, dual-write]
+    EventBus[Event Bus]
+
+    MobileApp --> LegacyAPI
+    MobileApp --> Services
+    Services --> EventBus
+----
+
+===== Rollout Strategy
+
+*Note*: See xref:../architecture_definitions/flybuys_integration.adoc#Feature%2520Flag%2520Register[Feature Flag Register] in Architecture Definition for complete feature catalogue, and <<transition-phase-matrix,Transition Phase Matrix>> above for rollout schedule.
+
+[cols="3,1"]
+|===
+| Flag | Status
+
+| +OTR.Loyalty.Enabled+
+| On
+
+| +OTR.Loyalty.TransactionAdjudication+
+| Off
+
+| +OTR.Loyalty.RewardPreferenceSelection+
+| Off
+
+| +OTR.Loyalty.PartnerLink.Flybuys+
+| Off
+
+| +OTR.Loyalty.PointsEarn.Flybuys+
+| Off
+|===
+
+===== Events
+
+[cols="2,1"]
+|===
+| Event | Emitted
+
+| +PointsEarned+
+| No
+
+| +FlybuysPointsRedeemed+
+| No
+
+| +TransactionAdjudicated+
+| No
+
+| +PointsEarned+
+| No
+
+| +PointsRedeemed+
+| No
+
+| +PointsExpired+
+| No
+
+| +PointsAdjusted+
+| No
+
+| +CustomerEnrolled+
+| Yes
+
+| +MemberUnenrolled+
+| No
+
+| +GrantIssued+
+| No
+
+| +GrantRedeemed+
+| No
+|===
+
+===== Success Criteria
+
+* 100% of xref:../ubiquitous_language.adoc#otr-app[Mobile Application] xref:../ubiquitous_language.adoc#customer[Customers] have xref:../ubiquitous_language.adoc#viva-consumer-id-vci[Viva Consumer ID (VCI)] allocated in xref:../bounded_context/external/salesforce_crm.adoc[Salesforce CRM]
+* 100% of xref:../ubiquitous_language.adoc#otr-app[Mobile Application] xref:../ubiquitous_language.adoc#customer[Customers] have xref:../ubiquitous_language.adoc#wallet[Wallets] allocated in xref:../bounded_context/external/eagle_eye.adoc[EagleEye]
+* No xref:../ubiquitous_language.adoc#otr-app[Mobile Application] xref:../ubiquitous_language.adoc#customer[Customers] have a linked xref:../ubiquitous_language.adoc#flybuys-digital-identity[Flybuys Digital Identity]
+* Zero production impact
+* Zero xref:../ubiquitous_language.adoc#otr-app[Mobile Application] impacts
+
+===== Dependencies
+
+* EagleEye API credentials and rate limits confirmed (external dependency - EagleEye, 1000 req/min guaranteed)
+* Infrastructure provisioning complete (internal dependency - Platform team)
+
+==== Rollback Approach
+
+* Delete xref:../ubiquitous_language.adoc#customer[Customers] uplifted xref:../bounded_context/external/salesforce_crm.adoc[Salesforce CRM] profiles
+
+===== Feature Flags
+
+[cols="3,1"]
+|===
+| Flag | Status
+
+| +OTR.Loyalty.Enabled+
+| Off
+
+| +OTR.Loyalty.TransactionAdjudication+
+| Off
+
+| +OTR.Loyalty.RewardPreferenceSelection+
+| Off
+
+| +OTR.Loyalty.PartnerLink.Flybuys+
+| Off
+
+| +OTR.Loyalty.PointsEarn.Flybuys+
+| Off
+|===
+
+
+=== AS-2 linking
+
+Enable customer-facing xref:../ubiquitous_language.adoc#partner-xref[Partner Link] and xref:../ubiquitous_language.adoc#reward-preference[Reward Preference] selection in xref:../ubiquitous_language.adoc#otr-app[Mobile Applications]
+
+==== New SBB
+
+[cols="1,2"]
+|===
+| SBB | Description
+
+| SBB-005
+| OAuth Token Service
+
+| SBB-007
+| Flybuys Integration Adaptor
+
+| SBB-011
+| Mobile Application Updates
+
+| SBB-013
+| Distributed Cache
+|===
+
+==== New Capabilities
+
+* xref:../ubiquitous_language.adoc#otr-app[Mobile Application] xref:../ubiquitous_language.adoc#partner-xref[Partner link] flow (xref:../ubiquitous_language.adoc#pkce[OAuth 2.0 Authorisation Code Flow with PKCE])
+* xref:../ubiquitous_language.adoc#reward-preference[Reward preference selection UI] (Flybuys points vs OTR fuel discount)
+* Real-time Flybuys balance display in mobile app wallet screen
+
+==== Implementation Approach
+
+Enable linking for xref:../ubiquitous_language.adoc#customer[Customers] using a xref:../ubiquitous_language.adoc#ring-deployments[Ring Deployments] progressive exposure strategy
+
+===== Monitoring
+
+Track OAuth success rate, balance query latency, customer support tickets (30-day observation period)
+
+===== Cutover
+
+After 30 days successful pilot (>95% OAuth success rate), enable for all xref:../ubiquitous_language.adoc#customer[Customers]
+
+===== Architecture Diagram
+
+[mermaid]
+----
+graph TD
+    A[Mobile App] --> B[API Gateway]
+    B --> C[Profile Service]
+    B --> D[Loyalty Service]
+    C --> E[Event Bus]
+    C --> F[OAuth Service + Key Vault]
+    C --> G[Flybuys API]
+    D --> E
+    D --> F
+    D --> G
+----
+
+===== Rollout
+
+====== Ring 0 (Internal Validation)
+
+Staff accounts (50 users), 7 days
+
+* Validation: Users are in xref:../bounded_context/external/salesforce_crm.adoc[Salesforce CRM] and Braze
+* Go criteria: 100% success rate, zero P1/P2 incidents
+
+====== Ring 1 (Pilot Users)
+
+Customers who regularly use the xref:../ubiquitous_language.adoc#otr-app[Mobile Applications], 14 days
+
+* Validation: OAuth success rate >90%, customer support tickets <10/day
+* Go criteria: Meet validation targets for 7 consecutive days
+
+====== Ring 2 (General availability)
+
+All xref:../ubiquitous_language.adoc#otr-app[Mobile Application] Customers
+
+* Deployment: Gradual rollout using percentage targeting (10% → 50% → 100% over 14 days)
+* Monitoring: Track OAuth success rate, balance query latency, customer support tickets (30-day observation period)
+
+[cols="3,1"]
+|===
+| Flag | Status
+
+| +OTR.Loyalty.Enabled+
+| On
+
+| +OTR.Loyalty.TransactionAdjudication+
+| Off
+
+| +OTR.Loyalty.RewardPreferenceSelection+
+| Off
+
+| +OTR.Loyalty.PartnerLink.Flybuys+
+| On
+
+| +OTR.Loyalty.PointsEarn.Flybuys+
+| Off
+|===
+
+===== Events
+
+[cols="2,1"]
+|===
+| Event | Emitted
+
+| +Partnerlinked+
+| Yes
+
+| +PartnerUnlinked+
+| Yes
+
+| +PointsEarned+
+| No
+
+| +FlybuysPointsRedeemed+
+| No
+
+| +TransactionAdjudicated+
+| No
+
+| +PointsEarned+
+| No
+
+| +PointsRedeemed+
+| No
+
+| +PointsExpired+
+| No
+
+| +PointsAdjusted+
+| No
+
+| +CustomerEnrolled+
+| Yes
+
+| +MemberUnenrolled+
+| No
+
+| +GrantIssued+
+| No
+
+| +GrantRedeemed+
+| No
+|===
+
+===== Dependencies
+
+* Flybuys OAuth API production credentials (external - Flybuys, confirmed Nov 2025)
+* OAuth Service provisioned with Flybuys IDP connection (internal - Platform team, Dec 2025)
+* Mobile app release with linking UI
+
+===== Success Criteria
+
+* 95% of xref:../ubiquitous_language.adoc#customer[Customers] attempting xref:../ubiquitous_language.adoc#partner-xref[Partner link] are successful
+* OAuth success rate >95% over 30-day pilot period (validation exit criterion)
+* Balance query latency < 2s p95 (NFR-003)
+* Customer support tickets < 50 related to linking issues (< 0.5% of pilot users)
+
+==== Rollback Approach
+
+* Delete xref:../ubiquitous_language.adoc#partner-xref[Partner link] from pilot xref:../ubiquitous_language.adoc#customer[Customers] (customer communication required via email/push notification)
+
+===== Feature Flags
+
+[cols="3,1"]
+|===
+| Flag | Status
+
+| +OTR.Loyalty.Enabled+
+| On
+
+| +OTR.Loyalty.TransactionAdjudication+
+| Off
+
+| +OTR.Loyalty.RewardPreferenceSelection+
+| On
+
+| +OTR.Loyalty.PartnerLink.Flybuys+
+| Off
+
+| +OTR.Loyalty.PointsEarn.Flybuys+
+| Off
+|===
+
+
+=== AS-3 Grants
+
+* Enable in-store xref:../bounded_context/interfaces/otr_pos.adoc[OTR POS] and xref:../bounded_context/interfaces/otr_plus_pos.adoc[OTR+ POS] xref:../ubiquitous_language.adoc#loyalty-credential[Loyalty Credential] recognition
+* Transaction posting to Flybuys (batch files)
+* xref:../ubiquitous_language.adoc#digital-fuel-dockets[Digital Fuel Docket] redemption
+
+==== New SBB
+
+[cols="1,3"]
+|===
+| SBB | Description
+
+| SBB-012
+| Batch File Pipeline (serverless functions for daily aggregation, SFTP transmission)
+|===
+
+==== Implementation Approach
+
+*POS Barcode Integration*:
+
+. Deploy +POST /api/v1/loyalty/credentials/resolve+ endpoint
+. Update POS to call Loyalty Service API on barcode scan
+. Barcode Format: EAN-13 (13-digit European Article Number standard)
+. Pre-linking Requirement: Customers must link Flybuys account via mobile app OAuth flow (AS-2)
+. Error Handling: POS displays "Please link Flybuys in mobile app" if unlinked Flybuys credential scanned (422 error)
+
+*Rollout Strategy*:
+
+* POS Rollout: Enable barcode scanning at pilot stores (10 OTR stores), then gradual rollout
+* Batch Processing: Daily batch file generation starts (nightly 01:00 UTC job)
+
+===== Feature Flags
+
+[cols="3,1"]
+|===
+| Flag | Status
+
+| +OTR.Loyalty.Enabled+
+| On
+
+| +OTR.Loyalty.TransactionAdjudication+
+| On
+
+| +OTR.Loyalty.RewardPreferenceSelection+
+| On
+
+| +OTR.Loyalty.PartnerLink.Flybuys+
+| On
+
+| +OTR.Loyalty.PointsEarn.Flybuys+
+| On
+|===
+
+*Success Criteria*:
+
+* 100% of customer transactions post to Flybuys (batch acknowledgement rate >98%, NFR-016)
+* POS barcode resolution latency < 500ms p95 (NFR-002)
+* Digital docket redemption operational at all 500+ stores
+
+=== AS-4 Target State
+
+Final steady-state architecture after all Flybuys Integration capabilities are deployed and stabilised.
+
+==== Success Criteria (Entry to AS-4)
+
+*Prerequisites*:
+
+* AS-3 Grants operational for minimum 6 months
+* Zero critical incidents (P1/P2) in last 90 days
+* All NFRs validated and meeting targets
+* Legacy Reddy Express Flybuys integration fully decommissioned
+
+==== Characteristics of Target State
+
+===== Feature Flags
+
+* All flags remain ON (no changes from AS-3)
+* Feature flag infrastructure retained for emergency rollback capability
+
+===== Architecture
+
+* Bounded contexts operating independently
+* Event-driven integration fully operational
+* Anti-Corruption Layers protecting domain boundaries
+* Zero coupling to legacy OTR App API
+
+=== Technical Dependency Graph
+
+[mermaid]
+----
+graph TD
+    A[AS-1: Foundation] --> B[AS-2: linking Enabled]
+    B --> C[AS-3: Grants Operational]
+    C --> D[AS-4: Target State]
+
+    A -->|Prerequisite| E[VCI Migration Complete]
+    A -->|Prerequisite| F[EagleEye Wallets Created]
+
+    B -->|Prerequisite| G[OAuth Service Ready<br/>Flybuys IDP configured]
+    B -->|Prerequisite| H[Flybuys OAuth Credentials<br/>Production API keys]
+
+    C -->|Prerequisite| I[Flybuys SFTP Access<br/>SSH keys, PGP encryption]
+    C -->|Prerequisite| J[D365 POS Integration<br/>Barcode API ready]
+
+    D -->|Prerequisite| K[6 Months Stability<br/>No critical incidents]
+    D -->|Prerequisite| L[Legacy Data Archived<br/>7-year retention]
+----
+
+=== Transition Risks
+
+[cols="1,3,3,2"]
+|===
+| Risk ID | Risk Description | Mitigation | Contingency
+
+| TR-001
+| VCI migration fails (customers lose profile data)
+| Dual-write during AS-1 (30 days), legacy remains authoritative
+| Rollback to legacy OTR App API only
+
+| TR-002
+| Flybuys OAuth service outage during rollout
+| Circuit breaker pattern, cached balance data as fallback (5-min TTL)
+| Disable linking, revert to read-only balance
+
+| TR-003
+| Batch file transmission failures (points not posted)
+| Retry logic with exponential backoff (3 attempts), manual SFTP fallback
+| Manual CSV generation and upload by data team
+
+| TR-004
+| POS barcode scanning latency unacceptable (>1s)
+| Redis caching for barcode resolution (5-min TTL), load testing in UAT
+| Revert to legacy Reddy Express POS integration
+
+| TR-005
+| Event Bus delivery failures (eventual consistency)
+| Dead letter queue monitoring (alert if >100 events), replay capability
+| Synchronous API calls as fallback (temporary)
+
+| TR-006
+| Cosmos DB autoscale insufficient (RU/s throttling)
+| Monitor 429 errors, increase max RU/s (10k → 20k), partition optimization
+| Temporarily disable non-critical features
+|===
+
+<<<
+== Solution Validation
+
+This section defines how the solution will be validated against requirements defined in the Architecture Definition.
+
+=== Functional Validation
+
+*Business Requirements*: See xref:../architecture_definitions/flybuys_integration.adoc#Business%2520Requirements[Business Requirements] in Architecture Definition for complete requirement definitions (BR-001 through BR-012).
+
+*Validation Approach*: All business requirements validated through combination of:
+
+* UAT testing with pilot users (500 mobile app users, 100 OAuth linking attempts)
+* Production pilot at 10 stores (10k transactions monitored)
+* Automated API tests (ProfileService, LoyaltyService, EagleEye integration)
+* Manual verification of batch file generation and Flybuys acknowledgement
+
+*Key Validation Checkpoints*:
+
+* *Customer Identity (BR-001, BR-002)*: 100% users have VCI allocated in Salesforce
+* *Partner linking (BR-004)*: OAuth flow completes in <30s p95
+* *Reward Preferences (BR-005, BR-006)*: Preference changes reflected within 5s
+* *Transaction Posting (BR-007)*: Transactions appear in daily batch file with correct points
+* *Balance Display (BR-010)*: Flybuys balance query returns within 2s p95
+* *Transaction Adjudication (BR-012)*: 100% credentialed transactions route to EagleEye
+
+=== Non-Functional Validation
+
+[cols="1,3,3,2"]
+|===
+| NFR ID | Validation Test | Acceptance Criteria | Tool/Method
+
+| NFR-001
+| Profile Service API latency under load
+| p95 < 200ms with 100 concurrent users
+| JMeter load test (UAT, 10k requests)
+
+| NFR-002
+| Loyalty Service API latency under load
+| p95 < 500ms with 500 concurrent POS transactions/sec
+| JMeter load test (UAT, 50k requests)
+
+| NFR-003
+| Flybuys balance query latency
+| p95 < 2s including Flybuys API call + Redis cache
+| Application Insights (PROD, 30-day avg)
+
+| NFR-004
+| Batch file generation window
+| Job starts 01:00 UTC, completes by 02:00 UTC (1-hour max)
+| Batch pipeline monitoring (PROD, 30-day avg)
+
+| NFR-006
+| Profile Service uptime
+| 99.9% measured over 30 days (max 4.3 hours downtime)
+| Azure Monitor (PROD, 30-day SLA)
+
+| NFR-016
+| Batch file acknowledgement rate
+| >98% transactions acknowledged by Flybuys within 24 hours
+| PROD monitoring (60-day avg)
+|===
+
+=== Integration Validation
+
+[cols="2,3,3,2"]
+|===
+| Integration Point | Validation Test | Acceptance Criteria | Method
+
+| Flybuys OAuth API
+| OAuth flow completes with valid access token
+| Token retrieved and stored in Key Vault
+| Pact contract test (UAT)
+
+| Flybuys Balance API
+| Balance query returns valid response
+| Response matches Flybuys API spec v2.1, < 1.5s latency
+| Integration test harness (UAT)
+
+| Flybuys SFTP
+| Batch file uploads successfully
+| File appears in Flybuys /inbound/otr/ directory, PGP encrypted
+| SFTP integration test (UAT)
+
+| EagleEye Adjudication
+| Transaction adjudication returns grants
+| Response matches EagleEye API spec v3, grants correct
+| Pact contract test (UAT)
+
+| Event Grid
+| Domain events published and consumed
+| Partnerlinked event delivered to Loyalty Service < 5s
+| Event Bus integration test (UAT)
+|===
+
+=== Security Validation
+
+*Validation Method*: Penetration testing (external vendor) + Security audit (internal InfoSec team)
+
+[cols="2,3,3,2"]
+|===
+| Security Control | Validation Test | Acceptance Criteria | Auditor
+
+| OAuth PKCE
+| Authorization code flow uses PKCE
+| Code challenge/verifier validated (S256 method)
+| External pentest (UAT, Q1 2026)
+
+| Token encryption
+| Tokens encrypted at rest (Key Vault)
+| AES-256 encryption, customer-managed keys
+| Internal security audit (PROD)
+
+| API authentication
+| Unauthenticated requests blocked
+| 401 Unauthorized for missing/invalid tokens
+| Automated security scan (UAT)
+
+| Data residency
+| Customer data stored in Australia East region
+| Cosmos DB, Key Vault in AU region only
+| Compliance audit (PROD)
+|===
+
+=== SBB Dependency Flowchart
+
+This flowchart visualizes the dependency relationships between Solution Building Blocks (SBBs) in the Flybuys Integration architecture.
+
+==== Dependency Chain Diagram
+
+[mermaid]
+----
+graph TD
+    %% External Systems
+    FlybuysOAuth[External: Flybuys OAuth]
+    FlybuysAPI[External: Flybuys API]
+    EagleEyeAPI[External: EagleEye API]
+    BrazeAPI[External: Braze API]
+
+    %% Mobile & Presentation Layer
+    SBB014[SBB-014: OTR Mobile App]
+
+    %% API Gateway
+    SBB013[SBB-013: API Gateway]
+
+    %% Profile Service
+    SBB001[SBB-001: Profile Service API]
+    SBB002[SBB-002: Profile Service Database]
+
+    %% Loyalty Service
+    SBB003[SBB-003: Loyalty Service API]
+    SBB004[SBB-004: Loyalty Service Database]
+
+    %% Engagement Service
+    SBB007[SBB-007: Engagement Service API]
+    SBB008[SBB-008: Engagement Service Database]
+
+    %% Infrastructure Services
+    SBB005[SBB-005: OAuth Token Manager]
+    SBB006[SBB-006: Domain Event Bus]
+    SBB009[SBB-009: Braze Integration Adaptor]
+    SBB010[SBB-010: Flybuys Integration Adaptor]
+    SBB011[SBB-011: EagleEye Integration Adaptor]
+    SBB012[SBB-012: Application Monitoring]
+    SBB015[SBB-015: Batch File Pipeline]
+    SBB016[SBB-016: Distributed Cache]
+    SBB017[SBB-017: Feature Flag Service]
+
+    %% Mobile App Dependencies
+    SBB014 -->|Partner linking| SBB001
+    SBB014 -->|Balance queries| SBB003
+    SBB014 -->|Ingress routing| SBB013
+
+    %% API Gateway Dependencies
+    SBB013 -->|Routes to| SBB001
+    SBB013 -->|Routes to| SBB003
+    SBB013 -->|Routes to| SBB007
+
+    %% Profile Service Dependencies
+    SBB001 -->|Persists PartnerLink| SBB002
+    SBB001 -->|Token storage/retrieval| SBB005
+    SBB001 -->|Publishes events| SBB006
+    SBB001 -->|Monitored by| SBB012
+
+    %% Loyalty Service Dependencies
+    SBB003 -->|Persists transactions| SBB004
+    SBB003 -->|PartnerLink lookup| SBB001
+    SBB003 -->|Publishes/Consumes events| SBB006
+    SBB003 -->|Balance queries| SBB010
+    SBB003 -->|Transaction adjudication| SBB011
+    SBB003 -->|Caches Flybuys balance| SBB016
+    SBB003 -->|Monitored by| SBB012
+    SBB003 -->|Feature toggles| SBB017
+
+    %% OAuth Token Manager Dependencies
+    SBB005 -->|Initiates OAuth| SBB001
+    SBB005 -->|OAuth tokens| FlybuysOAuth
+
+    %% Engagement Service Dependencies
+    SBB007 -->|Persists campaign state| SBB008
+    SBB007 -->|Consumes events| SBB006
+    SBB007 -->|Triggers campaigns| SBB009
+    SBB007 -->|Monitored by| SBB012
+
+    %% Braze Integration Adaptor Dependencies
+    SBB009 -->|Consumes events| SBB006
+    SBB009 -->|Optional enrichment| SBB001
+    SBB009 -->|Webhook calls| BrazeAPI
+
+    %% Flybuys Integration Adaptor Dependencies
+    SBB010 -->|Balance API| FlybuysAPI
+    SBB010 -->|Batch file upload| SBB015
+    SBB010 -->|Cached responses| SBB016
+
+    %% EagleEye Integration Adaptor Dependencies
+    SBB011 -->|Wallet & adjudication| EagleEyeAPI
+
+    %% Batch File Pipeline Dependencies
+    SBB015 -->|Reads transactions| SBB003
+    SBB015 -->|SFTP upload| FlybuysAPI
+
+    %% Event Bus Subscribers
+    SBB006 -.->|Partnerlinked event| SBB003
+    SBB006 -.->|Partnerlinked event| SBB007
+    SBB006 -.->|TransactionAdjudicated event| SBB007
+
+    %% Styling
+    classDef external fill:#f9f,stroke:#333,stroke-width:2px
+    classDef mobile fill:#bbf,stroke:#333,stroke-width:2px
+    classDef gateway fill:#bfb,stroke:#333,stroke-width:2px
+    classDef service fill:#fbb,stroke:#333,stroke-width:2px
+    classDef database fill:#ffb,stroke:#333,stroke-width:2px
+    classDef infrastructure fill:#bff,stroke:#333,stroke-width:2px
+    classDef integration fill:#fbf,stroke:#333,stroke-width:2px
+
+    class FlybuysOAuth,FlybuysAPI,EagleEyeAPI,BrazeAPI external
+    class SBB014 mobile
+    class SBB013 gateway
+    class SBB001,SBB003,SBB007 service
+    class SBB002,SBB004,SBB008 database
+    class SBB005,SBB006,SBB012,SBB015,SBB016,SBB017 infrastructure
+    class SBB009,SBB010,SBB011 integration
+----
+
+==== Dependency Layers
+
+===== Layer 1: External Systems
+
+* Flybuys OAuth Server
+* Flybuys API (Balance, Batch File SFTP)
+* EagleEye API
+* Braze API
+
+===== Layer 2: Presentation & Gateway
+
+* *SBB-014*: OTR Mobile App
+* *SBB-013*: API Gateway (ingress routing, OAuth validation, rate limiting)
+
+===== Layer 3: Domain Services
+
+* *SBB-001*: Profile Service API (partner linking, reward preferences)
+* *SBB-003*: Loyalty Service API (credential resolution, transaction adjudication)
+* *SBB-007*: Engagement Service API (campaign orchestration)
+
+===== Layer 4: Data Stores
+
+* *SBB-002*: Profile Service Database (PartnerLink aggregates)
+* *SBB-004*: Loyalty Service Database (RewardTransaction audit trail)
+* *SBB-008*: Engagement Service Database (campaign state tracking)
+
+===== Layer 5: Infrastructure Services
+
+* *SBB-005*: OAuth Token Manager (Flybuys token storage/refresh)
+* *SBB-006*: Domain Event Bus (event-driven integration)
+* *SBB-012*: Application Monitoring (observability)
+* *SBB-016*: Distributed Cache (Flybuys balance caching)
+* *SBB-017*: Feature Flag Service (progressive rollout)
+
+===== Layer 6: Integration Adaptors (Anti-Corruption Layers)
+
+* *SBB-009*: Braze Integration Adaptor (marketing automation)
+* *SBB-010*: Flybuys Integration Adaptor (conformist pattern)
+* *SBB-011*: EagleEye Integration Adaptor (loyalty engine)
+
+===== Layer 7: Batch Processing
+
+* *SBB-015*: Batch File Pipeline (nightly transaction aggregation, SFTP transmission)
+
+==== Critical Dependency Paths
+
+===== Partner linking Flow
+
+----
+Mobile App (SBB-014)
+  → API Gateway (SBB-013)
+  → Profile Service (SBB-001)
+  → OAuth Token Manager (SBB-005)
+  → Flybuys OAuth
+----
+
+===== Transaction Adjudication Flow
+
+----
+POS System
+  → API Gateway (SBB-013)
+  → Loyalty Service (SBB-003)
+  → Profile Service (SBB-001) [PartnerLink lookup]
+  → EagleEye Adaptor (SBB-011)
+  → EagleEye API
+----
+
+===== Flybuys Balance Query Flow
+
+----
+Loyalty Service (SBB-003)
+  → Distributed Cache (SBB-016) [cache miss]
+  → Flybuys Adaptor (SBB-010)
+  → Flybuys API
+----
+
+===== Event-Driven Engagement Flow
+
+----
+Profile Service (SBB-001) [publishes Partnerlinked]
+  → Event Bus (SBB-006)
+  → Engagement Service (SBB-007)
+  → Braze Adaptor (SBB-009)
+  → Braze API
+----
+
+==== Notes
+
+* *Solid arrows (→)* indicate synchronous dependencies (REST API calls, database queries)
+* *Dotted arrows (-.->)* indicate asynchronous dependencies (event subscriptions)
+* Some SBB references in the document contain numbering errors

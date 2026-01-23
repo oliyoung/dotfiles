@@ -1,0 +1,203 @@
+==== Strategic Architectural Philosophy
+
+This solution architecture aligns with OTR's target Domain-Driven Design (DDD) architecture. The design choices reflect three core principles:
+
+1. **Protect digital channels from external system coupling** - Use Anti-Corruption Layers (ACLs) to isolate OTR's domain model from external systems we don't control
+2. **Establish event-driven architecture as the integration standard** - Loose coupling between bounded contexts via domain events, enabling independent evolution
+3. **Prioritise simplicity and time-to-value** - Make pragmatic trade-offs that reduce complexity while establishing architectural patterns for future work
+
+==== Why Domain-Driven Design with Bounded Contexts?
+
+The decision to implement **ProfileService** and **EngagementService** as separate bounded contexts rather than direct Mobile App → Salesforce integration reflects a strategic investment in architectural quality:
+
+*The Problem with Direct Integration*:
+
+* Mobile App tightly coupled to Salesforce API (any Salesforce change breaks Mobile App)
+* Viva Energy controls the shared Salesforce instance - we conform to their governance and configuration
+* Future integrations (Flybuys, LocationService, PaymentService) would duplicate Contact reconciliation logic
+* No domain event publishing - other services can't react to customer feedback
+
+*The DDD Solution*:
+
+* **ProfileService** handles Contact reconciliation - reusable for Flybuys partner linking, future bounded contexts
+* **EngagementService** acts as Anti-Corruption Layer - translates between OTR domain language (customer feedback categories: App, Service, Order, Rewards, Refund, Delete Account) and Salesforce (Case object with Viva Energy-specific configuration)
+* **Event Bus** publishes domain events (`CustomerFeedbackSubmitted`, `SupportCaseCreated`) - other bounded contexts can react without coupling
+* **Clear boundaries** - ProfileService handles identity, EngagementService handles support/feedback (different responsibilities, different change rates)
+
+*The Trade-Off*:
+
+We accept **increased initial complexity** (two new microservices, Event Bus infrastructure, team learning DDD patterns) in exchange for **architectural foundation** that protects digital channels from external system changes and enables reusable components for future work (Flybuys, subscriptions, recommendations).
+
+This is a **strategic investment** - we're not just solving customer support consolidation, we're establishing the architectural pattern for all future bounded contexts.
+
+==== Why Async Processing Instead of Synchronous API Calls?
+
+The decision to create Salesforce Cases **asynchronously via Event Bus** (ADR-CS-003) rather than synchronously in the API request path reflects a prioritisation of user experience and resilience over simplicity:
+
+*The Problem with Synchronous Integration*:
+
+* User waits for Salesforce API response (latency: Mobile App → EngagementService → Salesforce → EngagementService → Mobile App)
+* If Salesforce is down or slow, customer feedback submission fails
+* No automatic retry - customer must resubmit feedback
+* API timeout must accommodate worst-case Salesforce latency
+
+*The Async Solution*:
+
+* **Immediate acknowledgment** - User gets "Feedback submitted" confirmation in <200ms (no Salesforce wait)
+* **Resilience** - If Salesforce is down, feedback queued, Case created when Salesforce recovers
+* **Automatic retry** - Exponential backoff handles transient Salesforce API failures
+* **Operational visibility** - Dead letter queue alerts ops team to persistent failures
+* **Scalability** - Queue buffering handles traffic spikes (expected 100-150 submissions/day, capacity for 10x)
+
+*The Trade-Off*:
+
+We accept **eventual consistency** (user receives push notification after Case created, not immediately) and **increased complexity** (Event Bus, background workers, retry logic, DLQ monitoring) in exchange for **better user experience** (no waiting) and **resilience** (Salesforce downtime doesn't block customer feedback).
+
+This trade-off is acceptable because customer support feedback is **not a real-time transaction** (unlike payment processing). A 30-second delay between feedback submission and Case creation is invisible to the customer, who receives a push notification when the Case is created.
+
+==== Why Conformist Pattern for Salesforce?
+
+The decision to **conform to Salesforce configuration** (ADR-CS-015) rather than heavily customise Salesforce or abstract away its API reflects a pragmatic acceptance of organisational reality:
+
+*The Organisational Context*:
+
+* **Shared Salesforce instance** - Viva Energy owns and operates the Salesforce Service Cloud instance
+* **Multi-tenant governance** - OTR is one business unit among many (fuel wholesale, Shell Card, other retail channels)
+* **Viva Energy controls roadmap** - We don't control Salesforce configuration, custom fields, or API evolution
+* **Post-merger integration** - Strategic decision to standardize on Viva Energy platforms (not build parallel systems)
+
+*The Conformist Approach*:
+
+* **Accept their data model** - Use standard Contact and Case objects with Viva Energy-configured fields
+* **Conform to their API** - Use Salesforce REST API as-is, minimal custom Apex code
+* **Work within their governance** - Data isolation via Record Types/queues (TBD with Salesforce admin team)
+* **Anti-Corruption Layer protects us** - EngagementService translates between OTR domain language and Salesforce, but doesn't fight Salesforce's model
+
+*Why Not Heavily Customise Salesforce?*:
+
+* **Governance constraints** - Viva Energy Salesforce team must approve all customisations (slow, requires business case)
+* **Shared instance risk** - Custom Apex code or triggers could impact other business units (change control overhead)
+* **Upgrade risk** - Heavy customisation increases Salesforce upgrade complexity
+* **Not our system** - We don't control the platform, so we shouldn't over-invest in customisation we can't maintain
+
+*The Trade-Off*:
+
+We accept **less control over data model and platform evolution** in exchange for **faster time-to-value** (no custom development in Salesforce), **reduced operational overhead** (no custom code to maintain), and **organisational alignment** (consolidate onto shared Viva Energy platforms).
+
+The **Anti-Corruption Layer** (EngagementService) is the protection mechanism - it translates between OTR's domain language and Salesforce, so if Salesforce changes, we update the ACL, not the Mobile App.
+
+==== Why Big Bang Cutover Instead of Phased Rollout?
+
+The decision to use **big bang cutover** (ADR-CS-006) rather than phased rollout with feature flags (like the Flybuys integration uses) reflects a risk assessment based on criticality and complexity:
+
+*Why Flybuys Uses Phased Rollout (AS-1, AS-2, AS-3)*:
+
+* **High complexity** - Flybuys points accrual involves transaction adjudication, partner API integration, reconciliation
+* **Mission-critical** - Points accrual errors directly impact customer value and partner agreements
+* **Large user base** - All OTR loyalty members (gradual enablement reduces blast radius)
+* **Reversibility challenge** - Once points awarded to Flybuys, reversal requires partner coordination
+
+*Why Customer Support Uses Big Bang*:
+
+* **Lower complexity** - Feedback submission is create-only operation (no complex state management)
+* **Not mission-critical** - Support feedback failure doesn't prevent app usage or transactions
+* **Manageable user base** - OTR digital customers smaller than total loyalty member base
+* **Easy rollback** - Can revert to D365 CE if critical issues (no partner coordination required)
+* **Faster D365 CE retirement** - No extended transition period maintaining two systems
+
+*The Trade-Off*:
+
+We accept **higher cutover risk** (all users switch at once) in exchange for **simplicity** (no feature flag management), **faster D365 CE retirement** (no parallel run period), and **reduced transition complexity** (no AS-1/AS-2/AS-3 architecture states).
+
+The risk is mitigated by:
+
+* **Comprehensive testing** - Load testing (3x-10x expected volume), integration testing, UAT
+* **Rollback plan** - Can revert Mobile App to D365 CE if critical issues within 48 hours
+* **Non-critical workload** - Support feedback failure doesn't block core app functionality
+
+This is a **pragmatic trade-off** - we use the simplest migration strategy that matches the risk profile of the workload.
+
+==== Why No Case Migration from D365 CE?
+
+The decision to **not migrate historical Cases** (ADR-CS-005) reflects a cost-benefit analysis that prioritises speed and simplicity over historical data preservation:
+
+*The Case for Migration*:
+
+* Support agents could see historical customer support Cases in Salesforce
+* Continuity of support history for repeat issues
+* Analytics and reporting on historical Case trends
+
+*The Case Against Migration*:
+
+* **Limited value** - Historical D365 CE Cases not critical for future support (new Cases moving forward)
+* **Data quality concerns** - D365 CE Case data may be inconsistent, incomplete, or poorly categorised
+* **Migration complexity** - Requires mapping D365 CE schema to Salesforce, data transformation, validation, testing
+* **Delays cutover** - Case migration extends timeline (Contact migration only is faster)
+* **Cost-benefit** - Migration effort (4-6 weeks) outweighs value of historical data
+
+*The Alternative*:
+
+If historical Cases are needed, D365 CE can remain accessible (read-only) temporarily for lookups, or Cases can be archived separately.
+
+*The Trade-Off*:
+
+We accept **loss of historical Case visibility in Salesforce** in exchange for **faster time-to-value** (Contact migration only), **simpler migration** (no Case schema mapping), and **clean start** (no legacy data quality issues).
+
+This is a **pragmatic simplification** - historical support Cases provide marginal value compared to the migration effort required.
+
+==== Why Email as Primary Matching Key (Not VCI)?
+
+The decision to use **email as the primary Contact matching key** (ADR-CS-004) rather than Viva Consumer ID (VCI) reflects a pragmatic choice based on current system capabilities:
+
+*Why Not VCI?*:
+
+* **Not in Salesforce today** - VCI is not currently stored as Salesforce External ID (requires Salesforce admin team to add field and configure upsert)
+* **Adds coordination overhead** - Requires Viva Energy Salesforce team approval, field creation, indexing, testing
+* **Delays cutover** - Email-based matching can start immediately, VCI matching requires Salesforce configuration work
+
+*Why Email Works*:
+
+* **Available now** - Salesforce Contact already has email field (standard, indexed)
+* **Unique identifier** - Email is unique in both Salesforce and Mobile App authentication
+* **Always available** - Authenticated users always have email from Entra ID JWT
+* **Salesforce standard** - Email is standard Contact lookup field (no custom configuration)
+
+*The Edge Case*:
+
+* **Email change** - If customer changes email, creates duplicate Contact (rare, manual cleanup acceptable)
+
+*Future Enhancement*:
+
+* Add VCI as Salesforce External ID (more stable matching)
+* Migrate to VCI-based matching once Salesforce configuration is complete
+
+*The Trade-Off*:
+
+We accept **rare duplicate Contact creation** (when customers change email) in exchange for **immediate implementation** (no Salesforce configuration required) and **simplicity** (single matching key).
+
+This is a **pragmatic starting point** - we can enhance to VCI-based matching later without breaking existing functionality.
+
+==== How the Decisions Reinforce Each Other
+
+The architectural decisions form a **coherent strategy** rather than isolated choices:
+
+1. **DDD Bounded Contexts** (ADR-CS-002) establish the foundation for **Event-Driven Architecture** (ADR-CS-003) - ProfileService and EngagementService publish domain events that other bounded contexts consume
+2. **Async Processing** (ADR-CS-003) enables **Resilience to Salesforce Downtime** - the Event Bus buffers work when Salesforce is unavailable
+3. **Conformist Pattern** (ADR-CS-015) is protected by **Anti-Corruption Layer** - EngagementService conforms to Salesforce but isolates the Mobile App from Salesforce API changes
+4. **Big Bang Cutover** (ADR-CS-006) is feasible because **Customer Support is Non-Critical** - unlike payment processing or Flybuys points accrual, support feedback failure doesn't block core app functionality
+5. **No Case Migration** (ADR-CS-005) simplifies the **Big Bang Cutover** - Contact migration only is faster and lower risk
+6. **Email Matching** (ADR-CS-004) enables **Immediate Implementation** - no waiting for Salesforce admin team to configure VCI External ID
+
+The decisions are **mutually reinforcing** - each choice makes the others more valuable or feasible.
+
+==== What This Establishes for Future Work
+
+This implementation is the **architectural foundation** for OTR's target state:
+
+* **First bounded contexts** - ProfileService and EngagementService establish the pattern for LoyaltyService, PaymentService, LocationService, RecommendationService
+* **First event-driven integration** - Event Bus pattern reused for all future bounded context integration (not direct API calls)
+* **Reusable Contact reconciliation** - ProfileService Contact lookup reused for Flybuys partner linking, subscription billing, personalised recommendations
+* **Anti-Corruption Layer pattern** - EngagementService ACL demonstrates how to protect OTR domain model from external systems (EagleEye, Braze, D365 Commerce)
+* **Conformist pattern for shared systems** - Establishes approach for systems we don't control (Salesforce, Entra ID, Microsoft Fabric)
+
+Every design decision is made with **future bounded contexts in mind** - we're not just solving customer support, we're establishing the architectural standards for all future work.

@@ -1,0 +1,197 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    // Makefile tasks
+    {
+      "label": "Make: Help",
+      "type": "shell",
+      "command": "make help",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Make: Install Dependencies",
+      "type": "shell",
+      "command": "make install",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Make: Build PDF",
+      "type": "shell",
+      "command": "make pdf",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Make: Build Site",
+      "type": "shell",
+      "command": "make site",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Make: Clean PDF",
+      "type": "shell",
+      "command": "make clean",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Make: Build All",
+      "type": "shell",
+      "command": "make all",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    // npm script tasks
+    {
+      "label": "npm: Build Antora",
+      "type": "npm",
+      "script": "build",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "npm: Build Antora (Local)",
+      "type": "npm",
+      "script": "build:local",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "npm: Serve Site",
+      "type": "npm",
+      "script": "serve",
+      "group": "none",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "npm: Dev (Build & Serve)",
+      "type": "npm",
+      "script": "dev",
+      "group": "none",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    },
+    // Direct shell script tasks
+    {
+      "label": "Script: Build PDF",
+      "type": "shell",
+      "command": "./build-pdf.sh",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Script: Build Site",
+      "type": "shell",
+      "command": "./build-site.sh",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    // Combined workflow tasks
+    {
+      "label": "Workflow: Clean, Build PDF & Site",
+      "dependsOn": [
+        "Make: Clean PDF",
+        "Make: Build PDF",
+        "Make: Build Site"
+      ],
+      "dependsOrder": "sequence",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Workflow: Build & Serve",
+      "dependsOn": [
+        "Make: Build Site",
+        "npm: Serve Site"
+      ],
+      "dependsOrder": "sequence",
+      "group": "none",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

@@ -1,0 +1,488 @@
+2026-01-23T07:35:47.278Z [DEBUG] Watching for changes in setting files /mnt/c/Users/o.young/work/architecture/.claude...
+2026-01-23T07:35:47.289Z [DEBUG] [init] configureGlobalMTLS starting
+2026-01-23T07:35:47.289Z [DEBUG] [init] configureGlobalMTLS complete
+2026-01-23T07:35:47.289Z [DEBUG] [init] configureGlobalAgents starting
+2026-01-23T07:35:47.289Z [DEBUG] [init] configureGlobalAgents complete
+2026-01-23T07:35:47.296Z [DEBUG] [LSP MANAGER] initializeLspServerManager() called
+2026-01-23T07:35:47.296Z [DEBUG] [LSP MANAGER] Created manager instance, state=pending
+2026-01-23T07:35:47.296Z [DEBUG] [LSP MANAGER] Starting async initialization (generation 1)
+2026-01-23T07:35:47.340Z [DEBUG] Applying permission update: Adding 77 allow rule(s) to destination 'localSettings': ["Bash(done)","Bash(echo:*)","Bash(find:*)","Bash(git add:*)","Bash(git commit:*)","Bash(git mv:*)","Bash(git pull:*)","Bash(git push:*)","Bash(git restore:*)","Bash(git rm:*)","Bash(git stash:*)","Bash(mkdir:*)","Bash(python3:*)","Bash(xargs:*)","WebFetch(domain:developer.eagleeye.com)","Bash(cml-ts:*)","Bash(node test-parse.js:*)","Bash(node test-generator.js:*)","Bash(npm run build:*)","Bash(node test-external.js:*)","Bash(ls:*)","Bash(git diff:*)","Bash(grep:*)","Bash(wc:*)","Bash(git ls-tree:*)","Bash(git checkout:*)","Bash(git check-ignore:*)","Bash(sudo apt update:*)","Bash(sudo apt install:*)","Bash(npm install:*)","Bash(npx md-to-pdf:*)","Bash(tree:*)","Bash(chmod:*)","Bash(do git mv \"$file\" \"$file/_/-\")","Bash(sort:*)","Bash(cat:*)","Bash(asciidoctor:*)","WebFetch(domain:contextmapper.org)","Bash(npx puppeteer browsers:*)","Bash(asciidoctor-pdf:*)","Bash(ln:*)","Bash(npm ls:*)","Bash(sudo npm update:*)","Bash(export PUPPETEER_EXECUTABLE_PATH=/home/oliy/.cache/puppeteer/chrome/linux-131.0.6778.264/chrome-linux64/chrome)","Bash(export PUPPETEER_EXECUTABLE_PATH=/home/oliy/.cache/puppeteer/chrome-headless-shell/linux-143.0.7499.169/chrome-headless-shell-linux64/chrome-headless-shell:*)","WebSearch","WebFetch(domain:pubs.opengroup.org)","WebFetch(domain:medium.com)","WebFetch(domain:togaf.visual-paradigm.com)","Bash(node --version:*)","Bash(npm --version)","Bash(for file in domains/*.adoc)","Bash(for file in solution_architectures/*.adoc)","Bash(for file in events/*.adoc)","Bash(for file in executive_summaries/*.adoc)","Bash(npx antora:*)","Bash(for file in architecture_definitions/*.adoc)","Bash(git reset:*)","Bash(test:*)","Bash(bash:*)","Bash(readlink:*)","Bash(dir /b \"c:\\\\Users\\\\o.young\\\\work\\\\architecture\\\\patterns\")","Bash(dir:*)","Bash(git config:*)","Bash(source ~/.zshrc)","Bash(zsh -c 'source ~/.zshrc 2>&1; echo \"\"LS_COLORS has di: $\\(echo $LS_COLORS | grep -o \"\"di=[^:]*\"\"\\)\"\"')","Bash(zsh -c 'unset LS_COLORS; source ~/.zshrc 2>&1 >/dev/null; echo \"\"$LS_COLORS\"\" | tr \"\":\"\" \"\"\\\\n\"\" | grep \"\"^di=\"\"')","Bash(zsh:*)","Bash(dircolors:*)","Bash(~/.dircolors)","Bash(python:*)","Bash(powershell -Command \"\n$content = Get-Content -Path ''architectural_definition.adoc'' -Raw\n\n# Define OAuth replacement\n$oauthNew = @''\n==== OAuth Partner Linking Flow\n\nFor the detailed OAuth Partner Linking sequence diagram showing the complete flow, see link:sequence_diagrams.adoc#_happy_path_successful_linking[OAuth Partner Linking - Happy Path].\n\nKey features of this flow:\n\n* Uses PKCE \\(Proof Key for Code Exchange\\) for enhanced security\n* Stores OAuth tokens encrypted with AES-256 in Azure Key Vault\n* Publishes PartnerLinked domain events for downstream system integration\n* Total flow duration: 2-3 minutes \\(includes user interaction\\)\n\nThe sequence diagrams document also includes comprehensive error scenarios:\n\n* link:sequence_diagrams.adoc#_error_path_1_oauth_authorization_denied[Authorization denied by customer]\n* link:sequence_diagrams.adoc#_error_path_2_token_exchange_failure[Token exchange failure]\n* link:sequence_diagrams.adoc#_error_path_3_partner_already_linked[Partner already linked]\n''@\n\n# OAuth Pattern - match from header to end of diagram\n$oauthPattern = ''\\(?s\\)==== OAuth Partner Linking Flow\\\\r?\\\\n\\\\r?\\\\n\\\\[source,mermaid\\\\]\\\\r?\\\\n----.*?----''\n$content = $content -replace $oauthPattern, $oauthNew\n\n# Define Transaction replacement\n$txnNew = @''\n==== Transaction Adjudication Flow\n\nFor the detailed Transaction Adjudication sequence diagram showing the complete flow, see link:sequence_diagrams.adoc#_happy_path_flybuys_points_selected[Transaction Adjudication - Happy Path].\n\nKey features of this flow:\n\n* Real-time credential resolution \\(<100ms p95\\)\n* Synchronous transaction adjudication with EagleEye \\(<300ms p95\\)\n* Total POS response time <500ms p95\n* Publishes TransactionAdjudicated domain events for downstream systems\n* Persists audit trail in RewardTransaction aggregate\n\nThe sequence diagrams document also includes comprehensive error scenarios:\n\n* link:sequence_diagrams.adoc#_error_path_1_profile_service_timeout[Profile Service timeout with Redis cache fallback]\n* link:sequence_diagrams.adoc#_error_path_2_eagleeye_circuit_breaker_open[EagleEye circuit breaker open with retry queue]\n* link:sequence_diagrams.adoc#_error_path_3_duplicate_transaction_idempotency[Duplicate transaction \\(idempotency handling\\)]\n''@\n\n# Transaction Pattern\n$txnPattern = ''\\(?s\\)==== Transaction Adjudication Flow\\\\r?\\\\n\\\\r?\\\\n\\\\[source,mermaid\\\\]\\\\r?\\\\n----.*?----''\n$content = $content -replace $txnPattern, $txnNew\n\nSet-Content -Path ''architectural_definition.adoc'' -Value $content -NoNewline\nWrite-Output ''Replacements completed successfully''\n\")","Bash(while read link)","Bash(do if [ ! -e \"$link\" ])","Bash(then echo \"$link\")","Bash(fi)","Bash(make restore-symlinks:*)"]
+2026-01-23T07:35:47.341Z [DEBUG] [STARTUP] Loading MCP configs...
+2026-01-23T07:35:47.344Z [DEBUG] Found 0 plugins (0 enabled, 0 disabled)
+2026-01-23T07:35:47.345Z [DEBUG] Total LSP servers loaded: 0
+2026-01-23T07:35:47.345Z [DEBUG] [LSP SERVER MANAGER] getAllLspServers returned 0 server(s)
+2026-01-23T07:35:47.345Z [DEBUG] LSP manager initialized with 0 servers
+2026-01-23T07:35:47.345Z [DEBUG] [STARTUP] MCP configs loaded in 4ms
+2026-01-23T07:35:47.345Z [DEBUG] LSP server manager initialized successfully
+2026-01-23T07:35:47.345Z [DEBUG] LSP notification handlers registered successfully for all 0 server(s)
+2026-01-23T07:35:47.347Z [DEBUG] [STARTUP] Running setup()...
+2026-01-23T07:35:47.381Z [DEBUG] Stats cache stale (2026-01-19), processing 2026-01-20 to 2026-01-22 in background
+2026-01-23T07:35:47.426Z [DEBUG] Loading skills from: managed=/etc/claude-code/.claude/skills, user=/home/oliy/.claude/skills, project=[]
+2026-01-23T07:35:49.029Z [DEBUG] Loaded 0 installed plugins from /home/oliy/.claude/plugins/installed_plugins.json
+2026-01-23T07:35:49.131Z [ERROR] Error: Error: ENOENT: no such file or directory, scandir '/etc/claude-code/.claude/skills'
+    at readdirSync (unknown)
+    at <anonymous> (/$bunfs/root/claude:12:1903)
+    at HJ (/$bunfs/root/claude:11:34695)
+    at readdirSync (/$bunfs/root/claude:12:1864)
+    at cX$ (/$bunfs/root/claude:1463:380)
+    at cX$ (/$bunfs/root/claude:1463:1350)
+    at <anonymous> (/$bunfs/root/claude:1463:4440)
+    at <anonymous> (/$bunfs/root/claude:1463:5171)
+    at A (/$bunfs/root/claude:11:7245)
+    at YG1 (/$bunfs/root/claude:4094:4342)
+2026-01-23T07:35:49.131Z [ERROR] Error: Error: ENOENT: no such file or directory, scandir '/home/oliy/.claude/skills'
+    at readdirSync (unknown)
+    at <anonymous> (/$bunfs/root/claude:12:1903)
+    at HJ (/$bunfs/root/claude:11:34695)
+    at readdirSync (/$bunfs/root/claude:12:1864)
+    at cX$ (/$bunfs/root/claude:1463:380)
+    at cX$ (/$bunfs/root/claude:1463:1350)
+    at <anonymous> (/$bunfs/root/claude:1463:4483)
+    at <anonymous> (/$bunfs/root/claude:1463:5171)
+    at A (/$bunfs/root/claude:11:7245)
+    at YG1 (/$bunfs/root/claude:4094:4342)
+2026-01-23T07:35:49.131Z [DEBUG] Error log sink initialized
+2026-01-23T07:35:49.143Z [DEBUG] Writing to temp file: /home/oliy/.claude/todos/14e34d7a-e717-49e9-88df-9ee480b9819f-agent-14e34d7a-e717-49e9-88df-9ee480b9819f.json.tmp.108933.1769153749143
+2026-01-23T07:35:49.153Z [DEBUG] Temp file written successfully, size: 2 bytes
+2026-01-23T07:35:49.153Z [DEBUG] Renaming /home/oliy/.claude/todos/14e34d7a-e717-49e9-88df-9ee480b9819f-agent-14e34d7a-e717-49e9-88df-9ee480b9819f.json.tmp.108933.1769153749143 to /home/oliy/.claude/todos/14e34d7a-e717-49e9-88df-9ee480b9819f-agent-14e34d7a-e717-49e9-88df-9ee480b9819f.json
+2026-01-23T07:35:49.153Z [DEBUG] File /home/oliy/.claude/todos/14e34d7a-e717-49e9-88df-9ee480b9819f-agent-14e34d7a-e717-49e9-88df-9ee480b9819f.json written atomically
+2026-01-23T07:35:49.215Z [DEBUG] getPluginSkills: Processing 0 enabled plugins
+2026-01-23T07:35:49.215Z [DEBUG] Total plugin skills loaded: 0
+2026-01-23T07:35:49.215Z [DEBUG] Total plugin commands loaded: 0
+2026-01-23T07:35:49.216Z [DEBUG] Registered 0 hooks from 0 plugins
+2026-01-23T07:35:49.217Z [DEBUG] [STARTUP] setup() completed in 1870ms
+2026-01-23T07:35:49.217Z [DEBUG] [STARTUP] Loading commands and agents...
+2026-01-23T07:35:49.344Z [DEBUG] Loaded 0 unique skills (managed: 0, user: 0, project: 0, legacy commands: 0)
+2026-01-23T07:35:49.346Z [DEBUG] getSkills returning: 0 skill dir commands, 0 plugin skills, 0 bundled skills
+2026-01-23T07:35:49.361Z [DEBUG] Acquired PID lock for 2.1.14 (PID 108933)
+2026-01-23T07:35:49.362Z [DEBUG] Acquired PID lock on running version: /home/oliy/.local/share/claude/versions/2.1.14
+2026-01-23T07:35:49.419Z [DEBUG] Summarizing all 282 messages (~97479 tokens)
+2026-01-23T07:35:49.427Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-23T07:35:49.433Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:35:49.433Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:35:49.434Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:35:49.478Z [DEBUG] Stats cache saved successfully (lastComputedDate: 2026-01-22)
+2026-01-23T07:35:49.479Z [DEBUG] Stats cache updated with 1 new sessions
+2026-01-23T07:35:49.490Z [DEBUG] Writing through symlink: /home/oliy/.claude.json -> /home/oliy/dotfiles/.claude.json
+2026-01-23T07:35:49.490Z [DEBUG] Writing to temp file: /home/oliy/dotfiles/.claude.json.tmp.108933.1769153749490
+2026-01-23T07:35:49.490Z [DEBUG] Preserving file permissions: 100600
+2026-01-23T07:35:49.495Z [DEBUG] Temp file written successfully, size: 15797 bytes
+2026-01-23T07:35:49.495Z [DEBUG] Applied original permissions to temp file
+2026-01-23T07:35:49.495Z [DEBUG] Renaming /home/oliy/dotfiles/.claude.json.tmp.108933.1769153749490 to /home/oliy/dotfiles/.claude.json
+2026-01-23T07:35:49.495Z [DEBUG] File /home/oliy/dotfiles/.claude.json written atomically
+2026-01-23T07:35:49.499Z [DEBUG] Writing through symlink: /home/oliy/.claude.json -> /home/oliy/dotfiles/.claude.json
+2026-01-23T07:35:49.499Z [DEBUG] Writing to temp file: /home/oliy/dotfiles/.claude.json.tmp.108933.1769153749499
+2026-01-23T07:35:49.499Z [DEBUG] Preserving file permissions: 100600
+2026-01-23T07:35:49.504Z [DEBUG] Temp file written successfully, size: 15814 bytes
+2026-01-23T07:35:49.504Z [DEBUG] Applied original permissions to temp file
+2026-01-23T07:35:49.504Z [DEBUG] Renaming /home/oliy/dotfiles/.claude.json.tmp.108933.1769153749499 to /home/oliy/dotfiles/.claude.json
+2026-01-23T07:35:49.504Z [DEBUG] File /home/oliy/dotfiles/.claude.json written atomically
+2026-01-23T07:35:49.557Z [DEBUG] Total plugin agents loaded: 0
+2026-01-23T07:35:49.558Z [DEBUG] [STARTUP] Commands and agents loaded in 341ms
+2026-01-23T07:35:49.559Z [DEBUG] [STARTUP] Running showSetupScreens()...
+2026-01-23T07:35:49.560Z [DEBUG] [render] initYoga starting
+2026-01-23T07:35:49.566Z [DEBUG] [Claude in Chrome] Extension not found in any browser
+2026-01-23T07:35:49.618Z [DEBUG] [render] initYoga complete
+2026-01-23T07:35:49.724Z [DEBUG] [keybindings] KeybindingSetup initialized with 45 bindings, 0 warnings
+2026-01-23T07:35:49.924Z [DEBUG] [Perfetto] initializePerfettoTracing called, env value: undefined
+2026-01-23T07:35:49.928Z [DEBUG] [STARTUP] showSetupScreens() completed in 369ms
+2026-01-23T07:35:49.928Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:35:49.928Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:35:49.937Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:35:49.940Z [DEBUG] Initialized versioned plugins system with 0 plugins
+2026-01-23T07:35:49.947Z [DEBUG] Writing through symlink: /home/oliy/.claude.json -> /home/oliy/dotfiles/.claude.json
+2026-01-23T07:35:49.947Z [DEBUG] Writing to temp file: /home/oliy/dotfiles/.claude.json.tmp.108933.1769153749947
+2026-01-23T07:35:49.947Z [DEBUG] Preserving file permissions: 100600
+2026-01-23T07:35:49.954Z [DEBUG] Temp file written successfully, size: 15814 bytes
+2026-01-23T07:35:49.954Z [DEBUG] Applied original permissions to temp file
+2026-01-23T07:35:49.954Z [DEBUG] Renaming /home/oliy/dotfiles/.claude.json.tmp.108933.1769153749947 to /home/oliy/dotfiles/.claude.json
+2026-01-23T07:35:49.954Z [DEBUG] File /home/oliy/dotfiles/.claude.json written atomically
+2026-01-23T07:35:49.986Z [DEBUG] Getting matching hook commands for SessionStart with query: startup
+2026-01-23T07:35:49.986Z [DEBUG] Found 0 hook matchers in settings
+2026-01-23T07:35:49.986Z [DEBUG] Matched 0 unique hooks for query "startup" (0 before deduplication)
+2026-01-23T07:35:49.989Z [DEBUG] [render] initYoga starting
+2026-01-23T07:35:49.990Z [DEBUG] [render] initYoga complete
+2026-01-23T07:35:50.011Z [DEBUG] Writing through symlink: /home/oliy/.claude.json -> /home/oliy/dotfiles/.claude.json
+2026-01-23T07:35:50.011Z [DEBUG] Writing to temp file: /home/oliy/dotfiles/.claude.json.tmp.108933.1769153750011
+2026-01-23T07:35:50.011Z [DEBUG] Preserving file permissions: 100600
+2026-01-23T07:35:50.016Z [DEBUG] Temp file written successfully, size: 15814 bytes
+2026-01-23T07:35:50.017Z [DEBUG] Applied original permissions to temp file
+2026-01-23T07:35:50.017Z [DEBUG] Renaming /home/oliy/dotfiles/.claude.json.tmp.108933.1769153750011 to /home/oliy/dotfiles/.claude.json
+2026-01-23T07:35:50.017Z [DEBUG] File /home/oliy/dotfiles/.claude.json written atomically
+2026-01-23T07:35:50.025Z [DEBUG] [keybindings] Skipping file watcher - user customization disabled
+2026-01-23T07:35:50.043Z [DEBUG] Git remote URL: https://github.com/otr-digital/architecture.git
+2026-01-23T07:35:50.043Z [DEBUG] Parsed repository: otr-digital/architecture from https://github.com/otr-digital/architecture.git
+2026-01-23T07:35:50.043Z [DEBUG] Parsed repository: otr-digital/architecture from URL: https://github.com/otr-digital/architecture.git
+2026-01-23T07:35:50.044Z [DEBUG] Path /mnt/c/Users/o.young/work/architecture already tracked for repo otr-digital/architecture
+2026-01-23T07:35:50.149Z [DEBUG] [keybindings] KeybindingSetup initialized with 45 bindings, 0 warnings
+2026-01-23T07:35:50.275Z [DEBUG] High write ratio: blit=0, write=1144 (100.0% writes), screen=17x156
+2026-01-23T07:35:50.321Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:35:50.336Z [DEBUG] Generated summary for session c0394f79-edf2-458f-ac85-c72efa8db83c: "Flybuys Solution Architecture Restructure"
+2026-01-23T07:35:50.339Z [DEBUG] Failed to check metrics opt-out status: Request failed with status code 403
+2026-01-23T07:35:50.339Z [ERROR] AxiosError: Error
+    at sS (/$bunfs/root/claude:42:1143)
+    at <anonymous> (/$bunfs/root/claude:47:10084)
+    at emit (node:events:92:22)
+    at endReadableNT (internal:streams/readable:862:50)
+    at processTicksAndRejections (native:7:39)
+    at request (/$bunfs/root/claude:49:2147)
+    at processTicksAndRejections (native:7:39)
+2026-01-23T07:35:50.342Z [DEBUG] Writing through symlink: /home/oliy/.claude.json -> /home/oliy/dotfiles/.claude.json
+2026-01-23T07:35:50.342Z [DEBUG] Writing to temp file: /home/oliy/dotfiles/.claude.json.tmp.108933.1769153750342
+2026-01-23T07:35:50.342Z [DEBUG] Preserving file permissions: 100600
+2026-01-23T07:35:50.356Z [DEBUG] Temp file written successfully, size: 15814 bytes
+2026-01-23T07:35:50.356Z [DEBUG] Applied original permissions to temp file
+2026-01-23T07:35:50.356Z [DEBUG] Renaming /home/oliy/dotfiles/.claude.json.tmp.108933.1769153750342 to /home/oliy/dotfiles/.claude.json
+2026-01-23T07:35:50.356Z [DEBUG] File /home/oliy/dotfiles/.claude.json written atomically
+2026-01-23T07:35:50.380Z [DEBUG] Summarizing all 25 messages (~28967 tokens)
+2026-01-23T07:35:50.382Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-23T07:35:50.383Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:35:50.383Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:35:50.384Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:35:50.393Z [DEBUG] Writing through symlink: /home/oliy/.claude.json -> /home/oliy/dotfiles/.claude.json
+2026-01-23T07:35:50.393Z [DEBUG] Writing to temp file: /home/oliy/dotfiles/.claude.json.tmp.108933.1769153750393
+2026-01-23T07:35:50.393Z [DEBUG] Preserving file permissions: 100600
+2026-01-23T07:35:50.398Z [DEBUG] Temp file written successfully, size: 15814 bytes
+2026-01-23T07:35:50.398Z [DEBUG] Applied original permissions to temp file
+2026-01-23T07:35:50.398Z [DEBUG] Renaming /home/oliy/dotfiles/.claude.json.tmp.108933.1769153750393 to /home/oliy/dotfiles/.claude.json
+2026-01-23T07:35:50.398Z [DEBUG] File /home/oliy/dotfiles/.claude.json written atomically
+2026-01-23T07:35:50.413Z [DEBUG] [keybindings] Skipping file watcher - user customization disabled
+2026-01-23T07:35:50.413Z [DEBUG] [REPL:mount] REPL mounted, disabled=false
+2026-01-23T07:35:51.679Z [DEBUG] Official marketplace auto-install skipped: already_attempted
+2026-01-23T07:35:51.679Z [DEBUG] performStartupChecks called
+2026-01-23T07:35:51.680Z [DEBUG] Starting background plugin installations
+2026-01-23T07:35:51.680Z [DEBUG] performBackgroundPluginInstallations called
+2026-01-23T07:35:52.869Z [DEBUG] AutoUpdaterWrapper: Installation type: native
+2026-01-23T07:35:52.871Z [DEBUG] [claudeai-mcp] Checking gate (cached)...
+2026-01-23T07:35:52.871Z [DEBUG] [claudeai-mcp] Gate returned: false
+2026-01-23T07:35:52.871Z [DEBUG] [claudeai-mcp] Disabled via gate
+2026-01-23T07:35:52.872Z [DEBUG] Setting installation status: 0 marketplaces, 0 installable plugins, 0 uninstallable plugins
+2026-01-23T07:35:52.873Z [DEBUG] Writing through symlink: /home/oliy/.claude.json -> /home/oliy/dotfiles/.claude.json
+2026-01-23T07:35:52.873Z [DEBUG] Writing to temp file: /home/oliy/dotfiles/.claude.json.tmp.108933.1769153752873
+2026-01-23T07:35:52.873Z [DEBUG] Preserving file permissions: 100600
+2026-01-23T07:35:52.912Z [DEBUG] Temp file written successfully, size: 15858 bytes
+2026-01-23T07:35:52.913Z [DEBUG] Applied original permissions to temp file
+2026-01-23T07:35:52.913Z [DEBUG] Renaming /home/oliy/dotfiles/.claude.json.tmp.108933.1769153752873 to /home/oliy/dotfiles/.claude.json
+2026-01-23T07:35:52.913Z [DEBUG] File /home/oliy/dotfiles/.claude.json written atomically
+2026-01-23T07:35:52.915Z [DEBUG] Loaded plugins - Enabled: 0, Disabled: 0, Commands: 0, Agents: 0, Errors: 0
+2026-01-23T07:35:52.918Z [DEBUG] Ripgrep first use test: PASSED (mode=builtin, path=/home/oliy/.local/share/claude/versions/2.1.14)
+2026-01-23T07:35:52.931Z [DEBUG] rg EAGAIN error detected, retrying with single-threaded mode (-j 1)
+2026-01-23T07:35:52.950Z [DEBUG] Successfully refreshed marketplace: claude-plugins-official
+2026-01-23T07:35:52.950Z [DEBUG] Plugin autoupdate: checking installed plugins
+2026-01-23T07:35:52.956Z [DEBUG] rg error (signal=undefined, code=ABORT_ERR, stderr: ), 0 results
+2026-01-23T07:35:52.956Z [ERROR] AbortError: AbortError: The operation was aborted.
+    at unknown
+    at abortChildProcess (node:child_process:937:42)
+    at onAbortListener2 (node:child_process:35:24)
+    at abort (unknown)
+    at <anonymous> (/$bunfs/root/claude:5355:12117)
+2026-01-23T07:35:52.966Z [DEBUG] Skills and commands included in Skill tool:
+2026-01-23T07:35:52.967Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:35:52.967Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:35:52.967Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:35:52.981Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:35:52.984Z [DEBUG] Generated summary for session c6b70995-fb42-44d0-878a-2a2a203ac178: "Salesforce Customer Support TOGAF Phase E Architecture"
+2026-01-23T07:35:52.989Z [DEBUG] Acquired PID lock for 2.1.7 (PID 108933)
+2026-01-23T07:35:52.991Z [DEBUG] Summarizing all 11 messages (~627 tokens)
+2026-01-23T07:35:52.991Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-23T07:35:52.992Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:35:52.992Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:35:52.993Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:35:52.998Z [DEBUG] Released PID lock for 2.1.7
+2026-01-23T07:35:53.002Z [DEBUG] Writing through symlink: /home/oliy/.claude.json -> /home/oliy/dotfiles/.claude.json
+2026-01-23T07:35:53.002Z [DEBUG] Writing to temp file: /home/oliy/dotfiles/.claude.json.tmp.108933.1769153753002
+2026-01-23T07:35:53.002Z [DEBUG] Preserving file permissions: 100600
+2026-01-23T07:35:53.006Z [DEBUG] Temp file written successfully, size: 15858 bytes
+2026-01-23T07:35:53.006Z [DEBUG] Applied original permissions to temp file
+2026-01-23T07:35:53.006Z [DEBUG] Renaming /home/oliy/dotfiles/.claude.json.tmp.108933.1769153753002 to /home/oliy/dotfiles/.claude.json
+2026-01-23T07:35:53.006Z [DEBUG] File /home/oliy/dotfiles/.claude.json written atomically
+2026-01-23T07:35:53.010Z [DEBUG] Writing through symlink: /home/oliy/.claude.json -> /home/oliy/dotfiles/.claude.json
+2026-01-23T07:35:53.010Z [DEBUG] Writing to temp file: /home/oliy/dotfiles/.claude.json.tmp.108933.1769153753010
+2026-01-23T07:35:53.010Z [DEBUG] Preserving file permissions: 100600
+2026-01-23T07:35:53.017Z [DEBUG] Temp file written successfully, size: 15858 bytes
+2026-01-23T07:35:53.017Z [DEBUG] Applied original permissions to temp file
+2026-01-23T07:35:53.017Z [DEBUG] Renaming /home/oliy/dotfiles/.claude.json.tmp.108933.1769153753010 to /home/oliy/dotfiles/.claude.json
+2026-01-23T07:35:53.017Z [DEBUG] File /home/oliy/dotfiles/.claude.json written atomically
+2026-01-23T07:35:53.132Z [ERROR] Error: Error: ENOENT: no such file or directory, open '/mnt/c/Users/o.young/.claude/ide/56353.lock'
+    at readFileSync (unknown)
+    at <anonymous> (/$bunfs/root/claude:12:582)
+    at HJ (/$bunfs/root/claude:11:34695)
+    at readFileSync (/$bunfs/root/claude:12:541)
+    at LjI (/$bunfs/root/claude:1042:42760)
+    at CX9 (/$bunfs/root/claude:1043:1302)
+    at async ayI (/$bunfs/root/claude:1043:1997)
+    at processTicksAndRejections (native:7:39)
+2026-01-23T07:35:53.134Z [ERROR] Error: Error: ENOENT: no such file or directory, unlink '/mnt/c/Users/o.young/.claude/ide/56353.lock'
+    at unlinkSync (unknown)
+    at <anonymous> (/$bunfs/root/claude:12:1300)
+    at HJ (/$bunfs/root/claude:11:34695)
+    at unlinkSync (/$bunfs/root/claude:12:1263)
+    at CX9 (/$bunfs/root/claude:1043:1332)
+    at async ayI (/$bunfs/root/claude:1043:1997)
+    at processTicksAndRejections (native:7:39)
+2026-01-23T07:35:53.168Z [ERROR] Error: Error: ENOENT: no such file or directory, open '/mnt/c/Users/o.young/.claude/ide/44620.lock'
+    at readFileSync (unknown)
+    at <anonymous> (/$bunfs/root/claude:12:582)
+    at HJ (/$bunfs/root/claude:11:34695)
+    at readFileSync (/$bunfs/root/claude:12:541)
+    at LjI (/$bunfs/root/claude:1042:42760)
+    at CX9 (/$bunfs/root/claude:1043:1302)
+    at async ayI (/$bunfs/root/claude:1043:1997)
+    at processTicksAndRejections (native:7:39)
+2026-01-23T07:35:53.171Z [ERROR] Error: Error: ENOENT: no such file or directory, unlink '/mnt/c/Users/o.young/.claude/ide/44620.lock'
+    at unlinkSync (unknown)
+    at <anonymous> (/$bunfs/root/claude:12:1300)
+    at HJ (/$bunfs/root/claude:11:34695)
+    at unlinkSync (/$bunfs/root/claude:12:1263)
+    at CX9 (/$bunfs/root/claude:1043:1332)
+    at async ayI (/$bunfs/root/claude:1043:1997)
+    at processTicksAndRejections (native:7:39)
+2026-01-23T07:35:54.379Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:35:54.382Z [DEBUG] Generated summary for session 4a60f12c-c125-4e6a-9a34-9cce641d11c3: "Git shortcuts in modules subfolder issue"
+2026-01-23T07:35:54.424Z [DEBUG] Summarizing all 243 messages (~73688 tokens)
+2026-01-23T07:35:54.425Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-23T07:35:54.425Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:35:54.425Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:35:54.426Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:35:54.580Z [DEBUG] Checking for native installer update to version 2.1.17
+2026-01-23T07:35:54.584Z [DEBUG] Downloading native installer version 2.1.17
+2026-01-23T07:35:56.619Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:35:56.622Z [DEBUG] Generated summary for session 0be73a0e-ee82-4e81-bfa6-967fc4e09322: "Fix Flybuys Stage Naming & Configure Antora Mermaid"
+2026-01-23T07:35:56.657Z [DEBUG] Summarizing all 81 messages (~26651 tokens)
+2026-01-23T07:35:56.658Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-23T07:35:56.659Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:35:56.659Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:35:56.659Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:35:58.835Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:35:58.837Z [DEBUG] Generated summary for session 39f61564-b490-4c3a-be2f-c8cefd57bfef: "Asciidoctor mermaid Chrome version mismatch WSL"
+2026-01-23T07:35:58.869Z [DEBUG] Summarizing all 111 messages (~29626 tokens)
+2026-01-23T07:35:58.869Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-23T07:35:58.870Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:35:58.870Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:35:58.870Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:36:01.021Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:36:01.024Z [DEBUG] Generated summary for session e680ea8c-6c11-4a5a-ac3f-d4c072e5d046: "Standardize phase naming convention to TS"
+2026-01-23T07:36:01.099Z [DEBUG] Summarizing all 476 messages (~120773 tokens)
+2026-01-23T07:36:01.101Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-23T07:36:01.101Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:36:01.101Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:36:01.101Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:36:03.200Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:36:03.204Z [DEBUG] Generated summary for session c7bf99a4-22b1-498b-b2bf-bb697fa65a6e: "Profile Service DDD Refactoring: Event-Driven Enrollment"
+2026-01-23T07:36:03.255Z [DEBUG] Summarizing all 98 messages (~91644 tokens)
+2026-01-23T07:36:03.257Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-23T07:36:03.258Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:36:03.258Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:36:03.258Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:36:04.098Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:36:05.433Z [DEBUG] Generated summary for session 6255da7a-23f4-4281-addc-a4e36121a3a7: "Problem Statement Addition to Initiative Templates"
+2026-01-23T07:36:05.468Z [DEBUG] Summarizing all 249 messages (~74874 tokens)
+2026-01-23T07:36:05.470Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-23T07:36:05.470Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:36:05.470Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:36:05.471Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:36:07.565Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:36:07.567Z [DEBUG] Generated summary for session d6f85549-d179-47c0-be32-c1c126337fbd: "Salesforce Customer Support Migration Solution Design"
+2026-01-23T07:36:07.627Z [DEBUG] Summarizing all 63 messages (~32024 tokens)
+2026-01-23T07:36:07.628Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-23T07:36:07.629Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:36:07.629Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:36:07.630Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:36:08.387Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:36:09.701Z [DEBUG] Generated summary for session d29de7ce-50e2-431c-9dce-845c8ed01a65: "Flybuys Data Integration TOGAF Phase C Architecture"
+2026-01-23T07:36:11.835Z [DEBUG] Atomically installed binary to /home/oliy/.local/share/claude/versions/2.1.17
+2026-01-23T07:36:12.002Z [DEBUG] Session index: added 1, updated 30, removed 0, summaries generated 10 (total: 31)
+2026-01-23T07:36:12.011Z [DEBUG] Created directory /home/oliy/.local/bin for symlink
+2026-01-23T07:36:12.016Z [DEBUG] Atomically updated symlink /home/oliy/.local/bin/claude -> /home/oliy/.local/share/claude/versions/2.1.17
+2026-01-23T07:36:12.016Z [DEBUG] Successfully updated to version 2.1.17
+2026-01-23T07:36:30.634Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-23T07:36:30.635Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-23T07:36:30.636Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-23T07:36:30.637Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-23T07:36:30.845Z [DEBUG] Getting matching hook commands for UserPromptSubmit with query: undefined
+2026-01-23T07:36:30.845Z [DEBUG] Found 0 hook matchers in settings
+2026-01-23T07:36:30.845Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-23T07:36:31.045Z [DEBUG] FileHistory: Added snapshot for c20c3aa4-d9ca-4a6b-bd46-4cbb38a5f9d9, tracking 0 files
+2026-01-23T07:36:31.098Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-23T07:36:31.119Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:36:31.119Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:36:31.120Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:36:31.217Z [DEBUG] Total plugin output styles loaded: 0
+2026-01-23T07:36:31.224Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-23T07:36:31.256Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:36:31.256Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:36:31.256Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:36:32.201Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:36:34.267Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:36:44.751Z [DEBUG] executePreToolHooks called for tool: Bash
+2026-01-23T07:36:44.752Z [DEBUG] executePreToolHooks called for tool: Bash
+2026-01-23T07:36:44.753Z [DEBUG] executePreToolHooks called for tool: Bash
+2026-01-23T07:36:44.753Z [DEBUG] executePreToolHooks called for tool: Bash
+2026-01-23T07:36:44.778Z [DEBUG] Getting matching hook commands for PreToolUse with query: Bash
+2026-01-23T07:36:44.778Z [DEBUG] Found 0 hook matchers in settings
+2026-01-23T07:36:44.778Z [DEBUG] Matched 0 unique hooks for query "Bash" (0 before deduplication)
+2026-01-23T07:36:44.778Z [DEBUG] Getting matching hook commands for PreToolUse with query: Bash
+2026-01-23T07:36:44.778Z [DEBUG] Found 0 hook matchers in settings
+2026-01-23T07:36:44.778Z [DEBUG] Matched 0 unique hooks for query "Bash" (0 before deduplication)
+2026-01-23T07:36:44.778Z [DEBUG] Getting matching hook commands for PreToolUse with query: Bash
+2026-01-23T07:36:44.778Z [DEBUG] Found 0 hook matchers in settings
+2026-01-23T07:36:44.778Z [DEBUG] Matched 0 unique hooks for query "Bash" (0 before deduplication)
+2026-01-23T07:36:44.778Z [DEBUG] Getting matching hook commands for PreToolUse with query: Bash
+2026-01-23T07:36:44.778Z [DEBUG] Found 0 hook matchers in settings
+2026-01-23T07:36:44.778Z [DEBUG] Matched 0 unique hooks for query "Bash" (0 before deduplication)
+2026-01-23T07:36:44.899Z [DEBUG] tree-sitter: loaded from embedded
+2026-01-23T07:36:44.932Z [DEBUG] Creating shell snapshot for zsh (/bin/zsh)
+2026-01-23T07:36:44.933Z [DEBUG] Looking for shell config file: /home/oliy/.zshrc
+2026-01-23T07:36:44.933Z [DEBUG] Snapshots directory: /home/oliy/.claude/shell-snapshots
+2026-01-23T07:36:44.933Z [DEBUG] Creating snapshot at: /home/oliy/.claude/shell-snapshots/snapshot-zsh-1769153804933-gve5it.sh
+2026-01-23T07:36:44.933Z [DEBUG] Shell binary exists: true
+2026-01-23T07:36:44.933Z [DEBUG] Execution timeout: 10000ms
+2026-01-23T07:36:44.965Z [DEBUG] Shell snapshot created successfully (998 bytes)
+2026-01-23T07:36:44.966Z [DEBUG] No session environment scripts found
+2026-01-23T07:36:45.104Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-23T07:36:45.107Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:36:45.107Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:36:45.108Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:36:45.146Z [DEBUG] Getting matching hook commands for PostToolUse with query: Bash
+2026-01-23T07:36:45.146Z [DEBUG] Found 0 hook matchers in settings
+2026-01-23T07:36:45.146Z [DEBUG] Matched 0 unique hooks for query "Bash" (0 before deduplication)
+2026-01-23T07:36:45.187Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-23T07:36:45.189Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:36:45.189Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:36:45.189Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:36:45.219Z [DEBUG] Getting matching hook commands for PostToolUse with query: Bash
+2026-01-23T07:36:45.219Z [DEBUG] Found 0 hook matchers in settings
+2026-01-23T07:36:45.219Z [DEBUG] Matched 0 unique hooks for query "Bash" (0 before deduplication)
+2026-01-23T07:36:45.257Z [DEBUG] High write ratio: blit=624, write=675 (52.0% writes), screen=30x156
+2026-01-23T07:36:45.663Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-23T07:36:45.665Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:36:45.665Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:36:45.666Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:36:45.699Z [DEBUG] Getting matching hook commands for PostToolUse with query: Bash
+2026-01-23T07:36:45.699Z [DEBUG] Found 0 hook matchers in settings
+2026-01-23T07:36:45.699Z [DEBUG] Matched 0 unique hooks for query "Bash" (0 before deduplication)
+2026-01-23T07:36:45.729Z [DEBUG] High write ratio: blit=624, write=809 (56.5% writes), screen=33x156
+2026-01-23T07:36:45.732Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-23T07:36:45.735Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:36:45.735Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:36:45.735Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:36:45.766Z [DEBUG] Persisted tool result to /home/oliy/.claude/projects/-mnt-c-Users-o-young-work-architecture/14e34d7a-e717-49e9-88df-9ee480b9819f/tool-results/toolu_01SbAQUq1fjEp3vh2yt4yY14.txt (64.2KB)
+2026-01-23T07:36:45.779Z [DEBUG] Getting matching hook commands for PostToolUse with query: Bash
+2026-01-23T07:36:45.779Z [DEBUG] Found 0 hook matchers in settings
+2026-01-23T07:36:45.779Z [DEBUG] Matched 0 unique hooks for query "Bash" (0 before deduplication)
+2026-01-23T07:36:45.828Z [DEBUG] High write ratio: blit=624, write=1061 (63.0% writes), screen=36x156
+2026-01-23T07:36:45.832Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-23T07:36:45.832Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-23T07:36:45.832Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-23T07:36:45.832Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-23T07:36:45.904Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-23T07:36:45.917Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:36:45.932Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:36:45.932Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:36:45.932Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:36:46.878Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:36:47.289Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:36:47.290Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:36:48.263Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:36:48.263Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:36:48.263Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:36:48.860Z [ERROR] MaxFileReadTokenExceededError: MaxFileReadTokenExceededError: File content (37101 tokens) exceeds maximum allowed tokens (25000). Please use offset and limit parameters to read specific portions of the file, or use the GrepTool to search for specific content.
+    at DuI (/$bunfs/root/claude:1463:6073)
+    at async call (/$bunfs/root/claude:1472:1005)
+    at async <anonymous> (/$bunfs/root/claude:4487:1599)
+    at processTicksAndRejections (native:7:39)
+2026-01-23T07:36:48.984Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:36:48.984Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:36:48.984Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:36:49.492Z [ERROR] MaxFileReadTokenExceededError: MaxFileReadTokenExceededError: File content (53211 tokens) exceeds maximum allowed tokens (25000). Please use offset and limit parameters to read specific portions of the file, or use the GrepTool to search for specific content.
+    at DuI (/$bunfs/root/claude:1463:6073)
+    at async call (/$bunfs/root/claude:1472:1005)
+    at async <anonymous> (/$bunfs/root/claude:4487:1599)
+    at processTicksAndRejections (native:7:39)
+2026-01-23T07:36:49.500Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:36:49.500Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:36:49.500Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:36:51.233Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:37:02.840Z [DEBUG] executePreToolHooks called for tool: Bash
+2026-01-23T07:37:02.877Z [DEBUG] Getting matching hook commands for PreToolUse with query: Bash
+2026-01-23T07:37:02.877Z [DEBUG] Found 0 hook matchers in settings
+2026-01-23T07:37:02.877Z [DEBUG] Matched 0 unique hooks for query "Bash" (0 before deduplication)
+2026-01-23T07:37:04.398Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-23T07:37:04.399Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:37:04.399Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:37:04.399Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:37:04.442Z [DEBUG] Getting matching hook commands for PostToolUse with query: Bash
+2026-01-23T07:37:04.442Z [DEBUG] Found 0 hook matchers in settings
+2026-01-23T07:37:04.442Z [DEBUG] Matched 0 unique hooks for query "Bash" (0 before deduplication)
+2026-01-23T07:37:04.473Z [DEBUG] executePreToolHooks called for tool: Bash
+2026-01-23T07:37:04.494Z [DEBUG] Getting matching hook commands for PreToolUse with query: Bash
+2026-01-23T07:37:04.494Z [DEBUG] Found 0 hook matchers in settings
+2026-01-23T07:37:04.494Z [DEBUG] Matched 0 unique hooks for query "Bash" (0 before deduplication)
+2026-01-23T07:37:05.064Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:37:07.055Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-23T07:37:07.058Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:37:07.058Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:37:07.059Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:37:07.120Z [DEBUG] Getting matching hook commands for PostToolUse with query: Bash
+2026-01-23T07:37:07.120Z [DEBUG] Found 0 hook matchers in settings
+2026-01-23T07:37:07.120Z [DEBUG] Matched 0 unique hooks for query "Bash" (0 before deduplication)
+2026-01-23T07:37:07.147Z [DEBUG] executePreToolHooks called for tool: Bash
+2026-01-23T07:37:07.171Z [DEBUG] Getting matching hook commands for PreToolUse with query: Bash
+2026-01-23T07:37:07.171Z [DEBUG] Found 0 hook matchers in settings
+2026-01-23T07:37:07.171Z [DEBUG] Matched 0 unique hooks for query "Bash" (0 before deduplication)
+2026-01-23T07:37:08.187Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:37:08.624Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-23T07:37:08.625Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:37:08.625Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:37:08.625Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:37:08.670Z [DEBUG] Getting matching hook commands for PostToolUse with query: Bash
+2026-01-23T07:37:08.670Z [DEBUG] Found 0 hook matchers in settings
+2026-01-23T07:37:08.670Z [DEBUG] Matched 0 unique hooks for query "Bash" (0 before deduplication)
+2026-01-23T07:37:08.699Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-23T07:37:08.699Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-23T07:37:08.699Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-23T07:37:08.699Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-23T07:37:08.986Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-23T07:37:09.019Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:37:09.019Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:37:09.019Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:37:09.240Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:37:14.424Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:37:17.143Z [DEBUG] executePreToolHooks called for tool: Bash
+2026-01-23T07:37:17.185Z [DEBUG] Getting matching hook commands for PreToolUse with query: Bash
+2026-01-23T07:37:17.185Z [DEBUG] Found 0 hook matchers in settings
+2026-01-23T07:37:17.186Z [DEBUG] Matched 0 unique hooks for query "Bash" (0 before deduplication)
+2026-01-23T07:37:21.914Z [DEBUG] Tool search disabled for model 'claude-haiku-4-5-20251001': model does not support tool_reference blocks. This feature is only available on Claude Sonnet 4+, Opus 4+, and newer models.
+2026-01-23T07:37:21.915Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:37:21.915Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:37:21.916Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:37:21.980Z [DEBUG] Getting matching hook commands for PostToolUse with query: Bash
+2026-01-23T07:37:21.980Z [DEBUG] Found 0 hook matchers in settings
+2026-01-23T07:37:21.980Z [DEBUG] Matched 0 unique hooks for query "Bash" (0 before deduplication)
+2026-01-23T07:37:22.013Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-01-23T07:37:22.013Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-01-23T07:37:22.013Z [DEBUG] Hooks: Found 0 total hooks in registry
+2026-01-23T07:37:22.013Z [DEBUG] Hooks: checkForNewResponses returning 0 responses
+2026-01-23T07:37:22.065Z [DEBUG] Auto tool search disabled: 0 chars (threshold: 50000, 10% of context)
+2026-01-23T07:37:22.116Z [DEBUG] [API:request] Creating client, ANTHROPIC_CUSTOM_HEADERS present: false, has Authorization header: false
+2026-01-23T07:37:22.116Z [DEBUG] [API:auth] OAuth token check starting
+2026-01-23T07:37:22.116Z [DEBUG] [API:auth] OAuth token check complete
+2026-01-23T07:37:23.250Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:37:24.592Z [DEBUG] Stream started - received first chunk
+2026-01-23T07:37:29.050Z [DEBUG] Getting matching hook commands for Stop with query: undefined
+2026-01-23T07:37:29.050Z [DEBUG] Found 0 hook matchers in settings
+2026-01-23T07:37:29.050Z [DEBUG] Matched 0 unique hooks for query "no match query" (0 before deduplication)
+2026-01-23T07:37:31.462Z [DEBUG] Writing through symlink: /home/oliy/.claude.json -> /home/oliy/dotfiles/.claude.json
+2026-01-23T07:37:31.462Z [DEBUG] Writing to temp file: /home/oliy/dotfiles/.claude.json.tmp.108933.1769153851462
+2026-01-23T07:37:31.462Z [DEBUG] Preserving file permissions: 100600
+2026-01-23T07:37:31.467Z [DEBUG] Temp file written successfully, size: 15858 bytes
+2026-01-23T07:37:31.467Z [DEBUG] Applied original permissions to temp file
+2026-01-23T07:37:31.467Z [DEBUG] Renaming /home/oliy/dotfiles/.claude.json.tmp.108933.1769153851462 to /home/oliy/dotfiles/.claude.json
+2026-01-23T07:37:31.467Z [DEBUG] File /home/oliy/dotfiles/.claude.json written atomically
+2026-01-23T07:38:00.844Z [DEBUG] Getting matching hook commands for SessionEnd with query: prompt_input_exit
+2026-01-23T07:38:00.844Z [DEBUG] Found 0 hook matchers in settings
+2026-01-23T07:38:00.844Z [DEBUG] Matched 0 unique hooks for query "prompt_input_exit" (0 before deduplication)
+2026-01-23T07:38:00.853Z [DEBUG] Cleaned up session snapshot: /home/oliy/.claude/shell-snapshots/snapshot-zsh-1769153804933-gve5it.sh
+2026-01-23T07:38:00.853Z [DEBUG] LSP server manager shut down successfully
+2026-01-23T07:38:00.856Z [DEBUG] FileHistory: Making snapshot for message 0925796e-b158-4eb8-8b89-4eb3fbe2b4c5
+2026-01-23T07:38:00.857Z [DEBUG] FileHistory: Added snapshot for 0925796e-b158-4eb8-8b89-4eb3fbe2b4c5, tracking 0 files
