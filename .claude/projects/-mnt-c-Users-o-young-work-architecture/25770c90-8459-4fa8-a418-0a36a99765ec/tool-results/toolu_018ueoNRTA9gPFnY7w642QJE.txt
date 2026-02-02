@@ -1,1 +1,0 @@
-File created successfully at: /mnt/c/Users/o.young/work/architecture/bounded_context/product-catalog.cml

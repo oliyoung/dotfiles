@@ -1,8 +1,0 @@
-/* Custom CSS overrides for OTR Architecture Documentation */
-
-/* Override default max-width for wider content area on large screens */
-@media screen and (min-width: 1024px) {
-    .doc {
-        max-width: 60rem; /* Increased from 46rem - adjust as needed */
-    }
-}

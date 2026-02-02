@@ -1,8 +1,0 @@
--rwxrwxrwx 1 oliy oliy 24365 Jan  5 11:12 /mnt/c/Users/o.young/work/architecture/bounded_context/engagement.cml
--rwxrwxrwx 1 oliy oliy     0 Dec 17 10:34 /mnt/c/Users/o.young/work/architecture/bounded_context/fuel.cml
--rwxrwxrwx 1 oliy oliy 18363 Jan  5 11:14 /mnt/c/Users/o.young/work/architecture/bounded_context/handover.cml
--rwxrwxrwx 1 oliy oliy 12556 Jan  5 11:13 /mnt/c/Users/o.young/work/architecture/bounded_context/location.cml
--rwxrwxrwx 1 oliy oliy 36270 Jan  5 11:13 /mnt/c/Users/o.young/work/architecture/bounded_context/loyalty.cml
--rwxrwxrwx 1 oliy oliy 18023 Jan  5 11:14 /mnt/c/Users/o.young/work/architecture/bounded_context/payment.cml
--rwxrwxrwx 1 oliy oliy 27034 Jan  9 15:04 /mnt/c/Users/o.young/work/architecture/bounded_context/profile.cml
--rwxrwxrwx 1 oliy oliy 20051 Jan  5 11:13 /mnt/c/Users/o.young/work/architecture/bounded_context/recommendation.cml

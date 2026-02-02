@@ -1,2 +1,0 @@
-/mnt/c/Users/o.young/work/architecture/bounded_context/interfaces/api_gateway.md
-/mnt/c/Users/o.young/work/architecture/bounded_context/interfaces/digital_wallet.md

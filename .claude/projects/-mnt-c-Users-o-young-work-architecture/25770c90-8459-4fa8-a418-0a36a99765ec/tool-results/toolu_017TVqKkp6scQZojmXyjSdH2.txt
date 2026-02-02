@@ -1,9 +1,0 @@
--rwxrwxrwx 1 oliy oliy 16110 Jan  5 15:11 /mnt/c/Users/o.young/work/architecture/bounded_context/engagement.adoc
--rwxrwxrwx 1 oliy oliy  1466 Dec 19 14:47 /mnt/c/Users/o.young/work/architecture/bounded_context/fuel.adoc
--rwxrwxrwx 1 oliy oliy 11362 Jan  5 10:49 /mnt/c/Users/o.young/work/architecture/bounded_context/handover.adoc
--rwxrwxrwx 1 oliy oliy  7027 Jan  5 11:06 /mnt/c/Users/o.young/work/architecture/bounded_context/location.adoc
--rwxrwxrwx 1 oliy oliy 25476 Jan  5 12:35 /mnt/c/Users/o.young/work/architecture/bounded_context/loyalty.adoc
--rwxrwxrwx 1 oliy oliy 11839 Jan  5 10:51 /mnt/c/Users/o.young/work/architecture/bounded_context/payment.adoc
--rwxrwxrwx 1 oliy oliy 17190 Jan 13 14:25 /mnt/c/Users/o.young/work/architecture/bounded_context/product_catalog.adoc
--rwxrwxrwx 1 oliy oliy 18201 Jan  9 15:04 /mnt/c/Users/o.young/work/architecture/bounded_context/profile.adoc
--rwxrwxrwx 1 oliy oliy 14607 Jan  5 11:06 /mnt/c/Users/o.young/work/architecture/bounded_context/recommendation.adoc

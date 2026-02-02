@@ -1,1 +1,0 @@
-(eval):1: no matches found: /mnt/c/Users/o.young/work/architecture/bounded_context/*.md
