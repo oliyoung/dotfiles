@@ -76,6 +76,19 @@ if command -v direnv &> /dev/null; then
     eval "$(direnv hook zsh)"
 fi
 
+# Source API keys and secrets (if file exists)
+if [ -f "$HOME/.secrets" ]; then
+    source "$HOME/.secrets"
+fi
+
+# WSL2 DISPLAY for X11 forwarding (if nameserver available)
+if grep -qi microsoft /proc/version 2>/dev/null; then
+    nameserver=$(grep nameserver /etc/resolv.conf 2>/dev/null | awk '{print $2; exit;}')
+    if [ -n "$nameserver" ]; then
+        export DISPLAY="${nameserver}:0.0"
+    fi
+fi
+
 # Puppeteer - dynamically locate the browser executable
 _set_puppeteer_path() {
     local cache_dir="$HOME/.cache/puppeteer/chrome-headless-shell"
@@ -108,5 +121,3 @@ typeset -U path  # Remove duplicates
 if command -v tmux &> /dev/null && [ -z "$TMUX" ] && [ -z "$INSIDE_EMACS" ] && [ -z "$VSCODE_RESOLVING_ENVIRONMENT" ]; then
     tmux attach -t default 2>/dev/null || tmux new-session -s default
 fi
-
-

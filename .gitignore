@@ -17,4 +17,9 @@
 
 # Auto-generated / session data
 .config/go/telemetry/
+.config/uv/uv-receipt.json
 .rest-client/
+
+# Secrets and API keys
+.secrets
+.config/gh/hosts.yml
