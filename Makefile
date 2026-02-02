@@ -7,7 +7,7 @@ EXCLUDE := . .. .git .gitignore README.md Makefile
 # Get all dotfiles and directories, excluding the ones in EXCLUDE
 DOTFILES := $(filter-out $(EXCLUDE), $(wildcard .*))
 
-.PHONY: all install uninstall list backup
+.PHONY: all install uninstall list backup setup-git
 
 all: install
 
@@ -56,3 +56,12 @@ list:
 	@for file in $(DOTFILES); do \
 		echo "  $$file"; \
 	done
+
+setup-git:
+	@echo "Configuring git credential helper for GitHub CLI..."
+	@if command -v gh >/dev/null 2>&1; then \
+		gh auth setup-git; \
+		echo "Done! GitHub CLI configured as git credential helper."; \
+	else \
+		echo "GitHub CLI (gh) not found. Install it first, then run 'make setup-git'"; \
+	fi

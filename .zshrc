@@ -130,6 +130,15 @@ alias gd='git diff'                  # Diff
 alias gst='git stash'                # Stash
 alias gcl='git clone'                # Clone
 
+# ============================================================================
+# PATH
+# ============================================================================
+path=(
+    $HOME/.local/bin
+    /opt/homebrew/opt/ruby/bin
+    $path
+)
+typeset -U path  # Remove duplicates
+
 # Local environment
 [ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
-export PATH="/opt/homebrew/opt/ruby/bin:$PATH"

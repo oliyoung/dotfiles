@@ -5,4 +5,9 @@
 .claude/projects/*
 .claude/statsig/*
 .claude/todos/*
-.claude/statsig/*
+.claude/cache/*
+.claude/settings.local.json
+.claude/stats-cache.json
+.claude/plugins/*
+.claude/ide/*
+.claude/shell-snapshots/*
