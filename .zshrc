@@ -66,6 +66,11 @@ if command -v starship &> /dev/null; then
     eval "$(starship init zsh)"
 fi
 
+# Zoxide - smarter cd command
+if command -v zoxide &> /dev/null; then
+    eval "$(zoxide init zsh)"
+fi
+
 # ============================================================================
 # ENVIRONMENT VARIABLES
 # ============================================================================
@@ -97,10 +102,29 @@ unset _set_puppeteer_path
 # ============================================================================
 # ALIASES
 # ============================================================================
-# Text search (color output)
-alias grep='grep --color=auto'
-alias fgrep='fgrep --color=auto'
-alias egrep='egrep --color=auto'
+# Modern CLI replacements
+if command -v bat &> /dev/null; then
+    alias cat='bat --paging=never'
+    alias catp='bat'  # bat with pager
+fi
+
+if command -v rg &> /dev/null; then
+    alias grep='rg'
+    alias fgrep='rg -F'
+    alias egrep='rg'
+else
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
+fi
+
+if command -v fd &> /dev/null; then
+    alias find='fd'
+fi
+
+if command -v zoxide &> /dev/null; then
+    alias cd='z'
+fi
 
 # Directory listing (eza - modern ls replacement)
 if command -v eza &> /dev/null; then
@@ -115,6 +139,10 @@ else
     alias l='ls -alFh'
     alias la='ls -A'
     alias lsd='ls -d */'
+fi
+
+if command -v tree &> /dev/null; then
+    alias tree='tree -l -L 2 -a'
 fi
 
 # Git operations
@@ -142,3 +170,8 @@ typeset -U path  # Remove duplicates
 
 # Local environment
 [ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/oliyoung/.lmstudio/bin"
+# End of LM Studio CLI section
+

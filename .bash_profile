@@ -16,3 +16,8 @@ unset __conda_setup
 
 
 . "$HOME/.local/bin/env"
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/oliyoung/.lmstudio/bin"
+# End of LM Studio CLI section
+

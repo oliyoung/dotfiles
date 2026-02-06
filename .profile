@@ -25,3 +25,8 @@ fi
 if [ -d "$HOME/.local/bin" ] ; then
     PATH="$HOME/.local/bin:$PATH"
 fi
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/oliyoung/.lmstudio/bin"
+# End of LM Studio CLI section
+

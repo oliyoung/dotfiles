@@ -43,3 +43,8 @@ fi
 
 # Local environment
 [ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/oliyoung/.lmstudio/bin"
+# End of LM Studio CLI section
+
