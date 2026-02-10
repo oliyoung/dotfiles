@@ -11,6 +11,8 @@ brew "coreutils"      # GNU core utilities (prefixed with 'g')
 brew "wget"
 brew "htop"
 brew "eza"            # Modern ls replacement
+brew "cloudflared"    # Cloudflare tunnel client
+brew "ngrok"           # Local tunneling service
 
 # Shell & prompt
 brew "starship"       # Cross-shell prompt
@@ -22,6 +24,7 @@ brew "node"
 brew "go"
 brew "ruby"
 brew "openjdk"
+cask "bruno"
 
 # Media
 brew "ffmpeg"
