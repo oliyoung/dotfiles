@@ -1,4 +1,5 @@
 .zsh_history
+.bash_history
 
 # SSH - private keys and host data
 .ssh/id_*
@@ -13,3 +14,7 @@
 
 # Agent config
 .config/cagent/
+
+# Auto-generated / session data
+.config/go/telemetry/
+.rest-client/
