@@ -71,6 +71,11 @@ if command -v zoxide &> /dev/null; then
     eval "$(zoxide init zsh)"
 fi
 
+# Direnv - per-directory environment variables
+if command -v direnv &> /dev/null; then
+    eval "$(direnv hook zsh)"
+fi
+
 # Puppeteer - dynamically locate the browser executable
 _set_puppeteer_path() {
     local cache_dir="$HOME/.cache/puppeteer/chrome-headless-shell"
