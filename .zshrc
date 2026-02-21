@@ -102,4 +102,11 @@ path=(
 )
 typeset -U path  # Remove duplicates
 
+# ============================================================================
+# TMUX - auto-attach or create session
+# ============================================================================
+if command -v tmux &> /dev/null && [ -z "$TMUX" ] && [ -z "$INSIDE_EMACS" ] && [ -z "$VSCODE_RESOLVING_ENVIRONMENT" ]; then
+    tmux attach -t default 2>/dev/null || tmux new-session -s default
+fi
+
 
