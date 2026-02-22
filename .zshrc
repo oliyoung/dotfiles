@@ -121,10 +121,3 @@ typeset -U path  # Remove duplicates
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-
-# ============================================================================
-# TMUX - auto-attach or create session
-# ============================================================================
-if command -v tmux &> /dev/null && [ -z "$TMUX" ] && [ -z "$INSIDE_EMACS" ] && [ -z "$VSCODE_RESOLVING_ENVIRONMENT" ]; then
-    tmux attach -t default 2>/dev/null || tmux new-session -s default
-fi

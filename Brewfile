@@ -44,7 +44,6 @@ brew "zoxide"         # Smarter cd command
 # Optional extras (uncomment to install)
 brew "tldr"         # Simplified man pages
 brew "tree"         # Directory tree view
-brew "tmux"         # Terminal multiplexer
 brew "lazygit"      # Terminal UI for git
 brew "direnv"       # Per-directory env vars
 brew "httpie"       # Modern curl alternative

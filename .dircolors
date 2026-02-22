@@ -35,7 +35,6 @@ TERM rxvt*
 TERM screen*
 TERM st
 TERM terminator
-TERM tmux*
 TERM vt100
 TERM xterm*
 # ===================================================================
