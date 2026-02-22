@@ -115,6 +115,13 @@ path=(
 )
 typeset -U path  # Remove duplicates
 
+# Local environment
+[ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
 # ============================================================================
 # TMUX - auto-attach or create session
 # ============================================================================
