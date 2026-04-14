@@ -16,6 +16,7 @@ brew "ngrok"           # Local tunneling service
 
 # Shell & prompt
 brew "starship"       # Cross-shell prompt
+brew "gurgeous/tap/tennis"
 
 # Development
 brew "gh"             # GitHub CLI
