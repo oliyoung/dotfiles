@@ -23,3 +23,4 @@
 # Secrets and API keys
 .secrets
 .config/gh/hosts.yml
+.config/immich/auth.yml

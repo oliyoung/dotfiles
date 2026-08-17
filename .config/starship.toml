@@ -203,3 +203,10 @@ symbol = " "
 
 [zig]
 symbol = " "
+
+[custom.tmux]
+command = "tmux display-message -p '#S'"
+when = '[ -n "$TMUX" ]'
+symbol = " "
+format = "[$symbol$output]($style) "
+style = "green"

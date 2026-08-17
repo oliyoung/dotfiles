@@ -9,3 +9,4 @@ esac
 
 
 
+. "$HOME/.cargo/env"

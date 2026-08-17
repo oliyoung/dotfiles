@@ -139,3 +139,4 @@ alias gcl='git clone'                # Clone
 # Local environment
 [ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
 
+. "$HOME/.cargo/env"

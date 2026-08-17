@@ -5,6 +5,14 @@
 [[ $- != *i* ]] && return
 
 # ============================================================================
+# TMUX - Auto-attach or create session
+# ============================================================================
+if command -v tmux &> /dev/null && [ -z "$TMUX" ] && [ -z "$VSCODE_PID" ] && [[ ! "$TERM_PROGRAM" =~ ^(vscode|VSCode)$ ]]; then
+    # Attach to an existing detached session, or create a new one
+    tmux attach-session 2>/dev/null || tmux new-session
+fi
+
+# ============================================================================
 # HISTORY
 # ============================================================================
 export HISTFILE="$HOME/.zsh_history"
